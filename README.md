@@ -1,10 +1,13 @@
-# Barbería Clásica - Website
-
-![Logo de Barbería Clásica](static/logo.jpg)
-
+# Barber Brothers
 ## Descripción
 
 Sitio web elegante para una barbería clásica con diseño luxury y vintage. Incluye catálogo de productos, carrito de compras, y gestión de contactos.
+
+
+## Vista Previa
+
+![Página de inicio](website.png)
+
 
 ## Características
 
@@ -39,7 +42,3 @@ Sitio web elegante para una barbería clásica con diseño luxury y vintage. Inc
 ├── migrations/         # Historial de migraciones de la base de datos
 └── .env                # Variables de entorno (no incluido en git)
 
-
-## Vista Previa
-
-![Página de inicio](website.png)
