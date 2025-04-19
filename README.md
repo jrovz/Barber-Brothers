@@ -40,3 +40,6 @@ Sitio web elegante para una barbería clásica con diseño luxury y vintage. Inc
 └── .env                # Variables de entorno (no incluido en git)
 
 
+## Vista Previa
+
+![Página de inicio](website.png)
