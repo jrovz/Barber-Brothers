@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración | Barbería Clásica</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Fondos (negros con profundidad) */
+            --color-bg-main: #0a0908;
+            --color-bg-dark: #040404;
+            --color-bg-medium: #121111;
+            --color-bg-light: #1c1a19;
+            --color-bg-card: #15130f;
+            
+            /* Tipografía (tonos crema y marfil) */
+            --color-text-primary: #f5f0e6;
+            --color-text-secondary: #e3d9c6;
+            --color-text-muted: #c4b9a2;
+            --color-text-accent: #d2b883;
+            
+            /* Acentos y bordes (tonos dorados antiguo) */
+            --color-border: #302c25;
+            --color-accent: #b39656;
+            --color-accent-hover: #c9aa6b;
+            --color-danger: #a83232;
+            --color-success: #2a9d8f;
+            
+            /* Sombras (con toque vintage) */
+            --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(179, 150, 86, 0.15);
+            --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(179, 150, 86, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Lora', serif;
+            background-color: var(--color-bg-main);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+        }
+        
+        /* Layout principal */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: var(--color-bg-dark);
+            border-right: 1px solid var(--color-border);
+            padding: 2rem 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        /* Sidebar */
+        .admin-logo {
+            padding: 0 1.5rem 1.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .admin-logo img {
+            max-width: 160px;
+            height: auto;
+        }
+        
+        .admin-title {
+            color: var(--color-text-accent);
+            font-size: 1.2rem;
+            margin: 1rem 0 0.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .admin-menu ul {
+            list-style: none;
+        }
+        
+        .admin-menu li {
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .admin-menu li.active {
+            background-color: var(--color-bg-medium);
+            border-left: 3px solid var(--color-accent);
+        }
+        
+        .admin-menu a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            display: block;
+            transition: color 0.3s;
+        }
+        
+        .admin-menu a:hover {
+            color: var(--color-accent);
+        }
+        
+        .admin-menu li.active a {
+            color: var(--color-accent);
+        }
+        
+        /* Contenido principal */
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-text-accent);
+            font-size: 2rem;
+        }
+        
+        /* Tabla de productos */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-soft);
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .data-table th {
+            background-color: var(--color-bg-medium);
+            color: var(--color-text-accent);
+            font-family: 'Playfair Display', serif;
+            font-weight: normal;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: var(--color-bg-card);
+        }
+        
+        .data-table .actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Formulario de productos */
+        .admin-form {
+            background-color: var(--color-bg-card);
+            padding: 2rem;
+            border: 1px solid var(--color-border);
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 2rem;
+            border-radius: 3px;
+        }
+        
+        .form-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-text-accent);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-secondary);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--color-bg-light);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            border-radius: 3px;
+            font-family: 'Lora', serif;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+        
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        /* Botones */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background-color: var(--color-accent);
+            color: white;
+            font-family: 'Lora', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: var(--color-accent-hover);
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .btn-edit {
+            background-color: #4b7bec;
+        }
+        
+        .btn-edit:hover {
+            background-color: #3867d6;
+        }
+        
+        .btn-delete {
+            background-color: var(--color-danger);
+        }
+        
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Utilidades */
+        .text-center {
+            text-align: center;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+        
+        .badge-primary {
+            background-color: var(--color-accent);
+            color: white;
+        }
+        
+        /* Responsividad */
+        @media (max-width: 992px) {
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                padding: 1rem 0;
+            }
+            
+            .main-content {
+                padding: 1.5rem;
+            }
+            
+            .data-table {
+                overflow-x: auto;
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="admin-logo">
+                <img src="/static/logo.jpg" alt="Barbería Clásica">
+                <h3 class="admin-title">Panel de Administración</h3>
+            </div>
+            
+            <nav class="admin-menu">
+                <ul>
+                    <li class="active"><a href="{{ url_for('admin.productos') }}">Productos</a></li>
+                    <li><a href="#">Clientes</a></li>
+                    <li><a href="#">Mensajes</a></li>
+                    <li><a href="#">Citas</a></li>
+                    <li><a href="#">Configuración</a></li>
+                    <li><a href="{{ url_for('public.home') }}">Ver Sitio</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <div class="panel-header">
+                <h1 class="panel-title">Gestión de Productos</h1>
+            </div>
+            
+            <!-- Formulario para añadir productos -->
+            <section class="admin-form">
+                <h2 class="form-title">Añadir Nuevo Producto</h2>
+                <form action="{{ url_for('admin.productos') }}" method="POST">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre" class="form-label">Nombre del Producto</label>
+                            <input type="text" id="nombre" name="nombre" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="precio" class="form-label">Precio (€)</label>
+                            <input type="number" id="precio" name="precio" step="0.01" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="categoria" class="form-label">Categoría</label>
+                            <select id="categoria" name="categoria" class="form-input" required>
+                                <option value="peinar">Productos para Peinar</option>
+                                <option value="barba">Productos para Barba</option>
+                                <option value="accesorios">Accesorios</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="imagen_url" class="form-label">URL de la Imagen</label>
+                            <input type="url" id="imagen_url" name="imagen_url" class="form-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" name="descripcion" class="form-input" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn">Guardar Producto</button>
+                </form>
+            </section>
+            
+            <!-- Tabla de productos existentes -->
+            <section>
+                <h2 class="form-title">Productos Existentes</h2>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Categoría</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td>{{ producto.id }}</td>
+                            <td>
+                                <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
+                            </td>
+                            <td>{{ producto.nombre }}</td>
+                            <td>€{{ producto.precio }}</td>
+                            <td>
+                                <span class="badge badge-primary">
+                                    {% if producto.categoria == 'peinar' %}
+                                        Para Peinar
+                                    {% elif producto.categoria == 'barba' %}
+                                        Para Barba
+                                    {% else %}
+                                        Accesorios
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="actions">
+                                <a href="#" class="btn btn-small btn-edit">Editar</a>
+                                <a href="#" class="btn btn-small btn-delete">Eliminar</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+    
+    <script>
+        // Aquí puedes añadir código JavaScript para mejorar la interactividad
+        // Por ejemplo, confirmación antes de eliminar, formulario de edición, etc.
+        document.addEventListener('DOMContentLoaded', function() {
+            // Seleccionar todos los botones de eliminar
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+            
+            // Añadir evento de confirmación
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+                        // Aquí se implementaría la lógica para eliminar
+                        console.log('Eliminando producto...');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,18 +1,6 @@
 from app import db
 from datetime import datetime
 
-class Producto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text)
-    precio = db.Column(db.Float, nullable=False)
-    imagen_url = db.Column(db.String(255))
-    categoria = db.Column(db.String(50), default='peinar')  # Nueva columna
-    creado = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Producto {self.nombre}>'
-
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
@@ -25,17 +13,6 @@ class Cliente(db.Model):
     def __repr__(self):
         return f'<Cliente {self.nombre}>'
 
-class Cita(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
-    fecha = db.Column(db.DateTime, nullable=False)
-    servicio = db.Column(db.String(100), nullable=False)
-    estado = db.Column(db.String(20), default='pendiente')
-    creado = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Cita {self.id} - {self.servicio}>'
-
 class Mensaje(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
@@ -46,3 +23,14 @@ class Mensaje(db.Model):
     
     def __repr__(self):
         return f'<Mensaje {self.id}>'
+
+class Cita(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
+    fecha = db.Column(db.DateTime, nullable=False)
+    servicio = db.Column(db.String(100), nullable=False)
+    estado = db.Column(db.String(20), default='pendiente')
+    creado = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Cita {self.id} - {self.servicio}>'
