@@ -25,20 +25,4 @@ Sitio web elegante para una barbería clásica con diseño luxury y vintage. Inc
 - **ORM**: SQLAlchemy
 - **Migraciones**: Flask-Migrate
 
-## Estructura del Proyecto
-
-/
-├── app.py              # Aplicación principal Flask
-├── models.py           # Modelos de datos SQLAlchemy
-├── config.py           # Configuración y variables de entorno
-├── init_data.py        # Datos de muestra para la base de datos
-├── static/             # Archivos estáticos
-│   ├── images/
-│   └── logo.jpg
-├── templates/          # Plantillas HTML
-│   ├── Home.html       # Página de inicio
-│   ├── productos.html  # Catálogo de productos
-│   └── contacto.html   # Formulario de contacto
-├── migrations/         # Historial de migraciones de la base de datos
-└── .env                # Variables de entorno (no incluido en git)
 
