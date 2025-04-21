@@ -9,8 +9,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:y3WhoYFS@localhost/barberia_db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
 
 class ProductionConfig(Config):
     DEBUG = False

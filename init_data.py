@@ -1,5 +1,7 @@
-from app import app, db
-from models import Producto
+from app import create_app, db
+from app.models import Producto  # Eliminar importaciones inexistentes
+
+app = create_app()
 
 # Productos de muestra
 productos = [
@@ -52,7 +54,7 @@ productos = [
     }
 ]
 
-# Insertar datos
+# Usa el contexto de aplicación para operaciones con la base de datos
 with app.app_context():
     # Limpiar datos existentes (opcional)
     db.session.query(Producto).delete()
@@ -69,3 +71,4 @@ with app.app_context():
     
     db.session.commit()
     print("Datos de muestra agregados correctamente!")
+    print("Datos iniciales cargados correctamente")
