@@ -1,0 +1,19 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        {# Determinar el color de fondo basado en la categoría #}
+        {% set bg_color = 'var(--color-info)' %} {# Color por defecto (info) #}
+        {% if category == 'success' %}
+            {% set bg_color = 'var(--color-success)' %}
+        {% elif category == 'danger' or category == 'error' %}
+            {% set bg_color = 'var(--color-danger)' %}
+        {% elif category == 'warning' %}
+            {% set bg_color = 'var(--color-warning)' %} {# Asume que tienes --color-warning definido #}
+        {% endif %}
+
+        <div class="alert alert-{{ category or 'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}

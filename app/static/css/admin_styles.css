@@ -1,0 +1,529 @@
+/* --- Variables (Asegúrate de que coincidan con admin_base.html) --- */
+:root {
+    /* Fondos (negros con profundidad) */
+    --color-bg-main: #0a0908;
+    --color-bg-dark: #040404;
+    --color-bg-medium: #121111;
+    --color-bg-light: #1c1a19;
+    --color-bg-card: #15130f;
+    
+    /* Tipografía (tonos crema y marfil) */
+    --color-text-primary: #f5f0e6;
+    --color-text-secondary: #e3d9c6;
+    --color-text-muted: #c4b9a2;
+    --color-text-accent: #d2b883; /* Dorado/Bronce */
+
+    /* Acentos y Estados */
+    --color-primary: var(--color-text-accent); /* Usar el acento dorado como primario */
+    --color-success: #28a745; /* Verde éxito */
+    --color-danger: #dc3545;  /* Rojo peligro */
+    --color-warning: #ffc107; /* Amarillo advertencia */
+    --color-info: #17a2b8;   /* Azul info */
+    --color-border: #3a362f; /* Borde sutil */
+
+    /* Fuentes */
+    --font-primary: 'Playfair Display', serif;
+    --font-secondary: 'Lora', serif;
+}
+
+/* --- Reset Básico y Estilos Globales --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px; /* Base para REM */
+}
+
+body {
+    font-family: var(--font-secondary);
+    background-color: var(--color-bg-main);
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-primary);
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+    color: var(--color-text-primary);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* --- Layout Principal --- */
+.admin-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: var(--color-bg-dark);
+    padding: 1.5rem 1rem;
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 2rem;
+    overflow-y: auto; /* Para scroll si el contenido es largo */
+}
+
+/* --- Sidebar --- */
+.admin-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.admin-logo img {
+    max-width: 80px;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+    border: 2px solid var(--color-primary);
+}
+
+.admin-title {
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0;
+}
+
+.admin-menu ul {
+    list-style: none;
+}
+
+.admin-menu li {
+    margin-bottom: 0.5rem;
+}
+
+.admin-menu a {
+    display: block;
+    padding: 0.6rem 1rem;
+    color: var(--color-text-secondary);
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-menu a:hover {
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-primary);
+}
+
+.admin-menu li.active a {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    font-weight: 500;
+}
+
+/* --- Contenido Principal --- */
+.panel-header {
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+}
+
+.panel-title {
+    font-size: 1.8rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0;
+}
+
+/* --- Formularios --- */
+.admin-form {
+    background-color: var(--color-bg-light);
+    padding: 1.5rem 2rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    border: 1px solid var(--color-border);
+}
+
+.form-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-accent);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.5rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.form-input,
+select.form-input,
+textarea.form-input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    background-color: var(--color-bg-medium);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-primary);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus,
+select.form-input:focus,
+textarea.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(210, 184, 131, 0.3); /* Sombra sutil dorada */
+}
+
+textarea.form-input {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.error {
+    color: var(--color-danger);
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+    display: block;
+}
+
+/* --- Botones --- */
+.btn {
+    display: inline-block;
+    padding: 0.7rem 1.5rem;
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-secondary);
+    font-weight: 500;
+    font-size: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+    background-color: #e0c89a; /* Dorado más claro al pasar el ratón */
+    color: var(--color-bg-dark);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background-color: var(--color-text-muted);
+    color: var(--color-bg-dark);
+}
+
+.btn-secondary:hover {
+    background-color: #d8ccb6;
+}
+
+.btn-delete {
+    background-color: var(--color-danger);
+    color: var(--color-text-primary);
+}
+
+.btn-delete:hover {
+    background-color: #e74c5b;
+    color: var(--color-text-primary);
+}
+
+.btn-edit {
+    background-color: var(--color-info);
+    color: var(--color-text-primary);
+}
+
+.btn-edit:hover {
+    background-color: #1caec4;
+    color: var(--color-text-primary);
+}
+
+
+.btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+/* --- Tablas --- */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    overflow: hidden; /* Para que el border-radius funcione en las esquinas */
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.9rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table th {
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-accent);
+    font-family: var(--font-primary);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr:hover {
+    background-color: var(--color-bg-medium);
+}
+
+.data-table .actions {
+    text-align: right;
+    white-space: nowrap; /* Evita que los botones se rompan en dos líneas */
+}
+
+.data-table .actions .btn,
+.data-table .actions form {
+    margin-left: 0.5rem;
+}
+
+.data-table .text-center {
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* --- Alertas (Estilos base, el color de fondo se aplica inline) --- */
+.alert {
+    padding: 0.8rem 1.2rem; 
+    margin-bottom: 1.5rem; 
+    border: 1px solid transparent; 
+    border-radius: 4px; 
+    color: var(--color-text-primary); /* Color de texto por defecto para alertas */
+}
+
+/* Puedes añadir estilos específicos si quieres, aunque el inline ya funciona */
+.alert-success { border-color: rgba(40, 167, 69, 0.5); }
+.alert-danger { border-color: rgba(220, 53, 69, 0.5); }
+.alert-info { border-color: rgba(23, 162, 184, 0.5); }
+.alert-warning { border-color: rgba(255, 193, 7, 0.5); }
+
+/* --- Alertas --- */
+.alert {
+    padding: 0.8rem 1.2rem; 
+    margin-bottom: 1.5rem; 
+    border: 1px solid transparent; /* Borde base transparente */
+    border-radius: 4px; 
+    color: var(--color-text-primary); /* Color de texto por defecto */
+    /* El color de fondo se definirá por la clase específica */
+}
+
+/* Colores de fondo y borde específicos por categoría */
+.alert-success { 
+    background-color: var(--color-success); 
+    border-color: rgba(40, 167, 69, 0.5); /* Borde semitransparente del mismo color */
+    color: #fff; /* Texto blanco para buen contraste con verde */
+}
+.alert-danger, 
+.alert-error { /* Incluir 'error' si usas esa categoría */
+    background-color: var(--color-danger); 
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #fff; /* Texto blanco para buen contraste con rojo */
+}
+.alert-info { 
+    background-color: var(--color-info); 
+    border-color: rgba(23, 162, 184, 0.5);
+    color: #fff; /* Texto blanco para buen contraste con azul */
+}
+.alert-warning { 
+    background-color: var(--color-warning); 
+    border-color: rgba(255, 193, 7, 0.5);
+    color: var(--color-bg-dark); /* Texto oscuro para buen contraste con amarillo */
+}
+
+/* --- Badges --- */
+.badge {
+    display: inline-block;
+    padding: 0.3em 0.6em;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    color: var(--color-bg-dark); /* Color de texto por defecto para badges */
+    background-color: var(--color-text-muted); /* Color de fondo por defecto */
+}
+
+.badge-primary {
+    color: var(--color-bg-dark);
+    background-color: var(--color-primary);
+}
+.badge-success {
+    color: #fff;
+    background-color: var(--color-success);
+}
+/* Añade más colores de badge si necesitas (danger, warning, info) */
+
+
+/* --- Login Page --- */
+.login-container {
+    max-width: 400px; 
+    margin: 5rem auto; 
+    padding: 2.5rem; 
+    background-color: var(--color-bg-light); 
+    border: 1px solid var(--color-border); 
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.login-container .form-title {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: none; /* Quitar borde en login */
+}
+
+.login-container .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-container .btn {
+    width: 100%;
+    padding: 0.8rem;
+}
+
+/* --- Estilos del Dashboard --- */
+
+/* Contenedor para las tarjetas de estadísticas */
+.dashboard-stats {
+    display: flex;
+    flex-wrap: wrap; /* Para que las tarjetas pasen abajo en pantallas pequeñas */
+    gap: 1.5rem;      /* Espacio entre tarjetas */
+    margin-bottom: 2.5rem;
+}
+
+/* Estilo individual de las tarjetas de estadísticas */
+.card {
+    flex: 1; /* Hace que las tarjetas intenten ocupar el mismo espacio */
+    min-width: 200px; /* Ancho mínimo antes de envolver */
+    background-color: var(--color-bg-light);
+    padding: 1.5rem;
+    border-radius: 5px;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-soft);
+    text-align: center;
+}
+
+.card h3 {
+    font-family: var(--font-primary);
+    color: var(--color-text-accent);
+    font-size: 1.1rem;
+    margin-bottom: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card .count {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.card a {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+.card a:hover {
+    color: var(--color-text-primary);
+}
+
+/* Estilo general para secciones del dashboard */
+.dashboard-section {
+    background-color: var(--color-bg-light);
+    padding: 1.5rem 2rem;
+    border-radius: 5px;
+    margin-bottom: 2rem;
+    border: 1px solid var(--color-border);
+}
+
+.section-title {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-accent);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.7rem;
+}
+
+/* Lista de elementos recientes (mensajes, etc.) */
+.recent-list {
+    list-style: none;
+    padding: 0;
+}
+
+.recent-list li {
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Para que se ajuste en pantallas pequeñas */
+    gap: 0.5rem;
+}
+
+.recent-list li:last-child {
+    border-bottom: none;
+}
+
+.recent-list .item-title {
+    font-weight: 500;
+    color: var(--color-text-primary);
+    flex-basis: 40%; /* Ajusta según necesites */
+}
+
+.recent-list .item-meta {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    flex-basis: 40%; /* Ajusta según necesites */
+    text-align: right;
+}
+

@@ -1,0 +1,58 @@
+<!-- filepath: app/templates/admin/dashboard.html -->
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{# Mostrar mensajes flash (si los hubiera en el dashboard) #}
+{% include 'admin/_flash_messages.html' %}
+
+<!-- A. Resumen Rápido (Estadísticas Clave) -->
+<section class="dashboard-stats">
+    <div class="card">
+        <h3>Productos Totales</h3>
+        <p class="count">{{ product_count }}</p>
+        <a href="{{ url_for('admin.gestionar_productos') }}">Gestionar</a>
+    </div>
+    <div class="card">
+        <h3>Barberos Registrados</h3>
+        <p class="count">{{ barber_count }}</p>
+        <a href="{{ url_for('admin.gestionar_barberos') }}">Gestionar</a>
+    </div>
+    <div class="card">
+        <h3>Mensajes Nuevos</h3>
+        <p class="count">{{ unread_messages_count }}</p>
+        {# Asume una futura ruta 'admin.gestionar_mensajes' #}
+        <a href="#">Ver Mensajes</a> 
+    </div>
+    {# Añade más tarjetas si tienes más estadísticas #}
+</section>
+
+<!-- B. Mensajes Recientes -->
+<section class="dashboard-section">
+    <h2 class="section-title">Mensajes Recientes</h2>
+    {% if recent_messages %}
+        <ul class="recent-list">
+            {% for mensaje in recent_messages %}
+            <li>
+                <span class="item-title">{{ mensaje.asunto or 'Sin Asunto' }}</span>
+                {# Asume que tienes relación mensaje.cliente.nombre #}
+                <span class="item-meta">De: {{ mensaje.cliente.nombre if mensaje.cliente else 'Desconocido' }} - {{ mensaje.creado.strftime('%d/%m/%Y %H:%M') }}</span> 
+                {# Enlace para ver el mensaje individual (requiere ruta) #}
+                <a href="#" class="btn btn-small btn-secondary">Ver</a> 
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay mensajes recientes.</p>
+    {% endif %}
+     {# Enlace a la gestión completa de mensajes #}
+    <div style="margin-top: 1rem;">
+         <a href="#" class="btn btn-secondary">Ver todos los mensajes</a>
+    </div>
+</section>
+
+
+
+{% endblock %}

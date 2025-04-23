@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración | Barbería Clásica</title>
+    <title>{{ title }} | Barber Brothers Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}"> 
     <style>
         :root {
             /* Fondos (negros con profundidad) */
@@ -292,6 +293,13 @@
                 display: block;
             }
         }
+        
+        /* Añade estilos básicos para mensajes flash y errores si no usas CSS externo */
+        .alert { padding: 0.75rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem; color: #fff; }
+        .alert-success { background-color: #28a745; border-color: #28a745; }
+        .alert-danger { background-color: #dc3545; border-color: #dc3545; }
+        .alert-info { background-color: #17a2b8; border-color: #17a2b8; }
+        .error { color: #dc3545; font-size: 0.8em; }
     </style>
 </head>
 <body>
@@ -299,127 +307,66 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="admin-logo">
-                <img src="/static/logo.jpg" alt="Barbería Clásica">
-                <h3 class="admin-title">Panel de Administración</h3>
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Barber Brothers Logo">
+                <h3 class="admin-title">Panel Admin</h3>
             </div>
             
             <nav class="admin-menu">
                 <ul>
-                    <li class="active"><a href="{{ url_for('admin.productos') }}">Productos</a></li>
+                    <li class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="{{ 'active' if 'producto' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_productos') }}">Productos</a></li>
+                    <li class="{{ 'active' if 'barbero' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_barberos') }}">Barberos</a></li>
                     <li><a href="#">Clientes</a></li>
                     <li><a href="#">Mensajes</a></li>
                     <li><a href="#">Citas</a></li>
-                    <li><a href="#">Configuración</a></li>
-                    <li><a href="{{ url_for('public.home') }}">Ver Sitio</a></li>
+                    <li><hr style="border-color: var(--color-border); margin: 1rem 0;"></li>
+                    <li><a href="{{ url_for('public.home') }}" target="_blank">Ver Sitio</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('admin.logout') }}">Cerrar Sesión ({{ current_user.username }})</a></li>
+                    {% endif %}
                 </ul>
             </nav>
         </aside>
         
         <!-- Contenido principal -->
         <main class="main-content">
-            <div class="panel-header">
-                <h1 class="panel-title">Gestión de Productos</h1>
-            </div>
-            
-            <!-- Formulario para añadir productos -->
-            <section class="admin-form">
-                <h2 class="form-title">Añadir Nuevo Producto</h2>
-                <form action="{{ url_for('admin.productos') }}" method="POST">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="nombre" class="form-label">Nombre del Producto</label>
-                            <input type="text" id="nombre" name="nombre" class="form-input" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="precio" class="form-label">Precio (€)</label>
-                            <input type="number" id="precio" name="precio" step="0.01" class="form-input" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="categoria" class="form-label">Categoría</label>
-                            <select id="categoria" name="categoria" class="form-input" required>
-                                <option value="peinar">Productos para Peinar</option>
-                                <option value="barba">Productos para Barba</option>
-                                <option value="accesorios">Accesorios</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="imagen_url" class="form-label">URL de la Imagen</label>
-                            <input type="url" id="imagen_url" name="imagen_url" class="form-input" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea id="descripcion" name="descripcion" class="form-input" required></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn">Guardar Producto</button>
-                </form>
-            </section>
-            
-            <!-- Tabla de productos existentes -->
-            <section>
-                <h2 class="form-title">Productos Existentes</h2>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Imagen</th>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Categoría</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for producto in productos %}
-                        <tr>
-                            <td>{{ producto.id }}</td>
-                            <td>
-                                <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
-                            </td>
-                            <td>{{ producto.nombre }}</td>
-                            <td>€{{ producto.precio }}</td>
-                            <td>
-                                <span class="badge badge-primary">
-                                    {% if producto.categoria == 'peinar' %}
-                                        Para Peinar
-                                    {% elif producto.categoria == 'barba' %}
-                                        Para Barba
-                                    {% else %}
-                                        Accesorios
-                                    {% endif %}
-                                </span>
-                            </td>
-                            <td class="actions">
-                                <a href="#" class="btn btn-small btn-edit">Editar</a>
-                                <a href="#" class="btn btn-small btn-delete">Eliminar</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
+            {% block content %}
+            {# El contenido específico de cada página irá aquí #}
+            {% endblock %}
         </main>
     </div>
-    
     <script>
         // Aquí puedes añadir código JavaScript para mejorar la interactividad
         // Por ejemplo, confirmación antes de eliminar, formulario de edición, etc.
         document.addEventListener('DOMContentLoaded', function() {
-            // Seleccionar todos los botones de eliminar
-            const deleteButtons = document.querySelectorAll('.btn-delete');
+            // Seleccionar todos los botones de eliminar DENTRO de las tablas de datos
+            // Es mejor ser más específico si tienes otros botones .btn-delete fuera de las tablas
+            const deleteButtons = document.querySelectorAll('.data-table .btn-delete'); 
             
-            // Añadir evento de confirmación
             deleteButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-                        // Aquí se implementaría la lógica para eliminar
-                        console.log('Eliminando producto...');
+                button.addEventListener('click', function(event) {
+                    // Prevenir el envío INMEDIATO del formulario (si el botón es type="submit")
+                    event.preventDefault(); 
+
+                    // Mostrar diálogo de confirmación
+                    // Puedes personalizar el mensaje si quieres, quizás usando data-attributes en el botón
+                    const confirmationMessage = button.dataset.confirmMessage || '¿Estás seguro de que deseas eliminar este elemento?';
+
+                    if (confirm(confirmationMessage)) {
+                        // Si el usuario confirma:
+                        // 1. Encontrar el formulario padre del botón que fue clickeado
+                        const form = event.target.closest('form'); 
+                        
+                        // 2. Si se encontró el formulario, enviarlo
+                        if (form) {
+                            console.log('Enviando formulario de eliminación...'); // Mensaje para depuración
+                            form.submit(); 
+                        } else {
+                            console.error('No se encontró el formulario asociado al botón de eliminar.');
+                        }
+                    } else {
+                        // Si el usuario cancela, no hacer nada.
+                        console.log('Eliminación cancelada por el usuario.'); // Mensaje para depuración
                     }
                 });
             });

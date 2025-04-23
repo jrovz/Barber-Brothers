@@ -1,0 +1,96 @@
+<!-- filepath: app/templates/admin/productos.html -->
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{# Mostrar mensajes flash #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}" style="padding: 0.75rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem; color: #fff; background-color: {{ 'var(--color-danger)' if category == 'danger' else ('var(--color-success)' if category == 'success' else 'var(--color-info)') }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Formulario para añadir productos (usando WTForms) -->
+<section class="admin-form">
+    <h2 class="form-title">Añadir Nuevo Producto</h2>
+    <form action="{{ url_for('admin.gestionar_productos') }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form.nombre.label(class="form-label") }}
+                {{ form.nombre(class="form-input") }}
+                {% for error in form.nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.precio.label(class="form-label") }}
+                {{ form.precio(class="form-input", step="0.01") }}
+                {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.categoria.label(class="form-label") }}
+                {{ form.categoria(class="form-input") }}
+                {% for error in form.categoria.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.imagen_url.label(class="form-label") }}
+                {{ form.imagen_url(class="form-input") }}
+                {% for error in form.imagen_url.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+        <div class="form-group">
+            {{ form.descripcion.label(class="form-label") }}
+            {{ form.descripcion(class="form-input", rows=3) }}
+            {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+        {{ form.submit(class="btn") }}
+    </form>
+</section>
+
+<!-- Tabla de productos existentes -->
+<section>
+    <h2 class="form-title">Productos Existentes</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto.id }}</td>
+                <td>
+                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
+                </td>
+                <td>{{ producto.nombre }}</td>
+                <td>€{{ "%.2f"|format(producto.precio) }}</td>
+                <td>{{ producto.categoria|capitalize }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
+                    {# Formulario para eliminar #}
+                    <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Si tienes CSRF global #}
+                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" class="text-center">No hay productos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
