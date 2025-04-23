@@ -1,10 +1,32 @@
 from app import create_app, db
-from app.models import Producto  # Eliminar importaciones inexistentes
+# 1. Importar TODOS los modelos necesarios
+from app.models import Producto, Barbero, User 
 
 app = create_app()
 
-# Productos de muestra
-productos = [
+# --- Datos de Muestra ---
+
+# 2. Datos de muestra para Barberos
+barberos_data = [
+    {
+        'nombre': 'Carlos "El Navaja" Pérez',
+        'especialidad': 'Cortes clásicos y afeitado tradicional',
+        'imagen_url': 'https://images.unsplash.com/photo-1595476108111-78411bf2c4a3' # URL de ejemplo
+    },
+    {
+        'nombre': 'Sofía "La Estilista" Gómez',
+        'especialidad': 'Cortes modernos y coloración',
+        'imagen_url': 'https://images.unsplash.com/photo-1621607512022-6aecc4fed814' # URL de ejemplo
+    },
+    {
+        'nombre': 'Andrés "El Preciso" Martínez',
+        'especialidad': 'Diseños de barba y fade',
+        'imagen_url': 'https://images.unsplash.com/photo-1605497788044-5a32c7078486' # URL de ejemplo
+    }
+]
+
+# Datos de muestra para Productos (ya existente)
+productos_data = [
     # Productos para Peinar
     {
         'nombre': 'Pomada Fijadora Premium',
@@ -13,7 +35,6 @@ productos = [
         'imagen_url': 'https://images.unsplash.com/photo-1581071562441-17d6347050bc',
         'categoria': 'peinar'
     },
-    
     # Productos para Barba
     {
         'nombre': 'Aceite Nutritivo',
@@ -54,21 +75,67 @@ productos = [
     }
 ]
 
+
+# --- Lógica de Carga de Datos ---
+
 # Usa el contexto de aplicación para operaciones con la base de datos
 with app.app_context():
-    # Limpiar datos existentes (opcional)
-    db.session.query(Producto).delete()
+    print("Iniciando carga de datos iniciales...")
     
-    for p in productos:
+    # 3. Limpiar datos existentes (opcional, pero recomendado para scripts de prueba)
+    # ¡CUIDADO! Esto borrará todos los datos de estas tablas.
+    print("Limpiando datos existentes (Productos, Barberos, Usuarios)...")
+    db.session.query(Producto).delete()
+    db.session.query(Barbero).delete()
+    # No borres todos los usuarios si quieres mantener otros, filtra por rol si es necesario
+    # db.session.query(User).delete() 
+    # O borra solo los no-admin si quieres mantener el admin entre ejecuciones
+    # db.session.query(User).filter(User.role != 'admin').delete()
+    
+    # 4. Cargar Barberos
+    print(f"Cargando {len(barberos_data)} barberos...")
+    for b_data in barberos_data:
+        barbero = Barbero(
+            nombre=b_data['nombre'],
+            especialidad=b_data['especialidad'],
+            imagen_url=b_data['imagen_url']
+            # 'activo' es True por defecto
+        )
+        db.session.add(barbero)
+
+    # 5. Cargar Productos
+    print(f"Cargando {len(productos_data)} productos...")
+    for p_data in productos_data:
         producto = Producto(
-            nombre=p['nombre'],
-            descripcion=p['descripcion'],
-            precio=p['precio'],
-            imagen_url=p['imagen_url'],
-            categoria=p['categoria']
+            nombre=p_data['nombre'],
+            descripcion=p_data['descripcion'],
+            precio=p_data['precio'],
+            imagen_url=p_data['imagen_url'],
+            categoria=p_data['categoria']
         )
         db.session.add(producto)
-    
-    db.session.commit()
-    print("Datos de muestra agregados correctamente!")
-    print("Datos iniciales cargados correctamente")
+
+    # 6. Crear usuario administrador si no existe
+    admin_username = 'admin'
+    admin_email = 'admin@barberbrothers.com'
+    admin_password = 'admin123456' # ¡Cambia esto por una contraseña segura!
+
+    if User.query.filter_by(username=admin_username).first() is None:
+        print(f"Creando usuario administrador: {admin_username}")
+        admin_user = User(
+            username=admin_username, 
+            email=admin_email, 
+            role='admin' # Asegúrate que el rol coincide con tu lógica de autorización
+        )
+        admin_user.set_password(admin_password) # Hashea la contraseña
+        db.session.add(admin_user)
+    else:
+        print(f"Usuario administrador '{admin_username}' ya existe.")
+
+    # 7. Guardar todos los cambios en la base de datos
+    try:
+        db.session.commit()
+        print("\n¡Datos iniciales cargados y guardados correctamente!")
+    except Exception as e:
+        db.session.rollback() # Deshacer cambios si hay un error
+        print(f"\nError al guardar datos: {e}")

@@ -24,13 +24,15 @@ class Mensaje(db.Model):
     def __repr__(self):
         return f'<Mensaje {self.id}>'
 
+
 class Cita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
+    barbero_id = db.Column(db.Integer, db.ForeignKey('barbero.id'), nullable=True) # Añadido, puede ser nulo si no se asigna
     fecha = db.Column(db.DateTime, nullable=False)
     servicio = db.Column(db.String(100), nullable=False)
-    estado = db.Column(db.String(20), default='pendiente')
+    estado = db.Column(db.String(20), default='pendiente') # Ej: pendiente, confirmada, cancelada, completada
     creado = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def __repr__(self):
         return f'<Cita {self.id} - {self.servicio}>'
