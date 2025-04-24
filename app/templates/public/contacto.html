@@ -584,9 +584,10 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="/">Inicio</a></li>
-                    <li><a href="/productos">Productos</a></li>
-                    <li><a href="/contacto">Contacto</a></li>
+                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
+                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
                     <li class="cart-icon">
                         <a href="#" id="cart-button">
                             <i class="cart-symbol">🛒</i>

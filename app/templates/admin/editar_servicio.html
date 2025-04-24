@@ -1,0 +1,46 @@
+<!-- filepath: app/templates/admin/editar_servicio.html -->
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{# Mostrar mensajes flash #}
+{% include 'admin/_flash_messages.html' %}
+
+<section class="admin-form">
+    <form action="{{ url_for('admin.editar_servicio', id=servicio.id) }}" method="POST">
+        {{ form.hidden_tag() }}
+        {# Renderizar campos del formulario ServicioForm (igual que en servicios.html) #}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form.nombre.label(class="form-label") }}
+                {{ form.nombre(class="form-input") }}
+                {% for error in form.nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.precio.label(class="form-label") }}
+                {{ form.precio(class="form-input") }}
+                {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.duracion_estimada.label(class="form-label") }}
+                {{ form.duracion_estimada(class="form-input") }}
+                {% for error in form.duracion_estimada.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+                {{ form.descripcion.label(class="form-label") }}
+                {{ form.descripcion(class="form-input", rows=3) }}
+                {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+             <div class="form-group" style="display: flex; align-items: center;">
+                {{ form.activo(style="margin-right: 0.5rem;") }}
+                {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
+                {% for error in form.activo.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+        {{ form.submit(class="btn", value="Actualizar Servicio") }}
+        <a href="{{ url_for('admin.gestionar_servicios') }}" class="btn btn-secondary" style="margin-left: 1rem;">Cancelar</a>
+    </form>
+</section>
+{% endblock %}

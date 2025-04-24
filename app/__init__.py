@@ -78,3 +78,19 @@ def create_app(config_name='default'):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
     return app
+
+from flask import render_template, request # ... otros imports ...
+from app.public import bp
+from app.models import Producto, Cliente, Mensaje, Servicio # Añadir Servicio
+from app import db
+
+
+@bp.route('/servicios')
+def servicios():
+    # Obtener solo los servicios marcados como activos
+    servicios_activos = Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()
+    return render_template("public/servicios.html", 
+                           servicios=servicios_activos)
+
+# ... (resto de rutas públicas) ...
+

@@ -1,12 +1,17 @@
+<!-- filepath: app/templates/public/servicios.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbería - Productos</title>
+    <title>Nuestros Servicios - Barber Brothers</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    
+    {# --- INICIO: Reemplazo del bloque <style> --- #}
+    {# Se elimina el <link> al CSS externo y el <style> anterior #}
+    {# Se inserta el bloque <style> copiado de productos.html #}
     <style>
         :root {
             /* Fondos (negros con profundidad) */
@@ -177,24 +182,81 @@
             font-style: italic;
         }
 
-        .category {
+        /* Ajuste para servicios: usar un contenedor general */
+        .services-list-container, .category { /* Aplicar estilos base a ambos */
             padding: 2.5rem;
             margin: 2.5rem 1.5rem;
             background-color: var(--color-bg-light);
             box-shadow: var(--shadow-medium);
             border: 1px solid var(--color-border);
+            max-width: 900px; /* Limitar ancho como en servicios original */
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .category h2 {
-            font-family: 'Playfair Display', serif;
-            margin-bottom: 1.5rem;
+        /* Estilos específicos para la lista de servicios */
+        .service-item {
+            background-color: var(--color-bg-card);
+            border-radius: 3px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--color-border);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem; /* Espacio entre servicios */
+        }
+
+        .service-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .service-details { /* Contenedor para nombre y precio */
+             display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap; 
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--color-border);
             padding-bottom: 0.7rem;
-            border-bottom: 2px solid var(--color-accent);
-            color: var(--color-text-accent);
-            text-align: center;
-            letter-spacing: 1px;
         }
 
+        .service-item h3 { /* Nombre del servicio */
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem; /* Igual que product-title */
+            font-weight: bold;
+            color: var(--color-text-accent);
+            margin: 0; /* Quitar margen inferior */
+        }
+
+        .service-price {
+            font-size: 1.3rem; /* Igual que product-price */
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+        
+        .service-duration {
+            font-style: italic;
+            color: var(--color-text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .service-description {
+            font-size: 0.9rem; /* Igual que product-description */
+            color: var(--color-text-muted);
+            line-height: 1.6;
+            margin-bottom: 0; /* Quitar margen si no hay botón */
+        }
+        
+        .no-services { /* Mensaje si no hay servicios */
+             text-align: center;
+            color: var(--color-text-muted);
+            padding: 2rem;
+        }
+
+        /* Estilos de productos (mantener por si se usan clases comunes) */
         .products {
             display: flex;
             flex-wrap: wrap;
@@ -309,7 +371,8 @@
             bottom: 40px;
             right: 40px;
             background-color: var(--color-bg-light);
-            color: var (--color-text-accent);
+            /* Corrección: color debe ser una variable válida */
+            color: var(--color-text-accent); 
             border-radius: 50%;
             text-align: center;
             box-shadow: var(--shadow-soft);
@@ -533,18 +596,21 @@
             }
         }
     </style>
+    {# --- FIN: Reemplazo del bloque <style> --- #}
 </head>
 <body>
+    {# Incluye tu header público aquí (copia/pega o usa un include si lo tienes separado) #}
     <header>
         <div class="header-container">
             <div class="logo">
-                <img src="/static/logo.jpg" alt="Barbería Clásica">
+                {# Asegúrate que la ruta al logo sea correcta, puede ser estática #}
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Barber Brothers">
             </div>
             <nav>
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.servicios') }}" class="active">Servicios</a></li> 
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
                     <li class="cart-icon">
                         <a href="#" id="cart-button">
@@ -558,111 +624,51 @@
     </header>
 
     <div class="page-title">
-        <h1>Nuestros Productos</h1>
-        <p>La mejor selección para lucir impecable</p>
+        <h1>Nuestros Servicios</h1>
+        <p>Calidad y tradición en cada detalle</p>
     </div>
-    
-    <!-- Sección Productos para Peinar -->
-     {% if productos_peinar %}
-    <section class="category">
-        <h2>Productos para Peinar</h2>
-        <div class="products">
-            {% for producto in productos_peinar %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
-                </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">€{{ producto.precio }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
 
-    <!-- Sección Productos para Barba -->
-     {% if productos_barba %}
-    <section class="category">
-        <h2>Productos para Barba</h2>
-        <div class="products">
-            {% for producto in productos_barba %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
+    {# Usar la clase del contenedor general definida en los estilos copiados #}
+    <main class="services-list-container"> 
+        {% if servicios %}
+            {% for servicio in servicios %}
+            {# Usar la clase service-item definida en los estilos copiados #}
+            <div class="service-item"> 
+                <div class="service-details">
+                    <h3>{{ servicio.nombre }}</h3>
+                    <span class="service-price">€{{ servicio.precio }}</span>
                 </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">€{{ producto.precio }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
+                 {% if servicio.duracion_estimada %}
+                    <p class="service-duration">Duración: {{ servicio.duracion_estimada }}</p>
+                 {% endif %}
+                {% if servicio.descripcion %}
+                    <p class="service-description">{{ servicio.descripcion }}</p>
+                {% endif %}
             </div>
             {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+        {% else %}
+            <p class="no-services">Actualmente no hay servicios disponibles. Vuelve pronto.</p>
+        {% endif %}
+    </main>
 
-    <!-- Sección Accesorios -->
-     {% if productos_accesorios %}
-    <section class="category">
-        <h2>Accesorios</h2>
-        <div class="products">
-            {% for producto in productos_accesorios %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
-                </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">€{{ producto.precio }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    {# Incluye tu footer público aquí #}
     <footer>
-        <p>Barbería &copy; 2025</p>
+        <p>Barber Brothers &copy; 2025</p>
         <p>Calle Falsa 123 | Tel: 123456789</p>
     </footer>
-    
-    <!-- Botón flotante de WhatsApp -->
+
+    {# Botón flotante de WhatsApp (ya incluido en estilos copiados) #}
     <a href="https://wa.me/123456789" class="whatsapp-float" target="_blank">
         <i class="whatsapp-icon">💬</i>
     </a>
 
-    <!-- Panel del Carrito -->
+    {# Panel del Carrito (ya incluido en estilos copiados) #}
     <div class="cart-panel" id="cart-panel">
         <div class="cart-header">
             <h3>Tu Carrito</h3>
             <button class="close-cart" id="close-cart">&times;</button>
         </div>
         <div class="cart-items" id="cart-items">
-            <!-- Los productos se añadirán aquí dinámicamente -->
             <div class="empty-cart">Tu carrito está vacío</div>
         </div>
         <div class="cart-footer">
@@ -675,152 +681,10 @@
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elementos del DOM
-            const cartButton = document.getElementById('cart-button');
-            const cartPanel = document.getElementById('cart-panel');
-            const cartOverlay = document.getElementById('cart-overlay');
-            const closeCart = document.getElementById('close-cart');
-            const cartItems = document.getElementById('cart-items');
-            const cartCount = document.querySelector('.cart-count');
-            const cartTotal = document.getElementById('cart-total');
-            
-            // Carrito de compras
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            
-            // Actualizar contador del carrito
-            function updateCartCount() {
-                const count = cart.reduce((total, item) => total + item.quantity, 0);
-                cartCount.textContent = count;
-            }
-            
-            // Calcular total del carrito
-            function calculateTotal() {
-                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                cartTotal.textContent = `€${total.toFixed(2)}`;
-            }
-            
-            // Renderizar los productos en el carrito
-            function renderCart() {
-                if (cart.length === 0) {
-                    cartItems.innerHTML = '<div class="empty-cart">Tu carrito está vacío</div>';
-                    return;
-                }
-                
-                cartItems.innerHTML = cart.map(item => `
-                    <div class="cart-item" data-id="${item.id}">
-                        <img src="${item.image}" alt="${item.name}" class="cart-item-img">
-                        <div class="cart-item-details">
-                            <div class="cart-item-name">${item.name}</div>
-                            <div class="cart-item-price">€${item.price.toFixed(2)}</div>
-                            <div class="cart-item-quantity">
-                                <button class="quantity-btn decrease">-</button>
-                                <input type="text" class="quantity-input" value="${item.quantity}" readonly>
-                                <button class="quantity-btn increase">+</button>
-                            </div>
-                        </div>
-                        <button class="remove-item">&times;</button>
-                    </div>
-                `).join('');
-                
-                // Añadir event listeners para los botones de cantidad
-                document.querySelectorAll('.increase').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        const item = cart.find(item => item.id === id);
-                        item.quantity++;
-                        updateCart();
-                    });
-                });
-                
-                document.querySelectorAll('.decrease').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        const item = cart.find(item => item.id === id);
-                        if (item.quantity > 1) {
-                            item.quantity--;
-                            updateCart();
-                        }
-                    });
-                });
-                
-                document.querySelectorAll('.remove-item').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        cart = cart.filter(item => item.id !== id);
-                        updateCart();
-                    });
-                });
-            }
-            
-            // Actualizar el carrito y localStorage
-            function updateCart() {
-                localStorage.setItem('cart', JSON.stringify(cart));
-                renderCart();
-                updateCartCount();
-                calculateTotal();
-            }
-            
-            // Abrir/cerrar panel del carrito
-            cartButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                cartPanel.classList.add('open');
-                cartOverlay.classList.add('open');
-                renderCart();
-                calculateTotal();
-            });
-            
-            closeCart.addEventListener('click', function() {
-                cartPanel.classList.remove('open');
-                cartOverlay.classList.remove('open');
-            });
-            
-            cartOverlay.addEventListener('click', function() {
-                cartPanel.classList.remove('open');
-                cartOverlay.classList.remove('open');
-            });
-            
-            // Añadir productos al carrito
-            document.querySelectorAll('.add-to-cart').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    const name = this.dataset.name;
-                    const price = parseFloat(this.dataset.price);
-                    const image = this.dataset.image;
-                    
-                    // Comprobar si el producto ya está en el carrito
-                    const existingItem = cart.find(item => item.id === id);
-                    
-                    if (existingItem) {
-                        existingItem.quantity++;
-                    } else {
-                        cart.push({
-                            id,
-                            name,
-                            price,
-                            image,
-                            quantity: 1
-                        });
-                    }
-                    
-                    // Efecto visual de confirmación
-                    const originalText = this.textContent;
-                    this.textContent = '¡Añadido!';
-                    this.classList.add('added');
-                    
-                    setTimeout(() => {
-                        this.textContent = originalText;
-                        this.classList.remove('added');
-                    }, 1500);
-                    
-                    updateCart();
-                });
-            });
-            
-            // Inicializar contador del carrito al cargar la página
-            updateCartCount();
-        });
-    </script>
+    {# Incluye scripts públicos si los tienes (ej. para el carrito) #}
+    {# El script del carrito de productos.html podría necesitar ajustes si no aplica a servicios #}
+    {# <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script> #}
+    {# Si el script del carrito es específico de productos, considera moverlo a un archivo JS separado #}
+    {# y solo incluirlo en productos.html #}
 </body>
 </html>

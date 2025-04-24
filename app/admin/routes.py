@@ -2,9 +2,9 @@
 from flask import render_template, request, redirect, url_for, flash, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
-from app.models import Producto, Barbero, User, Mensaje # Importar modelos
+from app.models import Producto, Barbero, User, Mensaje, Servicio # Añadir Servicio
 from app import db
-from .forms import LoginForm, ProductoForm, BarberoForm # Importar formularios
+from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm # Añadir ServicioForm
 
 # --- Autenticación ---
 
@@ -130,40 +130,40 @@ def editar_producto(id):
     # Mostrar el formulario de edición
     return render_template('editar_producto.html', title="Editar Producto", form=form, producto=producto)
 
-# @bp.route('/productos/eliminar/<int:id>', methods=['POST']) # Usar POST para eliminar
-# @login_required
-# def eliminar_producto(id):
-#     if not current_user.is_admin():
-#         abort(403)
-#     producto = Producto.query.get_or_404(id)
-#     try:
-#         db.session.delete(producto)
-#         db.session.commit()
-#         flash('Producto eliminado correctamente.', 'success')
-#     except Exception as e:
-#         db.session.rollback()
-#         flash(f'Error al eliminar producto: {e}', 'danger')
-#     return redirect(url_for('admin.gestionar_productos'))
-
 @bp.route('/productos/eliminar/<int:id>', methods=['POST']) # Usar POST para eliminar
 @login_required
 def eliminar_producto(id):
     if not current_user.is_admin():
         abort(403)
     producto = Producto.query.get_or_404(id)
-    
-    # --- INICIO: Modificación Temporal para Depuración ---
-    # Comenta o elimina el try...except para ver el error real
-    # try:
-    db.session.delete(producto)
-    db.session.commit() # Si esto falla, ahora Flask mostrará el error completo
-    flash('Producto eliminado correctamente.', 'success')
-    # except Exception as e:
-    #     db.session.rollback()
-    #     flash(f'Error al eliminar producto: {e}', 'danger')
-    # --- FIN: Modificación Temporal ---
-        
+    try:
+        db.session.delete(producto)
+        db.session.commit()
+        flash('Producto eliminado correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar producto: {e}', 'danger')
     return redirect(url_for('admin.gestionar_productos'))
+
+# @bp.route('/productos/eliminar/<int:id>', methods=['POST']) # Usar POST para eliminar
+# @login_required
+# def eliminar_producto(id):
+#     if not current_user.is_admin():
+#         abort(403)
+#     producto = Producto.query.get_or_404(id)
+    
+#     # --- INICIO: Modificación Temporal para Depuración ---
+#     # Comenta o elimina el try...except para ver el error real
+#     # try:
+#     db.session.delete(producto)
+#     db.session.commit() # Si esto falla, ahora Flask mostrará el error completo
+#     flash('Producto eliminado correctamente.', 'success')
+#     # except Exception as e:
+#     #     db.session.rollback()
+#     #     flash(f'Error al eliminar producto: {e}', 'danger')
+#     # --- FIN: Modificación Temporal ---
+        
+#     return redirect(url_for('admin.gestionar_productos'))
 
 
 # --- Gestión de Barberos (CRUD) ---
@@ -224,3 +224,79 @@ def eliminar_barbero(id):
         db.session.rollback()
         flash(f'Error al eliminar barbero: {e}', 'danger')
     return redirect(url_for('admin.gestionar_barberos'))
+
+# --- Gestión de Servicios (CRUD) ---
+
+@bp.route('/servicios', methods=['GET', 'POST'])
+@login_required
+def gestionar_servicios():
+    if not current_user.is_admin():
+        abort(403)
+    
+    form = ServicioForm()
+    if form.validate_on_submit():
+        # Lógica para Añadir
+        nuevo_servicio = Servicio(
+            nombre=form.nombre.data,
+            descripcion=form.descripcion.data,
+            precio=form.precio.data,
+            duracion_estimada=form.duracion_estimada.data,
+            activo=form.activo.data
+        )
+        db.session.add(nuevo_servicio)
+        try:
+            db.session.commit()
+            flash('Servicio añadido correctamente.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al añadir servicio: {e}', 'danger')
+        return redirect(url_for('admin.gestionar_servicios')) # Redirigir siempre tras POST exitoso
+
+    # Lógica para Mostrar (GET)
+    servicios_lista = Servicio.query.order_by(Servicio.nombre).all()
+    return render_template("admin/servicios.html", 
+                           title="Gestionar Servicios", 
+                           servicios=servicios_lista, 
+                           form=form)
+
+@bp.route('/servicios/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_servicio(id):
+    if not current_user.is_admin():
+        abort(403)
+    servicio = Servicio.query.get_or_404(id)
+    # Pasar obj=servicio en GET para pre-rellenar, no en POST
+    form = ServicioForm(obj=servicio if request.method == 'GET' else None) 
+
+    if form.validate_on_submit():
+        # Actualizar los campos del objeto servicio existente
+        form.populate_obj(servicio) 
+        try:
+            db.session.commit()
+            flash('Servicio actualizado correctamente.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar servicio: {e}', 'danger')
+        return redirect(url_for('admin.gestionar_servicios'))
+
+    # Mostrar el formulario de edición (en GET o si POST falla validación)
+    return render_template('admin/editar_servicio.html', 
+                           title="Editar Servicio", 
+                           form=form, 
+                           servicio=servicio)
+
+@bp.route('/servicios/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_servicio(id):
+    if not current_user.is_admin():
+        abort(403)
+    servicio = Servicio.query.get_or_404(id)
+    try:
+        db.session.delete(servicio)
+        db.session.commit()
+        flash('Servicio eliminado correctamente.', 'success')
+    except Exception as e:
+        # Podría fallar si hay dependencias futuras (ej. citas asociadas)
+        db.session.rollback()
+        flash(f'Error al eliminar servicio: {e}', 'danger')
+    return redirect(url_for('admin.gestionar_servicios'))
