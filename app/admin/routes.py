@@ -5,6 +5,7 @@ from app.admin import bp
 from app.models import Producto, Barbero, User, Mensaje, Servicio # Añadir Servicio
 from app import db
 from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm # Añadir ServicioForm
+from app.admin.utils import save_image # Asegúrate de que esta función existe y está bien implementada
 
 # --- Autenticación ---
 
@@ -83,52 +84,84 @@ def gestionar_productos():
         abort(403)
         
     form = ProductoForm()
-    if form.validate_on_submit(): # Procesa el formulario de añadir/editar
-        # Determinar si es una edición (si se envía un ID oculto, por ejemplo)
-        # O manejar la edición en una ruta separada (recomendado)
-        # --- Lógica para Añadir ---
+    if form.validate_on_submit():
         nuevo_producto = Producto(
             nombre=form.nombre.data,
             descripcion=form.descripcion.data,
             precio=form.precio.data,
-            imagen_url=form.imagen_url.data,
             categoria=form.categoria.data
         )
+        
+        # Procesar la imagen cargada o la URL
+        if form.imagen_file.data:
+            imagen_path = save_image(form.imagen_file.data, 'productos')
+            if imagen_path:
+                nuevo_producto.imagen_url = imagen_path
+        elif form.imagen_url.data:
+            nuevo_producto.imagen_url = form.imagen_url.data
+        
         db.session.add(nuevo_producto)
         try:
             db.session.commit()
             flash('Producto añadido correctamente.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al añadir producto: {e}', 'danger')
-        return redirect(url_for('admin.gestionar_productos')) # Redirigir para evitar reenvío de formulario
-
-    # --- Lógica para Mostrar (GET) ---
+            flash(f'Error al añadir producto: {str(e)}', 'danger')
+        return redirect(url_for('admin.gestionar_productos'))
+    
     productos_lista = Producto.query.order_by(Producto.creado.desc()).all()
-    # Pasar el formulario vacío para el 'modal' o sección de añadir
-    return render_template("admin/productos.html", title="Gestionar Productos", productos=productos_lista, form=form)
-
+    return render_template("admin/productos.html", 
+                           title="Gestionar Productos", 
+                           productos=productos_lista, 
+                           form=form)
 @bp.route('/productos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
     if not current_user.is_admin():
         abort(403)
     producto = Producto.query.get_or_404(id)
-    form = ProductoForm(obj=producto) # Pre-rellenar formulario con datos del producto
+    form = ProductoForm(obj=producto if request.method == 'GET' else None)
 
     if form.validate_on_submit():
-        # Actualizar los campos del objeto producto existente
-        form.populate_obj(producto) 
+        # Actualizar datos de texto
+        producto.nombre = form.nombre.data
+        producto.descripcion = form.descripcion.data
+        producto.precio = form.precio.data
+        producto.categoria = form.categoria.data
+        
+        # Procesar imagen
+        if form.imagen_file.data:
+            # Si se sube un nuevo archivo, guardarlo y actualizar la URL
+            imagen_path = save_image(form.imagen_file.data, 'productos')
+            if imagen_path:
+                producto.imagen_url = imagen_path
+        elif form.imagen_url.data and form.imagen_url.data != producto.imagen_url:
+            # Si la URL es diferente a la actual, actualizarla
+            producto.imagen_url = form.imagen_url.data
+        
+        # Si ninguno de los campos está completo, se mantiene la imagen actual
+        
         try:
             db.session.commit()
             flash('Producto actualizado correctamente.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al actualizar producto: {e}', 'danger')
+            flash(f'Error al actualizar producto: {str(e)}', 'danger')
         return redirect(url_for('admin.gestionar_productos'))
 
-    # Mostrar el formulario de edición
-    return render_template('editar_producto.html', title="Editar Producto", form=form, producto=producto)
+    # Para GET, prellenar el formulario
+    if request.method == 'GET':
+        form.nombre.data = producto.nombre
+        form.descripcion.data = producto.descripcion
+        form.precio.data = producto.precio
+        form.categoria.data = producto.categoria
+        form.imagen_url.data = producto.imagen_url
+        # No prellenamos imagen_file porque es un campo de carga
+
+    return render_template('admin/editar_producto.html', 
+                           title="Editar Producto", 
+                           form=form, 
+                           producto=producto)
 
 @bp.route('/productos/eliminar/<int:id>', methods=['POST']) # Usar POST para eliminar
 @login_required
@@ -168,6 +201,7 @@ def eliminar_producto(id):
 
 # --- Gestión de Barberos (CRUD) ---
 
+
 @bp.route('/barberos', methods=['GET', 'POST'])
 @login_required
 def gestionar_barberos():
@@ -176,19 +210,35 @@ def gestionar_barberos():
         
     form = BarberoForm()
     if form.validate_on_submit():
-        nuevo_barbero = Barbero()
-        form.populate_obj(nuevo_barbero) # Rellena el objeto desde el form
+        nuevo_barbero = Barbero(
+            nombre=form.nombre.data,
+            especialidad=form.especialidad.data,
+            descripcion=form.descripcion.data,
+            activo=form.activo.data if hasattr(form, 'activo') else True
+        )
+        
+        # Procesar la imagen cargada o la URL
+        if form.imagen_file.data:
+            imagen_path = save_image(form.imagen_file.data, 'barberos')
+            if imagen_path:
+                nuevo_barbero.imagen_url = imagen_path
+        elif form.imagen_url.data:
+            nuevo_barbero.imagen_url = form.imagen_url.data
+        
         db.session.add(nuevo_barbero)
         try:
             db.session.commit()
             flash('Barbero añadido correctamente.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al añadir barbero: {e}', 'danger')
+            flash(f'Error al añadir barbero: {str(e)}', 'danger')
         return redirect(url_for('admin.gestionar_barberos'))
 
     barberos_lista = Barbero.query.order_by(Barbero.nombre).all()
-    return render_template("barberos.html", title="Gestionar Barberos", barberos=barberos_lista, form=form)
+    return render_template("admin/barberos.html", 
+                           title="Gestionar Barberos", 
+                           barberos=barberos_lista, 
+                           form=form)
 
 @bp.route('/barberos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -196,19 +246,42 @@ def editar_barbero(id):
     if not current_user.is_admin():
         abort(403)
     barbero = Barbero.query.get_or_404(id)
-    form = BarberoForm(obj=barbero)
+    form = BarberoForm(obj=barbero if request.method == 'GET' else None)
 
     if form.validate_on_submit():
-        form.populate_obj(barbero)
+        # Actualizar datos de texto
+        barbero.nombre = form.nombre.data
+        barbero.especialidad = form.especialidad.data
+        barbero.descripcion = form.descripcion.data
+        if hasattr(form, 'activo'):
+            barbero.activo = form.activo.data
+        
+        # Procesar imagen
+        if form.imagen_file.data:
+            # Si se sube un nuevo archivo, guardarlo y actualizar la URL
+            imagen_path = save_image(form.imagen_file.data, 'barberos')
+            if imagen_path:
+                barbero.imagen_url = imagen_path
+        elif form.imagen_url.data and form.imagen_url.data != barbero.imagen_url:
+            # Si la URL es diferente a la actual, actualizarla
+            barbero.imagen_url = form.imagen_url.data
+        
+        # Si ninguno de los campos está completo, se mantiene la imagen actual
+        
         try:
             db.session.commit()
             flash('Barbero actualizado correctamente.', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al actualizar barbero: {e}', 'danger')
+            flash(f'Error al actualizar barbero: {str(e)}', 'danger')
         return redirect(url_for('admin.gestionar_barberos'))
 
-    return render_template('editar_barbero.html', title="Editar Barbero", form=form, barbero=barbero)
+    # Para GET, ya está prellenado con obj=barbero
+
+    return render_template('admin/editar_barbero.html', 
+                           title="Editar Barbero", 
+                           form=form, 
+                           barbero=barbero)
 
 @bp.route('/barberos/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -235,7 +308,7 @@ def gestionar_servicios():
     
     form = ServicioForm()
     if form.validate_on_submit():
-        # Lógica para Añadir
+        # Crear objeto servicio
         nuevo_servicio = Servicio(
             nombre=form.nombre.data,
             descripcion=form.descripcion.data,
@@ -243,6 +316,15 @@ def gestionar_servicios():
             duracion_estimada=form.duracion_estimada.data,
             activo=form.activo.data
         )
+        
+        # Procesar la imagen cargada o la URL
+        if form.imagen_file.data:
+            imagen_path = save_image(form.imagen_file.data, 'servicios')
+            if imagen_path:
+                nuevo_servicio.imagen_url = imagen_path
+        elif form.imagen_url.data:
+            nuevo_servicio.imagen_url = form.imagen_url.data
+            
         db.session.add(nuevo_servicio)
         try:
             db.session.commit()
@@ -250,7 +332,7 @@ def gestionar_servicios():
         except Exception as e:
             db.session.rollback()
             flash(f'Error al añadir servicio: {e}', 'danger')
-        return redirect(url_for('admin.gestionar_servicios')) # Redirigir siempre tras POST exitoso
+        return redirect(url_for('admin.gestionar_servicios'))
 
     # Lógica para Mostrar (GET)
     servicios_lista = Servicio.query.order_by(Servicio.nombre).all()
@@ -265,12 +347,28 @@ def editar_servicio(id):
     if not current_user.is_admin():
         abort(403)
     servicio = Servicio.query.get_or_404(id)
-    # Pasar obj=servicio en GET para pre-rellenar, no en POST
-    form = ServicioForm(obj=servicio if request.method == 'GET' else None) 
+    form = ServicioForm(obj=servicio if request.method == 'GET' else None)
 
     if form.validate_on_submit():
-        # Actualizar los campos del objeto servicio existente
-        form.populate_obj(servicio) 
+        # Actualizar datos de texto
+        servicio.nombre = form.nombre.data
+        servicio.descripcion = form.descripcion.data
+        servicio.precio = form.precio.data
+        servicio.duracion_estimada = form.duracion_estimada.data
+        servicio.activo = form.activo.data
+        
+        # Procesar imagen
+        if form.imagen_file.data:
+            # Si se sube un nuevo archivo, guardarlo y actualizar la URL
+            imagen_path = save_image(form.imagen_file.data, 'servicios')
+            if imagen_path:
+                servicio.imagen_url = imagen_path
+        elif form.imagen_url.data and form.imagen_url.data != servicio.imagen_url:
+            # Si la URL es diferente a la actual, actualizarla
+            servicio.imagen_url = form.imagen_url.data
+        
+        # Si ninguno de los campos está completo, se mantiene la imagen actual
+        
         try:
             db.session.commit()
             flash('Servicio actualizado correctamente.', 'success')
@@ -279,7 +377,8 @@ def editar_servicio(id):
             flash(f'Error al actualizar servicio: {e}', 'danger')
         return redirect(url_for('admin.gestionar_servicios'))
 
-    # Mostrar el formulario de edición (en GET o si POST falla validación)
+    # Para GET, ya está prellenado con obj=servicio
+
     return render_template('admin/editar_servicio.html', 
                            title="Editar Servicio", 
                            form=form, 

@@ -59,7 +59,7 @@
                             <p class="service-description">{{ servicio.descripcion }}</p>
                             
                             <!-- Display service price from database (format as needed) -->
-                            <div class="service-price">€{{ "%.2f"|format(servicio.precio) }}</div> 
+                            <div class="service-price">{{ servicio.precio |cop_format }}</div> 
                             
                         </div>
                         {% endfor %}

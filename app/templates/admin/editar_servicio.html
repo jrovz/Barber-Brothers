@@ -1,4 +1,3 @@
-<!-- filepath: app/templates/admin/editar_servicio.html -->
 {% extends "admin/admin_base.html" %}
 {% block content %}
 <div class="panel-header">
@@ -6,12 +5,20 @@
 </div>
 
 {# Mostrar mensajes flash #}
-{% include 'admin/_flash_messages.html' %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 
 <section class="admin-form">
-    <form action="{{ url_for('admin.editar_servicio', id=servicio.id) }}" method="POST">
+    <!-- Añadir enctype para permitir carga de archivos -->
+    <form action="{{ url_for('admin.editar_servicio', id=servicio.id) }}" method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        {# Renderizar campos del formulario ServicioForm (igual que en servicios.html) #}
         <div class="form-grid">
             <div class="form-group">
                 {{ form.nombre.label(class="form-label") }}
@@ -20,7 +27,7 @@
             </div>
             <div class="form-group">
                 {{ form.precio.label(class="form-label") }}
-                {{ form.precio(class="form-input") }}
+                {{ form.precio(class="form-input", step="1") }}
                 {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
@@ -28,19 +35,80 @@
                 {{ form.duracion_estimada(class="form-input") }}
                 {% for error in form.duracion_estimada.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
-            <div class="form-group" style="grid-column: 1 / -1;">
-                {{ form.descripcion.label(class="form-label") }}
-                {{ form.descripcion(class="form-input", rows=3) }}
-                {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            
+            <!-- Imagen actual -->
+            <div class="form-group">
+                <label class="form-label">Imagen Actual:</label>
+                <div>
+                    {% if servicio.imagen_url %}
+                    <img src="{{ servicio.imagen_url }}" alt="{{ servicio.nombre }}" style="max-width: 100px; max-height: 100px; margin-bottom: 10px;">
+                    {% else %}
+                    <p>Sin imagen</p>
+                    {% endif %}
+                </div>
             </div>
-             <div class="form-group" style="display: flex; align-items: center;">
+            
+            <!-- Campos de imagen -->
+            <div class="form-group">
+                {{ form.imagen_url.label(class="form-label") }}
+                {{ form.imagen_url(class="form-input") }}
+                {% for error in form.imagen_url.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small class="form-text text-muted">Dejar vacío para mantener la imagen actual</small>
+            </div>
+            
+            <!-- Nuevo campo para subir archivo -->
+            <div class="form-group">
+                {{ form.imagen_file.label(class="form-label") }}
+                {{ form.imagen_file(class="form-input", id="imagen_file") }}
+                {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small class="form-text text-muted">Si subes una nueva imagen, reemplazará la actual</small>
+                <div id="imagen_preview" style="display: none;"></div>
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: center;">
                 {{ form.activo(style="margin-right: 0.5rem;") }}
                 {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
                 {% for error in form.activo.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
         </div>
+        
+        <div class="form-group">
+            {{ form.descripcion.label(class="form-label") }}
+            {{ form.descripcion(class="form-input", rows=3) }}
+            {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+        
         {{ form.submit(class="btn", value="Actualizar Servicio") }}
-        <a href="{{ url_for('admin.gestionar_servicios') }}" class="btn btn-secondary" style="margin-left: 1rem;">Cancelar</a>
+        <a href="{{ url_for('admin.gestionar_servicios') }}" class="btn btn-secondary" style="margin-left: 1rem; background-color: var(--color-text-muted); color: var(--color-bg-dark);">Cancelar</a>
     </form>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('imagen_file');
+    const preview = document.getElementById('imagen_preview');
+    
+    if (input && preview) {
+        input.addEventListener('change', function() {
+            preview.innerHTML = '';
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '100px';
+                    img.style.maxHeight = '100px';
+                    img.style.marginTop = '10px';
+                    preview.appendChild(img);
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+                preview.style.display = 'block';
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

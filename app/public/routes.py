@@ -47,13 +47,29 @@ def contact():
 
 @bp.route('/productos')
 def productos():
-    # Obtener productos y agruparlos por categoría
-    productos_peinar = Producto.query.filter_by(categoria='peinar').all()
-    productos_barba = Producto.query.filter_by(categoria='barba').all()
-    productos_accesorios = Producto.query.filter_by(categoria='accesorios').all()
+    """Página de productos agrupados por categoría."""
+    
+    # Consultar productos activos y agruparlos por categoría
+    productos_peinar = Producto.query.filter_by(
+        categoria='peinar', 
+        activo=True
+    ).order_by(Producto.nombre).all()
+    
+    productos_barba = Producto.query.filter_by(
+        categoria='barba', 
+        activo=True
+    ).order_by(Producto.nombre).all()
+    
+    productos_accesorios = Producto.query.filter_by(
+        categoria='accesorios', 
+        activo=True
+    ).order_by(Producto.nombre).all()
+    
+    # También obtener todos los productos si se necesita
+    # todos_productos = Producto.query.filter_by(activo=True).order_by(Producto.nombre).all()
     
     return render_template(
-        "productos.html", 
+        'public/productos.html',
         productos_peinar=productos_peinar,
         productos_barba=productos_barba,
         productos_accesorios=productos_accesorios
@@ -68,14 +84,9 @@ def checkout():
 
 @bp.route('/servicios')
 def servicios():
-    """Renders the services page, fetching services from the database."""
-    try:
-        # Query all services from the database
-        # You might want to add ordering, e.g., .order_by(Servicio.nombre)
-        lista_servicios = Servicio.query.all()
-    except Exception as e:
-        # Handle potential database errors gracefully
-        print(f"Error fetching services: {e}")
-        lista_servicios = [] # Pass an empty list if there's an error
+    # Obtener solo los servicios marcados como activos
+    servicios_activos = Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()
+    return render_template("public/servicios.html", 
+                           servicios=servicios_activos)
 
-    return render_template("public/servicios.html", servicios=lista_servicios)
+# ... (resto de rutas públicas) ...

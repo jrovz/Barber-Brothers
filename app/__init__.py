@@ -55,8 +55,22 @@ def create_app(config_name='default'):
         # Descomenta las líneas pop si sabes que estos encabezados se están añadiendo y quieres forzar su eliminación.
 
         # Devuelve el objeto response modificado
+        
+
         return response
-    
+    #Filtro de formato moneda COP
+    @app.template_filter('cop_format')
+    def cop_format(value):
+        """Formatea un número como precio en pesos colombianos"""
+        if value is None:
+            return "COP 0"
+        try:
+            value = float(value)
+            # Formato colombiano: con punto para miles y sin decimales
+            return f"COP {value:,.0f}".replace(",", ".")
+        except (ValueError, TypeError):
+            return "COP 0"
+        
     # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])

@@ -2,13 +2,14 @@ from app import db
 from datetime import datetime
 
 class Producto(db.Model):
+    __tablename__ = 'productos'
+    
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text)
+    descripcion = db.Column(db.Text, nullable=True)
     precio = db.Column(db.Float, nullable=False)
-    imagen_url = db.Column(db.String(255))
-    categoria = db.Column(db.String(50), default='peinar')
+    categoria = db.Column(db.String(50), nullable=True)
+    imagen_url = db.Column(db.String(255), nullable=True)
+    activo = db.Column(db.Boolean, default=True)
     creado = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Producto {self.nombre}>'
+    actualizado = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

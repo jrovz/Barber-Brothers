@@ -19,9 +19,11 @@
 <!-- Formulario para añadir productos (usando WTForms) -->
 <section class="admin-form">
     <h2 class="form-title">Añadir Nuevo Producto</h2>
-    <form action="{{ url_for('admin.gestionar_productos') }}" method="POST">
+    <!-- Es crucial añadir enctype="multipart/form-data" para permitir la carga de archivos -->
+    <form action="{{ url_for('admin.gestionar_productos') }}" method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="form-grid">
+            <!-- Sección de nombre, precio y categoría -->
             <div class="form-group">
                 {{ form.nombre.label(class="form-label") }}
                 {{ form.nombre(class="form-input") }}
@@ -29,7 +31,7 @@
             </div>
             <div class="form-group">
                 {{ form.precio.label(class="form-label") }}
-                {{ form.precio(class="form-input", step="0.01") }}
+                {{ form.precio(class="form-input", step="1") }}
                 {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
@@ -37,12 +39,22 @@
                 {{ form.categoria(class="form-input") }}
                 {% for error in form.categoria.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
+            
+            <!-- Sección de imagen actualizada -->
             <div class="form-group">
                 {{ form.imagen_url.label(class="form-label") }}
                 {{ form.imagen_url(class="form-input") }}
                 {% for error in form.imagen_url.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                
+            </div>
+            
+            <div class="form-group">
+                {{ form.imagen_file.label(class="form-label") }}
+                {{ form.imagen_file(class="form-input") }}
+                {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
         </div>
+        
         <div class="form-group">
             {{ form.descripcion.label(class="form-label") }}
             {{ form.descripcion(class="form-input", rows=3) }}
@@ -74,7 +86,7 @@
                     <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
                 </td>
                 <td>{{ producto.nombre }}</td>
-                <td>€{{ "%.2f"|format(producto.precio) }}</td>
+                <td>{{ producto.precio|cop_format }}</td>
                 <td>{{ producto.categoria|capitalize }}</td>
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
@@ -93,4 +105,48 @@
         </tbody>
     </table>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Función para mostrar vista previa de imagen
+        function setupImagePreview(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            
+            if (!input || !preview) return;
+            
+            input.addEventListener('change', function(event) {
+                preview.innerHTML = '';
+                
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100px';
+                        img.style.maxHeight = '100px';
+                        img.style.marginTop = '10px';
+                        preview.appendChild(img);
+                    }
+                    
+                    reader.readAsDataURL(input.files[0]);
+                    preview.style.display = 'block';
+                }
+            });
+        }
+        
+        // Inicializar las vistas previas
+        setupImagePreview('imagen_file', 'imagen_preview');
+    });
+    </script>
+    
+    <!-- Añadir un div para la vista previa después del campo de carga de imagen -->
+    <div class="form-group">
+        {{ form.imagen_file.label(class="form-label") }}
+        {{ form.imagen_file(class="form-input", id="imagen_file") }}
+        {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        <div id="imagen_preview" style="display: none;"></div>
+    </div>
+
 {% endblock %}
