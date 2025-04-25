@@ -8,609 +8,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    
-    {# --- INICIO: Reemplazo del bloque <style> --- #}
-    {# Se elimina el <link> al CSS externo y el <style> anterior #}
-    {# Se inserta el bloque <style> copiado de productos.html #}
-    <style>
-        :root {
-            /* Fondos (negros con profundidad) */
-            --color-bg-main: #0a0908; /* Negro profundo con un toque cálido */
-            --color-bg-dark: #040404; /* Negro casi absoluto para áreas de máximo contraste */
-            --color-bg-medium: #121111; /* Negro intermedio con un toque de calidez */
-            --color-bg-light: #1c1a19; /* Negro suavizado para áreas secundarias */
-            --color-bg-card: #15130f; /* Negro con matiz vintage para elementos destacados */
-            
-            /* Tipografía (tonos crema y marfil) */
-            --color-text-primary: #f5f0e6; /* Marfil suave para textos principales */
-            --color-text-secondary: #e3d9c6; /* Crema cálido para textos secundarios */
-            --color-text-muted: #c4b9a2; /* Tono beige apagado para textos menos importantes */
-            --color-text-accent: #d2b883; /* Dorado antiguo suave para acentos textuales */
-            
-            /* Acentos y bordes (tonos dorados antiguo) */
-            --color-border: #302c25; /* Borde sutil con toque sépia */
-            --color-accent: #b39656; /* Dorado antiguo para elementos interactivos */
-            --color-accent-hover: #c9aa6b; /* Dorado cálido para estados hover */
-            
-            /* Sombras (con toque vintage) */
-            --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(179, 150, 86, 0.15);
-            --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(179, 150, 86, 0.2);
-        }
-
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: var(--color-bg-main);
-            color: var(--color-text-primary);
-            font-family: 'Lora', serif;
-            line-height: 1.6;
-        }
-        
-        header {
-            background-color: var(--color-bg-dark);
-            color: var(--color-text-accent);
-            padding: 1rem;
-            border-bottom: 1px solid var(--color-border);
-        }
-        
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            text-align: left;
-        }
-        
-        .logo h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            margin-bottom: 0;
-        }
-        
-        .logo .tagline {
-            color: var(--color-text-muted);
-            font-style: italic;
-            font-size: 0.9rem;
-            margin-top: 0.2rem;
-        }
-        
-        .logo img {
-            height: 90px; /* Aumentado de 60px a 90px */
-            width: auto;
-            display: block;
-        }
-        
-        header nav {
-            background-color: transparent;
-            padding: 0;
-            border-bottom: none;
-        }
-        
-        header nav ul {
-            display: flex;
-            justify-content: flex-end;
-            list-style: none;
-        }
-        
-        header nav ul li {
-            margin: 0 0 0 1.5rem;
-        }
-        
-        header nav ul li a {
-            color: var(--color-accent);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: color 0.3s;
-            padding: 0.5rem 0;
-            position: relative;
-        }
-        
-        header nav ul li a::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 0;
-            height: 2px;
-            background-color: var(--color-accent);
-            transition: width 0.3s;
-        }
-        
-        header nav ul li a:hover {
-            color: var(--color-accent-hover);
-        }
-        
-        header nav ul li a:hover::after {
-            width: 100%;
-        }
-        
-        /* Estilos responsivos para pantallas pequeñas */
-        @media (max-width: 768px) {
-            .header-container {
-                flex-direction: column;
-            }
-            
-            .logo {
-                text-align: center;
-                margin-bottom: 1rem;
-            }
-            
-            header nav ul {
-                justify-content: center;
-            }
-            
-            header nav ul li {
-                margin: 0 0.75rem;
-            }
-
-            .logo img {
-                margin: 0 auto;
-                max-height: 70px; /* Aumentado de 50px a 70px */
-            }
-        }
-
-        .page-title {
-            text-align: center;
-            padding: 3rem 0;
-            background-color: var(--color-bg-light);
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .page-title h1 {
-            font-family: 'Playfair Display', serif;
-            color: var(--color-text-accent);
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .page-title p {
-            color: var(--color-text-muted);
-            font-size: 1rem;
-            font-style: italic;
-        }
-
-        /* Ajuste para servicios: usar un contenedor general */
-        .services-list-container, .category { /* Aplicar estilos base a ambos */
-            padding: 2.5rem;
-            margin: 2.5rem 1.5rem;
-            background-color: var(--color-bg-light);
-            box-shadow: var(--shadow-medium);
-            border: 1px solid var(--color-border);
-            max-width: 900px; /* Limitar ancho como en servicios original */
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Estilos específicos para la lista de servicios */
-        .service-item {
-            background-color: var(--color-bg-card);
-            border-radius: 3px;
-            overflow: hidden;
-            box-shadow: var(--shadow-soft);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid var(--color-border);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem; /* Espacio entre servicios */
-        }
-
-        .service-item:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-medium);
-        }
-
-        .service-details { /* Contenedor para nombre y precio */
-             display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 0.8rem;
-            flex-wrap: wrap; 
-            gap: 0.5rem;
-            border-bottom: 1px solid var(--color-border);
-            padding-bottom: 0.7rem;
-        }
-
-        .service-item h3 { /* Nombre del servicio */
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem; /* Igual que product-title */
-            font-weight: bold;
-            color: var(--color-text-accent);
-            margin: 0; /* Quitar margen inferior */
-        }
-
-        .service-price {
-            font-size: 1.3rem; /* Igual que product-price */
-            color: var(--color-text-secondary);
-            font-weight: 500;
-        }
-        
-        .service-duration {
-            font-style: italic;
-            color: var(--color-text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-
-        .service-description {
-            font-size: 0.9rem; /* Igual que product-description */
-            color: var(--color-text-muted);
-            line-height: 1.6;
-            margin-bottom: 0; /* Quitar margen si no hay botón */
-        }
-        
-        .no-services { /* Mensaje si no hay servicios */
-             text-align: center;
-            color: var(--color-text-muted);
-            padding: 2rem;
-        }
-
-        /* Estilos de productos (mantener por si se usan clases comunes) */
-        .products {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2.5rem;
-            justify-content: center;
-        }
-
-        .product {
-            width: 280px;
-            background-color: var(--color-bg-card);
-            border-radius: 3px;
-            overflow: hidden;
-            box-shadow: var(--shadow-soft);
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid var(--color-border);
-        }
-
-        .product:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-medium);
-        }
-
-        .product-img {
-            height: 220px;
-            background-color: #191714;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .product-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.9;
-            transition: opacity 0.3s;
-        }
-
-        .product:hover .product-img img {
-            opacity: 1;
-        }
-
-        .product-info {
-            padding: 1.5rem;
-        }
-
-        .product-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 0.7rem;
-            color: var(--color-text-accent);
-            border-bottom: 1px solid var(--color-border);
-            padding-bottom: 0.5rem;
-        }
-
-        .product-price {
-            font-size: 1.3rem;
-            color: var(--color-text-secondary);
-            margin-bottom: 1rem;
-            font-weight: 500;
-        }
-
-        .product-description {
-            font-size: 0.9rem;
-            color: var(--color-text-muted);
-            margin-bottom: 1.3rem;
-            line-height: 1.6;
-        }
-
-        .buy-button {
-            display: block;
-            width: 100%;
-            padding: 0.9rem;
-            background-color: var(--color-accent);
-            color: var(--color-text-primary);
-            text-align: center;
-            border: none;
-            border-radius: 2px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-family: 'Lora', serif;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-        }
-
-        .buy-button:hover {
-            background-color: var(--color-accent-hover);
-        }
-
-        footer {
-            background-color: var(--color-bg-dark);
-            color: var(--color-text-muted);
-            text-align: center;
-            padding: 1.5rem;
-            margin-top: 3rem;
-            border-top: 1px solid var(--color-border);
-        }
-
-        footer p {
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .whatsapp-float {
-            position: fixed;
-            width: 55px;
-            height: 55px;
-            bottom: 40px;
-            right: 40px;
-            background-color: var(--color-bg-light);
-            /* Corrección: color debe ser una variable válida */
-            color: var(--color-text-accent); 
-            border-radius: 50%;
-            text-align: center;
-            box-shadow: var(--shadow-soft);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s;
-            border: 1px solid var(--color-border);
-        }
-
-        .whatsapp-icon {
-            font-style: normal;
-        }
-
-        .whatsapp-float:hover {
-            background-color: var(--color-bg-card);
-            transform: scale(1.05);
-        }
-
-        /* Estilos para el botón de carrito en la navegación */
-        .cart-icon {
-            position: relative;
-            margin-left: 1.5rem;
-        }
-
-        .cart-symbol {
-            font-size: 1.2rem;
-            color: var(--color-accent);
-        }
-
-        .cart-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: var(--color-accent);
-            color: white;
-            font-size: 0.7rem;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        /* Estilos para el panel del carrito */
-        .cart-panel {
-            position: fixed;
-            top: 0;
-            right: -350px; /* Inicialmente oculto */
-            width: 350px;
-            height: 100vh;
-            background-color: var(--color-bg-main);
-            border-left: 1px solid var(--color-border);
-            transition: right 0.3s ease-in-out;
-            z-index: 1000;
-            box-shadow: var(--shadow-medium);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-panel.open {
-            right: 0; /* Mostrar panel */
-        }
-
-        .cart-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s;
-        }
-
-        .cart-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .cart-header {
-            padding: 1rem;
-            border-bottom: 1px solid var(--color-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cart-header h3 {
-            font-family: 'Playfair Display', serif;
-            color: var(--color-text-accent);
-            margin: 0;
-        }
-
-        .close-cart {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--color-text-primary);
-            cursor: pointer;
-        }
-
-        .cart-items {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-
-        .empty-cart {
-            text-align: center;
-            color: var(--color-text-muted);
-            padding: 2rem 0;
-        }
-
-        .cart-item {
-            display: flex;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .cart-item-img {
-            width: 70px;
-            height: 70px;
-            object-fit: cover;
-            border-radius: 3px;
-            border: 1px solid var(--color-border);
-        }
-
-        .cart-item-details {
-            margin-left: 1rem;
-            flex: 1;
-        }
-
-        .cart-item-name {
-            font-weight: bold;
-            color: var(--color-text-primary);
-            margin-bottom: 0.3rem;
-        }
-
-        .cart-item-price {
-            color: var(--color-text-accent);
-            margin-bottom: 0.5rem;
-        }
-
-        .cart-item-quantity {
-            display: flex;
-            align-items: center;
-        }
-
-        .quantity-btn {
-            width: 25px;
-            height: 25px;
-            border: 1px solid var(--color-border);
-            background: transparent;
-            color: var(--color-text-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .quantity-input {
-            width: 30px;
-            text-align: center;
-            border: 1px solid var(--color-border);
-            background: transparent;
-            color: var(--color-text-primary);
-            margin: 0 0.3rem;
-        }
-
-        .remove-item {
-            color: #c9341c;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.3rem;
-            margin-left: auto;
-            font-size: 1rem;
-        }
-
-        .cart-footer {
-            padding: 1rem;
-            border-top: 1px solid var(--color-border);
-        }
-
-        .cart-total {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            color: var(--color-text-primary);
-        }
-
-        .checkout-button {
-            width: 100%;
-            padding: 0.8rem;
-            background-color: var(--color-accent);
-            color: white;
-            border: none;
-            border-radius: 3px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .checkout-button:hover {
-            background-color: var(--color-accent-hover);
-        }
-
-        /* Estilos responsivos */
-        @media (max-width: 500px) {
-            .cart-panel {
-                width: 300px;
-            }
-        }
-    </style>
-    {# --- FIN: Reemplazo del bloque <style> --- #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
 </head>
+
 <body>
-    {# Incluye tu header público aquí (copia/pega o usa un include si lo tienes separado) #}
     <header>
         <div class="header-container">
             <div class="logo">
-                {# Asegúrate que la ruta al logo sea correcta, puede ser estática #}
-                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Barber Brothers">
+                <img src="/static/logo.jpg" alt="Barbería Clásica">
             </div>
             <nav>
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}" class="active">Servicios</a></li> 
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
+                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
                     <li class="cart-icon">
                         <a href="#" id="cart-button">
@@ -622,33 +33,44 @@
             </nav>
         </div>
     </header>
-
     <div class="page-title">
         <h1>Nuestros Servicios</h1>
-        <p>Calidad y tradición en cada detalle</p>
+        <p>Calidad y estilo en cada corte y afeitado.</p> 
     </div>
+    <main>
+        <section class="services-page-section">
+            <div class="services-container">
+                
+                
 
-    {# Usar la clase del contenedor general definida en los estilos copiados #}
-    <main class="services-list-container"> 
-        {% if servicios %}
-            {% for servicio in servicios %}
-            {# Usar la clase service-item definida en los estilos copiados #}
-            <div class="service-item"> 
-                <div class="service-details">
-                    <h3>{{ servicio.nombre }}</h3>
-                    <span class="service-price">€{{ servicio.precio }}</span>
+                <div class="services-grid">
+                    
+                    <!-- Check if there are services to display -->
+                    {% if servicios %}
+                        <!-- Loop through the services passed from the route -->
+                        {% for servicio in servicios %}
+                        <div class="service-item">
+                            <!-- Optional Icon: <div class="service-icon">✂️</div> -->
+                            
+                            <!-- Display service name from database -->
+                            <h3 class="service-name">{{ servicio.nombre }}</h3> 
+                            
+                            <!-- Display service description from database -->
+                            <p class="service-description">{{ servicio.descripcion }}</p>
+                            
+                            <!-- Display service price from database (format as needed) -->
+                            <div class="service-price">€{{ "%.2f"|format(servicio.precio) }}</div> 
+                            
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Optional: Message to display if no services are found -->
+                        <p>No hay servicios disponibles en este momento. Por favor, vuelve a consultar más tarde.</p>
+                    {% endif %}
+
                 </div>
-                 {% if servicio.duracion_estimada %}
-                    <p class="service-duration">Duración: {{ servicio.duracion_estimada }}</p>
-                 {% endif %}
-                {% if servicio.descripcion %}
-                    <p class="service-description">{{ servicio.descripcion }}</p>
-                {% endif %}
             </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-services">Actualmente no hay servicios disponibles. Vuelve pronto.</p>
-        {% endif %}
+        </section>
     </main>
 
     {# Incluye tu footer público aquí #}
@@ -661,30 +83,9 @@
     <a href="https://wa.me/123456789" class="whatsapp-float" target="_blank">
         <i class="whatsapp-icon">💬</i>
     </a>
+    <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
 
-    {# Panel del Carrito (ya incluido en estilos copiados) #}
-    <div class="cart-panel" id="cart-panel">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button class="close-cart" id="close-cart">&times;</button>
-        </div>
-        <div class="cart-items" id="cart-items">
-            <div class="empty-cart">Tu carrito está vacío</div>
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total">€0.00</span>
-            </div>
-            <button class="checkout-button">Finalizar Compra</button>
-        </div>
-    </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
-
-    {# Incluye scripts públicos si los tienes (ej. para el carrito) #}
-    {# El script del carrito de productos.html podría necesitar ajustes si no aplica a servicios #}
-    {# <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script> #}
-    {# Si el script del carrito es específico de productos, considera moverlo a un archivo JS separado #}
-    {# y solo incluirlo en productos.html #}
+    {# Aquí puedes incluir el script para manejar el carrito, si lo tienes #}
+    
 </body>
 </html>
