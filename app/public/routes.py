@@ -1,8 +1,10 @@
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
 from app.public import bp
 from app.models.producto import Producto
 from app.models.cliente import Cliente, Mensaje
 from app.models.servicio import Servicio # Asegúrate de que este modelo existe
+from app.models.barbero import Barbero, DisponibilidadBarbero
 from app import db
 
 @bp.route('/')
@@ -89,4 +91,44 @@ def servicios():
     return render_template("public/servicios.html", 
                            servicios=servicios_activos)
 
-# ... (resto de rutas públicas) ...
+@bp.route('/barberos/<int:id>/disponibilidad', methods=['GET', 'POST'])
+@login_required
+def gestionar_disponibilidad(id):
+    if not current_user.is_admin():
+        abort(403)
+    
+    barbero = Barbero.query.get_or_404(id)
+    form = DisponibilidadForm()
+    
+    if form.validate_on_submit():
+        # Convertir strings a objetos time
+        from datetime import datetime
+        hora_inicio = datetime.strptime(form.hora_inicio.data, '%H:%M').time()
+        hora_fin = datetime.strptime(form.hora_fin.data, '%H:%M').time()
+        
+        disponibilidad = DisponibilidadBarbero(
+            barbero_id=barbero.id,
+            dia_semana=form.dia_semana.data,
+            hora_inicio=hora_inicio,
+            hora_fin=hora_fin,
+            activo=form.activo.data
+        )
+        
+        db.session.add(disponibilidad)
+        try:
+            db.session.commit()
+            flash('Disponibilidad añadida correctamente', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al añadir disponibilidad: {str(e)}', 'danger')
+            
+        return redirect(url_for('admin.gestionar_disponibilidad', id=barbero.id))
+    
+    # Mostrar disponibilidad actual
+    disponibilidades = DisponibilidadBarbero.query.filter_by(barbero_id=barbero.id).order_by(DisponibilidadBarbero.dia_semana).all()
+    
+    return render_template('admin/disponibilidad.html', 
+                           title=f'Disponibilidad de {barbero.nombre}',
+                           form=form,
+                           barbero=barbero,
+                           disponibilidades=disponibilidades)

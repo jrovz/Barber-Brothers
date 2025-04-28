@@ -53,6 +53,42 @@
     </div>
 </section>
 
-
+<div class="dashboard-widget">
+    <h3>Próximas Citas</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Barbero</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cita in proximas_citas %}
+            <tr>
+                <td>{{ cita.cliente.nombre }}</td>
+                <td>{{ cita.barbero.nombre }}</td>
+                <td>{{ cita.servicio }}</td>
+                <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <span class="badge {% if cita.estado == 'confirmada' %}badge-success
+                                       {% elif cita.estado == 'pendiente' %}badge-warning
+                                       {% elif cita.estado == 'cancelada' %}badge-danger
+                                       {% else %}badge-info{% endif %}">
+                        {{ cita.estado }}
+                    </span>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">No hay citas próximas</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Ver todas</a>
+</div>
 
 {% endblock %}

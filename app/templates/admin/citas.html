@@ -1,0 +1,147 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Formulario para nueva cita -->
+<section class="admin-form">
+    <h2 class="section-title">Crear Nueva Cita</h2>
+    <form action="{{ url_for('admin.gestionar_citas') }}" method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form.cliente_id.label(class="form-label") }}
+                {{ form.cliente_id(class="form-select") }}
+                {% for error in form.cliente_id.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.barbero_id.label(class="form-label") }}
+                {{ form.barbero_id(class="form-select") }}
+                {% for error in form.barbero_id.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.fecha.label(class="form-label") }}
+                {{ form.fecha(class="form-input", placeholder="AAAA-MM-DD HH:MM") }}
+                {% for error in form.fecha.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.servicio.label(class="form-label") }}
+                {{ form.servicio(class="form-select") }}
+                {% for error in form.servicio.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.estado.label(class="form-label") }}
+                {{ form.estado(class="form-select") }}
+                {% for error in form.estado.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <button type="submit" class="btn">Crear Cita</button>
+    </form>
+</section>
+
+<!-- Filtros para las citas -->
+<section class="filters">
+    <h2 class="section-title">Filtrar Citas</h2>
+    <form action="{{ url_for('admin.gestionar_citas') }}" method="get" class="filter-form">
+        <div class="form-grid-filters">
+            <div class="form-group">
+                <label for="estado" class="form-label">Estado:</label>
+                <select name="estado" id="estado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="pendiente" {% if request.args.get('estado') == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="confirmada" {% if request.args.get('estado') == 'confirmada' %}selected{% endif %}>Confirmada</option>
+                    <option value="cancelada" {% if request.args.get('estado') == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    <option value="completada" {% if request.args.get('estado') == 'completada' %}selected{% endif %}>Completada</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="fecha" class="form-label">Fecha:</label>
+                <input type="date" name="fecha" id="fecha" class="form-input" value="{{ request.args.get('fecha', '') }}">
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn">Filtrar</button>
+                <a href="{{ url_for('admin.gestionar_citas') }}" class="btn btn-outline">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</section>
+
+<!-- Tabla de citas -->
+<section class="data-table-container">
+    <h2 class="section-title">Citas Existentes</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Barbero</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cita in citas %}
+            <tr>
+                <td>{{ cita.id }}</td>
+                <td>{{ cita.cliente.nombre if cita.cliente else 'N/A' }}</td>
+                <td>{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</td>
+                <td>{{ cita.servicio }}</td>
+                <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>
+                    <span class="badge 
+                        {% if cita.estado == 'confirmada' %}badge-success
+                        {% elif cita.estado == 'pendiente' %}badge-warning
+                        {% elif cita.estado == 'cancelada' %}badge-danger
+                        {% else %}badge-info{% endif %}">
+                        {{ cita.estado }}
+                    </span>
+                </td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.editar_cita', id=cita.id) }}" class="btn btn-small">Editar</a>
+                    <form action="{{ url_for('admin.eliminar_cita', id=cita.id) }}" method="post" class="inline-form" onsubmit="return confirm('¿Estás seguro de eliminar esta cita?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="btn btn-small btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No hay citas disponibles</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endblock %}

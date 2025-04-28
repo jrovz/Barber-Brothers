@@ -1,0 +1,70 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Volver a Citas</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <form action="{{ url_for('admin.editar_cita', id=cita.id) }}" method="post">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form.cliente_id.label(class="form-label") }}
+                {{ form.cliente_id(class="form-select") }}
+                {% for error in form.cliente_id.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.barbero_id.label(class="form-label") }}
+                {{ form.barbero_id(class="form-select") }}
+                {% for error in form.barbero_id.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.fecha.label(class="form-label") }}
+                {{ form.fecha(class="form-input", value=cita.fecha.strftime('%Y-%m-%d %H:%M') if cita.fecha else '') }}
+                {% for error in form.fecha.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.servicio.label(class="form-label") }}
+                {{ form.servicio(class="form-select") }}
+                {% for error in form.servicio.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.estado.label(class="form-label") }}
+                {{ form.estado(class="form-select") }}
+                {% for error in form.estado.errors %}
+                <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn">Guardar Cambios</button>
+            <a href="{{ url_for('admin.gestionar_citas') }}" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

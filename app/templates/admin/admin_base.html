@@ -313,13 +313,12 @@
             
             <nav class="admin-menu">
                 <ul>
+                    <!-- side bar lateral -->
                     <li class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
                     <li class="{{ 'active' if 'producto' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_productos') }}">Productos</a></li>
                     <li class="{{ 'active' if 'barbero' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_barberos') }}">Barberos</a></li>
-                    
-                    {# --- NUEVO ENLACE --- #}
                     <li class="{{ 'active' if 'servicio' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_servicios') }}">Servicios</a></li>
-                    {# --- FIN NUEVO ENLACE --- #}
+                    <li class="{{ 'active' if 'cita' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_citas') }}">Citas</a></li>
 
                     <li><hr style="border-color: var(--color-border); margin: 1rem 0;"></li>
                     <li><a href="{{ url_for('public.home') }}" target="_blank">Ver Sitio</a></li>

@@ -33,6 +33,31 @@ class Cita(db.Model):
     servicio = db.Column(db.String(100), nullable=False)
     estado = db.Column(db.String(20), default='pendiente') # Ej: pendiente, confirmada, cancelada, completada
     creado = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<Cita {self.id} - {self.servicio}>'
+    duracion = db.Column(db.Integer, default=30)  # duración en minutos
+    
+    @staticmethod
+    def crear_cita(cliente_id, barbero_id, fecha, servicio, duracion=30):
+        """Crea una cita verificando disponibilidad"""
+        barbero = Barbero.query.get(barbero_id)
+        if not barbero or not barbero.activo:
+            return False, "Barbero no disponible"
+            
+        if not barbero.esta_disponible(fecha):
+            return False, "El barbero no está disponible en ese horario"
+            
+        nueva_cita = Cita(
+            cliente_id=cliente_id,
+            barbero_id=barbero_id,
+            fecha=fecha,
+            servicio=servicio,
+            duracion=duracion,
+            estado='pendiente'
+        )
+        
+        db.session.add(nueva_cita)
+        try:
+            db.session.commit()
+            return True, nueva_cita
+        except Exception as e:
+            db.session.rollback()
+            return False, str(e)

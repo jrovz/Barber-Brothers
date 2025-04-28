@@ -1,0 +1,92 @@
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn">Volver a Barberos</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <h2 class="form-title">Añadir Disponibilidad</h2>
+    <form action="{{ url_for('admin.gestionar_disponibilidad', id=barbero.id) }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-grid">
+            <div class="form-group">
+                {{ form.dia_semana.label(class="form-label") }}
+                {{ form.dia_semana(class="form-input") }}
+                {% for error in form.dia_semana.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.hora_inicio.label(class="form-label") }}
+                {{ form.hora_inicio(class="form-input", placeholder="09:00") }}
+                {% for error in form.hora_inicio.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.hora_fin.label(class="form-label") }}
+                {{ form.hora_fin(class="form-input", placeholder="18:00") }}
+                {% for error in form.hora_fin.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: center;">
+                {{ form.activo(style="margin-right: 0.5rem;") }}
+                {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
+                {% for error in form.activo.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+        
+        {{ form.submit(class="btn", value="Añadir Disponibilidad") }}
+    </form>
+</section>
+
+<section>
+    <h2 class="form-title">Horarios Disponibles</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Día</th>
+                <th>Hora Inicio</th>
+                <th>Hora Fin</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for disp in disponibilidades %}
+            <tr>
+                <td>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][disp.dia_semana] }}</td>
+                <td>{{ disp.hora_inicio.strftime('%H:%M') }}</td>
+                <td>{{ disp.hora_fin.strftime('%H:%M') }}</td>
+                <td>
+                    {% if disp.activo %}
+                        <span class="badge badge-primary" style="background-color: var(--color-success);">Activo</span>
+                    {% else %}
+                        <span class="badge" style="background-color: var(--color-text-muted); color: var(--color-bg-dark);">Inactivo</span>
+                    {% endif %}
+                </td>
+                <td class="actions">
+                    <form action="{{ url_for('admin.eliminar_disponibilidad', id=disp.id) }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">No hay horarios configurados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}
