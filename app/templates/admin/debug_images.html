@@ -1,0 +1,46 @@
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">Depuración de Imágenes</h1>
+</div>
+
+<div class="debug-container" style="padding: 20px;">
+    <h2>Barberos</h2>
+    {% for barbero in barberos %}
+    <div class="debug-item" style="margin-bottom: 30px; border: 1px solid #ddd; padding: 15px;">
+        <h3>{{ barbero.nombre }} (ID: {{ barbero.id }})</h3>
+        <p><strong>URL en base de datos:</strong> {{ barbero.imagen_url }}</p>
+        
+        <div style="display: flex; margin-top: 10px;">
+            <div style="margin-right: 20px;">
+                <p><strong>Imagen usando URL directa:</strong></p>
+                {% if barbero.imagen_url %}
+                <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" style="max-width: 100px; border: 2px solid blue;">
+                {% else %}
+                <p>Sin imagen</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <p><strong>Imagen usando url_for:</strong></p>
+                {% if barbero.imagen_url and barbero.imagen_url.startswith('/static/') %}
+                {% set rel_path = barbero.imagen_url.replace('/static/', '') %}
+                <img src="{{ url_for('static', filename=rel_path) }}" alt="{{ barbero.nombre }}" style="max-width: 100px; border: 2px solid green;">
+                {% else %}
+                <p>No se puede generar url_for</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Repetir para productos y servicios -->
+</div>
+
+<div style="margin-top: 20px; padding: 20px;">
+    <h2>Información del Sistema</h2>
+    <p><strong>Ruta de la aplicación:</strong> {{ app_path }}</p>
+    <p><strong>Ruta de uploads:</strong> {{ upload_path }}</p>
+    <p><strong>URL base:</strong> {{ request.host_url }}</p>
+</div>
+{% endblock %}

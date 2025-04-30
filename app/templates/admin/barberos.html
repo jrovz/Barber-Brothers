@@ -19,7 +19,7 @@
 <!-- Formulario para añadir barberos (usando WTForms) -->
 <section class="admin-form">
     <h2 class="form-title">Añadir Nuevo Barbero</h2>
-    <form action="{{ url_for('admin.gestionar_barberos') }}" method="POST">
+    <form action="{{ url_for('admin.gestionar_barberos') }}" method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="form-grid">
             <!--  Sección de nombre, especialidad y categoría -->
@@ -81,10 +81,11 @@
                 <td>{{ barbero.id }}</td>
                 <td>
                     {% if barbero.imagen_url %}
-                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
-                    {% else %}
-                    <span style="color: var(--color-text-muted); font-style: italic;">Sin imagen</span>
-                    {% endif %}
+                <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" 
+                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+                {% else %}
+                <span style="color: var(--color-text-muted); font-style: italic;">Sin imagen</span>
+                {% endif %}
                 </td>
                 <td>{{ barbero.nombre }}</td>
                 <td>{{ barbero.especialidad or 'N/A' }}</td>
@@ -149,11 +150,11 @@
     });
     </script>
     
-    <!-- Añadir un div para la vista previa después del campo de carga de imagen -->
+    <!-- Añadir un div para la vista previa después del campo de carga de imagen
     <div class="form-group">
         {{ form.imagen_file.label(class="form-label") }}
         {{ form.imagen_file(class="form-input", id="imagen_file") }}
         {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
         <div id="imagen_preview" style="display: none;"></div>
-    </div>
+    </div> -->
 {% endblock %}

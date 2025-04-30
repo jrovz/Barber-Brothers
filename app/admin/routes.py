@@ -1,14 +1,10 @@
-# filepath: app/admin/routes.py
-from flask import render_template, request, redirect, url_for, flash, abort
+from flask import render_template, request, redirect, url_for, flash, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
 from app.models import Producto, Barbero, User, Mensaje, Servicio, Cliente, Cita # Añadir Cliente y Cita
 from app import db
 from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm # Añadir ServicioForm
-from app.admin.utils import save_image # Asegúrate de que esta función existe y está bien implementada
-from datetime import datetime # Import datetime to fix the error
-from app.admin.forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, DisponibilidadForm, CitaForm
-# --- Autenticación ---
+from app.admin.utils import save_image
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -86,20 +82,24 @@ def gestionar_productos():
         
     form = ProductoForm()
     if form.validate_on_submit():
+        # Procesar la imagen
+        imagen_url = None
+        
+        # Primero intentar con el archivo subido
+        if form.imagen_file.data:
+            imagen_url = save_image(form.imagen_file.data, 'productos')
+            
+        # Si no hay archivo, usar la URL si se proporcionó
+        if not imagen_url and form.imagen_url.data:
+            imagen_url = form.imagen_url.data
+        
         nuevo_producto = Producto(
             nombre=form.nombre.data,
             descripcion=form.descripcion.data,
             precio=form.precio.data,
-            categoria=form.categoria.data
+            categoria=form.categoria.data,
+            imagen_url=imagen_url
         )
-        
-        # Procesar la imagen cargada o la URL
-        if form.imagen_file.data:
-            imagen_path = save_image(form.imagen_file.data, 'productos')
-            if imagen_path:
-                nuevo_producto.imagen_url = imagen_path
-        elif form.imagen_url.data:
-            nuevo_producto.imagen_url = form.imagen_url.data
         
         db.session.add(nuevo_producto)
         try:
@@ -108,8 +108,10 @@ def gestionar_productos():
         except Exception as e:
             db.session.rollback()
             flash(f'Error al añadir producto: {str(e)}', 'danger')
+            
         return redirect(url_for('admin.gestionar_productos'))
     
+    # Resto del código para GET...
     productos_lista = Producto.query.order_by(Producto.creado.desc()).all()
     return render_template("admin/productos.html", 
                            title="Gestionar Productos", 
@@ -118,29 +120,24 @@ def gestionar_productos():
 @bp.route('/productos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
-    if not current_user.is_admin():
-        abort(403)
     producto = Producto.query.get_or_404(id)
     form = ProductoForm(obj=producto if request.method == 'GET' else None)
-
+    
     if form.validate_on_submit():
-        # Actualizar datos de texto
+        # Actualizar los datos básicos
         producto.nombre = form.nombre.data
         producto.descripcion = form.descripcion.data
         producto.precio = form.precio.data
         producto.categoria = form.categoria.data
         
-        # Procesar imagen
+        # Procesar imagen solo si se subió una nueva
         if form.imagen_file.data:
-            # Si se sube un nuevo archivo, guardarlo y actualizar la URL
-            imagen_path = save_image(form.imagen_file.data, 'productos')
-            if imagen_path:
-                producto.imagen_url = imagen_path
+            nueva_imagen = save_image(form.imagen_file.data, 'productos')
+            if nueva_imagen:
+                producto.imagen_url = nueva_imagen
+        # Solo actualizar URL si hay una nueva y no se subió archivo
         elif form.imagen_url.data and form.imagen_url.data != producto.imagen_url:
-            # Si la URL es diferente a la actual, actualizarla
             producto.imagen_url = form.imagen_url.data
-        
-        # Si ninguno de los campos está completo, se mantiene la imagen actual
         
         try:
             db.session.commit()
@@ -148,8 +145,9 @@ def editar_producto(id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error al actualizar producto: {str(e)}', 'danger')
+            
         return redirect(url_for('admin.gestionar_productos'))
-
+    
     # Para GET, prellenar el formulario
     if request.method == 'GET':
         form.nombre.data = producto.nombre
@@ -179,52 +177,30 @@ def eliminar_producto(id):
         flash(f'Error al eliminar producto: {e}', 'danger')
     return redirect(url_for('admin.gestionar_productos'))
 
-# @bp.route('/productos/eliminar/<int:id>', methods=['POST']) # Usar POST para eliminar
-# @login_required
-# def eliminar_producto(id):
-#     if not current_user.is_admin():
-#         abort(403)
-#     producto = Producto.query.get_or_404(id)
-    
-#     # --- INICIO: Modificación Temporal para Depuración ---
-#     # Comenta o elimina el try...except para ver el error real
-#     # try:
-#     db.session.delete(producto)
-#     db.session.commit() # Si esto falla, ahora Flask mostrará el error completo
-#     flash('Producto eliminado correctamente.', 'success')
-#     # except Exception as e:
-#     #     db.session.rollback()
-#     #     flash(f'Error al eliminar producto: {e}', 'danger')
-#     # --- FIN: Modificación Temporal ---
-        
-#     return redirect(url_for('admin.gestionar_productos'))
-
-
-# --- Gestión de Barberos (CRUD) ---
-
-
 @bp.route('/barberos', methods=['GET', 'POST'])
 @login_required
 def gestionar_barberos():
-    if not current_user.is_admin():
-        abort(403)
-        
+    
     form = BarberoForm()
     if form.validate_on_submit():
+        # Procesar la imagen
+        imagen_url = None
+        
+        # Primero intentar con el archivo subido
+        if form.imagen_file.data:
+            imagen_url = save_image(form.imagen_file.data, 'barberos')
+            
+        # Si no hay archivo, usar la URL si se proporcionó
+        if not imagen_url and form.imagen_url.data:
+            imagen_url = form.imagen_url.data
+        
         nuevo_barbero = Barbero(
             nombre=form.nombre.data,
             especialidad=form.especialidad.data,
             descripcion=form.descripcion.data,
-            activo=form.activo.data if hasattr(form, 'activo') else True
+            activo=form.activo.data,
+            imagen_url=imagen_url
         )
-        
-        # Procesar la imagen cargada o la URL
-        if form.imagen_file.data:
-            imagen_path = save_image(form.imagen_file.data, 'barberos')
-            if imagen_path:
-                nuevo_barbero.imagen_url = imagen_path
-        elif form.imagen_url.data:
-            nuevo_barbero.imagen_url = form.imagen_url.data
         
         db.session.add(nuevo_barbero)
         try:
@@ -233,6 +209,7 @@ def gestionar_barberos():
         except Exception as e:
             db.session.rollback()
             flash(f'Error al añadir barbero: {str(e)}', 'danger')
+            
         return redirect(url_for('admin.gestionar_barberos'))
 
     barberos_lista = Barbero.query.order_by(Barbero.nombre).all()
@@ -244,45 +221,53 @@ def gestionar_barberos():
 @bp.route('/barberos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_barbero(id):
-    if not current_user.is_admin():
-        abort(403)
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger('barberos_route')
+    
     barbero = Barbero.query.get_or_404(id)
-    form = BarberoForm(obj=barbero if request.method == 'GET' else None)
-
+    form = BarberoForm()
+    
     if form.validate_on_submit():
-        # Actualizar datos de texto
+        # Actualizar datos básicos
         barbero.nombre = form.nombre.data
         barbero.especialidad = form.especialidad.data
         barbero.descripcion = form.descripcion.data
-        if hasattr(form, 'activo'):
-            barbero.activo = form.activo.data
+        barbero.activo = form.activo.data
         
-        # Procesar imagen
+        # Manejar la imagen
+        old_imagen_url = barbero.imagen_url
+        logger.info(f"URL de imagen anterior: {old_imagen_url}")
+        
         if form.imagen_file.data:
-            # Si se sube un nuevo archivo, guardarlo y actualizar la URL
-            imagen_path = save_image(form.imagen_file.data, 'barberos')
-            if imagen_path:
-                barbero.imagen_url = imagen_path
-        elif form.imagen_url.data and form.imagen_url.data != barbero.imagen_url:
-            # Si la URL es diferente a la actual, actualizarla
+            logger.info(f"Procesando nueva imagen subida: {form.imagen_file.data.filename}")
+            imagen_url = save_image(form.imagen_file.data, 'barberos')
+            
+            if imagen_url:
+                logger.info(f"Nueva URL de imagen: {imagen_url}")
+                barbero.imagen_url = imagen_url
+            else:
+                logger.warning("No se pudo guardar la nueva imagen")
+        elif form.imagen_url.data:
+            logger.info(f"Usando URL proporcionada: {form.imagen_url.data}")
             barbero.imagen_url = form.imagen_url.data
-        
-        # Si ninguno de los campos está completo, se mantiene la imagen actual
         
         try:
             db.session.commit()
-            flash('Barbero actualizado correctamente.', 'success')
+            logger.info(f"Barbero actualizado. URL final: {barbero.imagen_url}")
+            flash('Barbero actualizado correctamente', 'success')
         except Exception as e:
             db.session.rollback()
+            logger.error(f"Error al actualizar barbero: {str(e)}")
             flash(f'Error al actualizar barbero: {str(e)}', 'danger')
+        
         return redirect(url_for('admin.gestionar_barberos'))
-
-    # Para GET, ya está prellenado con obj=barbero
-
+        
+    
     return render_template('admin/editar_barbero.html', 
-                           title="Editar Barbero", 
-                           form=form, 
-                           barbero=barbero)
+                          title="Editar Barbero", 
+                          form=form, 
+                          barbero=barbero)
 
 @bp.route('/barberos/eliminar/<int:id>', methods=['POST'])
 @login_required
@@ -547,3 +532,25 @@ def eliminar_cita(id):
         flash(f'Error al eliminar cita: {str(e)}', 'danger')
         
     return redirect(url_for('admin.gestionar_citas'))
+
+@bp.route('/debug/images')
+@login_required
+def debug_images():
+    if not current_user.is_admin():
+        abort(403)
+        
+    barberos = Barbero.query.all()
+    productos = Producto.query.all()
+    servicios = Servicio.query.all()
+    
+    app_path = current_app.root_path
+    upload_path = current_app.config['UPLOAD_FOLDER']
+    
+    return render_template(
+        'admin/debug_images.html',
+        barberos=barberos,
+        productos=productos,
+        servicios=servicios,
+        app_path=app_path,
+        upload_path=upload_path
+    )

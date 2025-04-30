@@ -33,7 +33,7 @@ class BarberoForm(FlaskForm):
     descripcion = TextAreaField('Descripción', validators=[Optional(), Length(max=500)])
     activo = BooleanField('Servicio Activo', default=True)
     # Mantener campo URL para compatibilidad hacia atrás
-    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()])
+    imagen_url = StringField('URL de Imagen Externa', validators=[Optional(), URL()])
     
     # Agregar campo para subir imagen
     imagen_file = FileField('Subir Imagen', validators=[

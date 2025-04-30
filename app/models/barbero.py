@@ -6,6 +6,7 @@ class Barbero(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     especialidad = db.Column(db.String(100))
+    descripcion = db.Column(db.Text)
     imagen_url = db.Column(db.String(255))
     activo = db.Column(db.Boolean, default=True)
     creado = db.Column(db.DateTime, default=datetime.utcnow)

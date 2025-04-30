@@ -2,84 +2,80 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-from flask_wtf.csrf import CSRFProtect # Añadido
+from flask_wtf.csrf import CSRFProtect
+import os
 
-# Definir extensiones aquí para evitar importaciones circulares
+# Definir extensiones
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-csrf = CSRFProtect() # Añadido
+csrf = CSRFProtect()
 
-login_manager.login_view = 'admin.login' # Ruta a la que redirigir si no está logueado
-login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.' # Mensaje flash
-login_manager.login_message_category = 'info' # Categoría del mensaje flash
+# Configuración de login
+login_manager.login_view = 'admin.login'
+login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
+login_manager.login_message_category = 'info'
 
 # Función para cargar usuario (requerida por Flask-Login)
 @login_manager.user_loader
 def load_user(user_id):
-    from app.models import User # Importar aquí para evitar importación circular
+    from app.models import User
     return User.query.get(int(user_id))
 
 def create_app(config_name='default'):
-    # Especifica static_folder relativo al directorio de la app (__name__)
-    # y el prefijo de URL para acceder a esos archivos.
+    # Crear instancia de Flask
     app = Flask(__name__, 
-                static_folder='static',      # Nombre de la carpeta dentro de 'app'
-                static_url_path='/static')   # URL base para acceder a los archivos estáticos
+                static_folder='static',
+                static_url_path='/static')
     
-    @app.after_request
-    def add_security_and_charset_headers(response):
-        # Punto 1: Asegurar charset=utf-8 si no está presente
-        # Verifica si 'charset' ya está en el Content-Type (insensible a mayúsculas/minúsculas)
-        if 'charset' not in response.headers.get('Content-Type', '').lower():
-            # Si no está, lo añade explícitamente
-            response.charset = 'utf-8' 
-        
-        # Punto 4: Añadir X-Content-Type-Options
-        # Evita que el navegador intente adivinar el tipo MIME
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        
-        # Punto 6: Añadir Content-Security-Policy (reemplaza X-Frame-Options)
-        # 'frame-ancestors \'self\'' previene clickjacking permitiendo iframes solo desde tu propio dominio.
-        # Puedes añadir más directivas CSP aquí si lo necesitas (ej., para scripts, estilos, etc.)
-        # Si ya tienes un encabezado CSP, asegúrate de que incluya 'frame-ancestors \'self\';'
-        if 'Content-Security-Policy' not in response.headers:
-             response.headers['Content-Security-Policy'] = "frame-ancestors 'self';"
-        # Nota: Si usas Flask-Talisman, podría manejar esto por ti. Verifica su configuración.
-
-        # Eliminar encabezados obsoletos/innecesarios si los añade algún otro componente
-        # (Flask no los añade por defecto, pero podrían venir de otro lado)
-        # response.headers.pop('X-Frame-Options', None) 
-        # response.headers.pop('X-XSS-Protection', None)
-        # response.headers.pop('Expires', None) 
-        # Descomenta las líneas pop si sabes que estos encabezados se están añadiendo y quieres forzar su eliminación.
-
-        # Devuelve el objeto response modificado
-        
-
-        return response
-    #Filtro de formato moneda COP
-    @app.template_filter('cop_format')
-    def cop_format(value):
-        """Formatea un número como precio en pesos colombianos"""
-        if value is None:
-            return "COP 0"
-        try:
-            value = float(value)
-            # Formato colombiano: con punto para miles y sin decimales
-            return f"COP {value:,.0f}".replace(",", ".")
-        except (ValueError, TypeError):
-            return "COP 0"
-        
+    # CORRECCIÓN: Configuración de carga de archivos con ruta absoluta explícita
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    print(f"Basedir original: {basedir}")
+    
+    # Verificar si la ruta contiene duplicación
+    if basedir.endswith('app\\app') or basedir.endswith('app/app'):
+        # Corregir la ruta eliminando la duplicación
+        basedir = os.path.dirname(basedir)
+        print(f"Basedir corregido (eliminada duplicación): {basedir}")
+    
+    # Construir la ruta completa para uploads
+    UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
+    print(f"UPLOAD_FOLDER configurado: {UPLOAD_FOLDER}")
+    
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    
+    # Crear carpeta de uploads si no existe
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    
+    # Resto del código...
+    
     # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])
     
+     # Verificar rutas después de cargar configuración completa
+    @app.before_request
+    def verify_upload_path():
+        from app.utils.path_checker import check_upload_path
+        check_upload_path()
+    
+
+    @app.after_request
+    def add_security_and_charset_headers(response):
+        # Tu código existente...
+        return response
+    
+    @app.template_filter('cop_format')
+    def cop_format(value):
+        # Tu código existente...
+        pass
+        
     # Inicializar extensiones con la app
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    csrf.init_app(app) # Añadido: Inicializar CSRFProtect
+    csrf.init_app(app)
     
     # Registrar blueprints
     from app.public import bp as public_bp
@@ -92,11 +88,6 @@ def create_app(config_name='default'):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
     return app
-
-# from flask import render_template, request # ... otros imports ...
-# from app.public import bp
-# from app.models import Producto, Cliente, Mensaje, Servicio # Añadir Servicio
-# from app import db
 
 
 
