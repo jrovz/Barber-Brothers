@@ -23,34 +23,42 @@
         <div class="form-grid">
             <div class="form-group">
                 {{ form.cliente_id.label(class="form-label") }}
-                {{ form.cliente_id(class="form-select") }}
-                {% for error in form.cliente_id.errors %}
-                <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.cliente_id(class="form-input", placeholder="Nombre completo del cliente") }}
+                {% if form.cliente_id.errors %}
+                    {% for error in form.cliente_id.errors %}
+                        <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
             </div>
-            
             <div class="form-group">
                 {{ form.barbero_id.label(class="form-label") }}
                 {{ form.barbero_id(class="form-select") }}
-                {% for error in form.barbero_id.errors %}
-                <span class="error">{{ error }}</span>
-                {% endfor %}
+                {% if form.barbero_id.errors %}
+                    {% for error in form.barbero_id.errors %}
+                        <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
             </div>
             
             <div class="form-group">
                 {{ form.fecha.label(class="form-label") }}
-                {{ form.fecha(class="form-input", placeholder="AAAA-MM-DD HH:MM") }}
-                {% for error in form.fecha.errors %}
-                <span class="error">{{ error }}</span>
-                {% endfor %}
+                {# Añadir clase 'datepicker-input' para JS #}
+                {{ form.fecha(class="form-input datepicker-input", placeholder="Seleccione fecha y hora") }}
+                {% if form.fecha.errors %}
+                    {% for error in form.fecha.errors %}
+                    <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
             </div>
             
             <div class="form-group">
                 {{ form.servicio.label(class="form-label") }}
                 {{ form.servicio(class="form-select") }}
-                {% for error in form.servicio.errors %}
-                <span class="error">{{ error }}</span>
-                {% endfor %}
+                {% if form.servicio.errors %}
+                    {% for error in form.servicio.errors %}
+                        <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
             </div>
             
             <div class="form-group">
@@ -143,5 +151,17 @@
         </tbody>
     </table>
 </section>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".datepicker-input", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i", // Debe coincidir con el format de WTForms
+            defaultDate: "{{ form.fecha.data or datetime.datetime.now().strftime('%Y-%m-%d %H:%M') }}", // Fecha actual o la existente
+            locale: "es", // Usar localización en español
+            time_24hr: true,
+            minuteIncrement: 15, // Intervalos de 15 minutos
+            minDate: "today" // Opcional: no permitir fechas pasadas
+        });
+    });
+</script>
 {% endblock %}

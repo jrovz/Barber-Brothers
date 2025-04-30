@@ -6,6 +6,7 @@ from app import db
 from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm # Añadir ServicioForm
 from app.admin.utils import save_image
 import datetime
+
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated and current_user.is_admin():
@@ -397,90 +398,46 @@ def gestionar_citas():
     form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
     form.barbero_id.choices = [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).all()]
     form.servicio.choices = [(s.nombre, s.nombre) for s in Servicio.query.all()]
-    
+
     if form.validate_on_submit():
-        resultado, mensaje_o_cita = Cita.crear_cita(
-            cliente_id=form.cliente_id.data,
+        # Buscar o crear cliente por nombre
+        cliente_id = form.cliente_id.data.strip()
+        cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == cliente_id.lower()).first()
+        if not cliente:
+            cliente = Cliente(nombre=cliente_id) # Asume valores por defecto para otros campos
+            db.session.add(cliente)
+            # Es importante hacer commit aquí para obtener el ID del nuevo cliente
+            try:
+                db.session.commit()
+                flash(f'Nuevo cliente "{cliente.nombre}" creado.', 'info')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al crear nuevo cliente: {str(e)}', 'danger')
+                # Renderizar de nuevo el formulario podría ser mejor que redirigir
+                citas_lista = Cita.query.order_by(Cita.fecha.desc()).all()
+                return render_template("admin/citas.html", title="Gestionar Citas", citas=citas_lista, form=form, datetime=datetime)
+
+        # Crear la cita usando el cliente.id
+        nueva_cita = Cita(
+            cliente_id=cliente.id,
             barbero_id=form.barbero_id.data,
             fecha=form.fecha.data,
-            servicio=form.servicio.data
+            servicio=form.servicio.data,
+            estado=form.estado.data
         )
-        
-        if resultado:
-            flash('Cita creada correctamente.', 'success')
-            return redirect(url_for('admin.gestionar_citas'))
-        else:
-            flash(f'Error al crear cita: {mensaje_o_cita}', 'danger')
-    
-    # Mostrar citas filtradas o todas
-    filtro_estado = request.args.get('estado', '')
-    filtro_fecha = request.args.get('fecha', '')
-    
-    query = Cita.query
-    if filtro_estado:
-        query = query.filter_by(estado=filtro_estado)
-    if filtro_fecha:
+        db.session.add(nueva_cita)
         try:
-            fecha = datetime.strptime(filtro_fecha, '%Y-%m-%d')
-            query = query.filter(db.func.date(Cita.fecha) == fecha.date())
-        except ValueError:
-            pass
-            
-    citas = query.order_by(Cita.fecha.desc()).all()
-    
-    return render_template('admin/citas.html', 
-                          title="Gestionar Citas", 
-                          form=form, 
-                          citas=citas)
+            db.session.commit()
+            flash('Cita creada correctamente.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al guardar la cita: {str(e)}', 'danger')
 
-@bp.route('/calendario', methods=['GET'])
-@login_required
-def calendario_citas():
-    if not current_user.is_admin():
-        abort(403)
-    
-    # Obtener parámetro de mes (por defecto mes actual)
-    import calendar
-    from datetime import datetime, timedelta
-    
-    today = datetime.today()
-    month = request.args.get('month', today.month, type=int)
-    year = request.args.get('year', today.year, type=int)
-    
-    # Validar mes y año
-    if month < 1 or month > 12:
-        month = today.month
-    
-    # Obtener todas las citas del mes
-    start_date = datetime(year, month, 1)
-    if month == 12:
-        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
-    else:
-        end_date = datetime(year, month + 1, 1) - timedelta(days=1)
-    
-    citas = Cita.query.filter(
-        Cita.fecha >= start_date,
-        Cita.fecha <= end_date.replace(hour=23, minute=59, second=59)
-    ).all()
-    
-    # Organizar citas por día
-    citas_por_dia = {}
-    for cita in citas:
-        day = cita.fecha.day
-        if day not in citas_por_dia:
-            citas_por_dia[day] = []
-        citas_por_dia[day].append(cita)
-    
-    # Crear matriz del calendario
-    cal = calendar.monthcalendar(year, month)
-    
-    return render_template('admin/calendario.html',
-                          title="Calendario de Citas",
-                          calendar=cal,
-                          month=month,
-                          year=year,
-                          citas_por_dia=citas_por_dia,
-                          month_name=calendar.month_name[month])
+        return redirect(url_for('admin.gestionar_citas'))
+
+    citas_lista = Cita.query.order_by(Cita.fecha.desc()).all()
+    return render_template("admin/citas.html", title="Gestionar Citas", citas=citas_lista, form=form, datetime=datetime)
+
 
 @bp.route('/citas/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -490,31 +447,49 @@ def editar_cita(id):
         
     cita = Cita.query.get_or_404(id)
     form = CitaForm(obj=cita if request.method == 'GET' else None)
-    
-    # Poblar opciones dinámicas
-    form.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.all()]
-    form.barbero_id.choices = [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).all()]
-    form.servicio.choices = [(s.nombre, s.nombre) for s in Servicio.query.all()]
-    
+    form.barbero_id.choices = [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).order_by(Barbero.nombre).all()]
+    form.servicio.choices = [(s.nombre, s.nombre) for s in Servicio.query.order_by(Servicio.nombre).all()]
+
     if form.validate_on_submit():
-        cita.cliente_id = form.cliente_id.data
+        # Buscar o crear cliente por nombre
+        cliente_id = form.cliente.id.data.strip()
+        cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == cliente_id.lower()).first()
+        if not cliente:
+            cliente_nombre_ingresado = form.cliente_id.data.strip()
+            # --- FIN CORRECCIÓN ---
+
+            # --- CORRECCIÓN: Buscar usando el nombre ingresado ---
+            cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == cliente_nombre_ingresado.lower()).first()
+            # --- FIN CORRECCIÓN ---
+
+            db.session.add(cliente)
+            try:
+                db.session.commit()
+                flash(f'Nuevo cliente "{cliente.nombre}" creado.', 'info')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al crear nuevo cliente: {str(e)}', 'danger')
+                return render_template('admin/editar_cita.html', title="Editar Cita", form=form, cita=cita, datetime=datetime)
+
+        # Actualizar la cita
+        cita.cliente_id = cliente.id
         cita.barbero_id = form.barbero_id.data
         cita.fecha = form.fecha.data
         cita.servicio = form.servicio.data
         cita.estado = form.estado.data
-        
         try:
             db.session.commit()
             flash('Cita actualizada correctamente.', 'success')
             return redirect(url_for('admin.gestionar_citas'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al actualizar cita: {str(e)}', 'danger')
-    
-    return render_template('admin/editar_cita.html',
-                          title="Editar Cita",
-                          form=form,
-                          cita=cita)
+            flash(f'Error al actualizar la cita: {str(e)}', 'danger')
+
+    # Prellenar el nombre del cliente manualmente si obj=cita no lo hizo (porque los nombres no coinciden)
+    if request.method == 'GET' and cita.cliente:
+        form.cliente_id.data = cita.cliente.id
+
+    return render_template('admin/editar_cita.html', title="Editar Cita", form=form, cita=cita, datetime=datetime)    
 
 @bp.route('/citas/eliminar/<int:id>', methods=['POST'])
 @login_required

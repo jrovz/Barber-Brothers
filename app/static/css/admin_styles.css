@@ -527,3 +527,33 @@ textarea.form-input {
     text-align: right;
 }
 
+/* Estilos mejorados para el selector de barbero */
+.select-barbero {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1.5rem 0.75rem 0.75rem; /* Espacio extra a la derecha para la flecha */
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057; /* Color de texto */
+    background-color: #fff; /* Fondo blanco */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); /* Flecha SVG */
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #ced4da; /* Borde sutil */
+    border-radius: 0.25rem; /* Bordes redondeados */
+    appearance: none; /* Quitar apariencia nativa */
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  }
+  
+  .select-barbero:focus {
+    border-color: #86b7fe; /* Color de borde al enfocar */
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Sombra al enfocar */
+  }
+  
+  /* Estilo opcional para las opciones */
+  .select-barbero option {
+    font-weight: normal;
+  }
