@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
 from app.models import Producto, Barbero, User, Mensaje, Servicio, Cliente, Cita # Añadir Cliente y Cita
 from app import db
-from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm # Añadir ServicioForm
+from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm # Añadir ServicioForm
 from app.admin.utils import save_image
 
 @bp.route('/login', methods=['GET', 'POST'])
