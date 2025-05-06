@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from app.models.barbero import Barbero  # Import the Barbero model
 
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -24,16 +25,24 @@ class Mensaje(db.Model):
     def __repr__(self):
         return f'<Mensaje {self.id}>'
 
-
+# Corregir la clase Cita
 class Cita(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=False)
-    barbero_id = db.Column(db.Integer, db.ForeignKey('barbero.id'), nullable=True) # Añadido, puede ser nulo si no se asigna
+    barbero_id = db.Column(db.Integer, db.ForeignKey('barbero.id'), nullable=False)
     fecha = db.Column(db.DateTime, nullable=False)
-    servicio = db.Column(db.String(100), nullable=False)
-    estado = db.Column(db.String(20), default='pendiente') # Ej: pendiente, confirmada, cancelada, completada
+    # servicio = db.Column(db.String(100), nullable=True)  # Campo para nombre del servicio (legacy)
+    servicio_id = db.Column(db.Integer, db.ForeignKey('servicio.id'), nullable=True)  # Relación con Servicio
+    estado = db.Column(db.String(20), default='pendiente')  # pendiente, confirmada, cancelada, completada
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     duracion = db.Column(db.Integer, default=30)  # duración en minutos
+    notas = db.Column(db.Text, nullable=True)  # Notas adicionales
+    
+    # Relación con Servicio
+    servicio_rel = db.relationship('Servicio', backref='citas', foreign_keys=[servicio_id])
+    
+    def __repr__(self):
+        return f'<Cita {self.id} - {self.fecha}>'
     
     @staticmethod
     def crear_cita(cliente_id, barbero_id, fecha, servicio, duracion=30):

@@ -76,6 +76,8 @@
         
         {{ form.submit(class="btn", value="Actualizar Barbero") }}
         <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-secondary" style="margin-left: 1rem; background-color: var(--color-text-muted); color: var(--color-bg-dark);">Cancelar</a>
+        <!-- NUEVO: Botón para ir a gestionar disponibilidad -->
+        <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-secondary" style="margin-left: 1rem;">Gestionar Horarios</a>
     </form>
 </section>
 

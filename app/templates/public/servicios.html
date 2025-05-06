@@ -86,6 +86,28 @@
     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
 
     {# Aquí puedes incluir el script para manejar el carrito, si lo tienes #}
-    
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+
+    <!-- Cart Panel Structure (matching productos.html) -->
+    <div class="cart-panel" id="cart-panel">
+        <div class="cart-header">
+            <h3>Tu Carrito</h3>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Los productos se añadirán aquí dinámicamente -->
+            <div class="empty-cart">Tu carrito está vacío</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total">COP 0</span>
+            </div>
+            <button class="checkout-button">Finalizar Compra</button>
+        </div>
+    </div>
+    <div class="cart-overlay" id="cart-overlay"></div>
+    <!-- End Cart Panel Structure -->
+
 </body>
 </html>

@@ -33,11 +33,14 @@
                 {{ form.especialidad(class="form-input") }}
                 {% for error in form.especialidad.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
+            <!-- Eliminar o comentar esta sección si imagen_url ya no se usa en el form -->
+            {# 
             <div class="form-group">
-                {{ form.imagen_url.label(class="form-label") }}
+                {{ form.imagen_url.label(class="form-label") }} 
                 {{ form.imagen_url(class="form-input") }}
                 {% for error in form.imagen_url.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
+            #}
             <div class="form-group" style="display: flex; align-items: center;">
                 {{ form.activo(style="margin-right: 0.5rem;") }}
                 {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
@@ -46,7 +49,7 @@
             </div>
             
             <div class="form-group">
-                {{ form.imagen_file.label(class="form-label") }}
+                {{ form.imagen_file.label(class="form-label") }} <!-- Asegurarse que este es el campo correcto -->
                 {{ form.imagen_file(class="form-input") }}
                 {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
@@ -91,15 +94,17 @@
                 <td>{{ barbero.especialidad or 'N/A' }}</td>
                 <td>
                     {% if barbero.activo %}
-                        <span class="badge badge-primary" style="background-color: var(--color-success);">Activo</span>
+                        <span class="badge badge-success">Activo</span> {# Use class badge-success #}
                     {% else %}
-                        <span class="badge" style="background-color: var(--color-text-muted); color: var(--color-bg-dark);">Inactivo</span>
+                        <span class="badge">Inactivo</span> {# Use default badge class #}
                     {% endif %}
                 </td>
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_barbero', id=barbero.id) }}" class="btn btn-small btn-edit">Editar</a>
+                    <!-- NUEVO: Botón para gestionar disponibilidad -->
+                    <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-small btn-secondary" style="margin-left: 5px;">Horarios</a>
                     {# Formulario para eliminar #}
-                    <form action="{{ url_for('admin.eliminar_barbero', id=barbero.id) }}" method="POST" style="display: inline;">
+                    <form action="{{ url_for('admin.eliminar_barbero', id=barbero.id) }}" method="POST" style="display: inline; margin-left: 5px;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Si tienes CSRF global #}
                         <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
                     </form>

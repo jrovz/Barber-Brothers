@@ -13,3 +13,4 @@ class Producto(db.Model):
     activo = db.Column(db.Boolean, default=True)
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     actualizado = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

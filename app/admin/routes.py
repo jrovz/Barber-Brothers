@@ -1,11 +1,14 @@
-from flask import render_template, request, redirect, url_for, flash, abort, current_app
+from flask import render_template, request, redirect, url_for, flash, abort, current_app, jsonify # Added jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
-from app.models import Producto, Barbero, User, Mensaje, Servicio, Cliente, Cita # Añadir Cliente y Cita
+# Import models
+from app.models import Producto, User, Mensaje, Servicio, Cliente, Cita # Removed Barbero and DisponibilidadBarbero from here
+from app.models.barbero import Barbero, DisponibilidadBarbero # Import Barbero and DisponibilidadBarbero from their specific file
 from app import db
-from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm # Añadir ServicioForm
+# Import forms - ADD DisponibilidadForm HERE
+from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm, DisponibilidadForm
 from app.admin.utils import save_image
-import datetime
+from datetime import datetime, time # Added time
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -284,6 +287,125 @@ def eliminar_barbero(id):
         db.session.rollback()
         flash(f'Error al eliminar barbero: {e}', 'danger')
     return redirect(url_for('admin.gestionar_barberos'))
+
+@bp.route('/barberos/<int:barbero_id>/disponibilidad', methods=['GET', 'POST'])
+@login_required
+def gestionar_disponibilidad(barbero_id):
+    if not current_user.is_admin():
+        abort(403) # Forbidden access if not admin
+
+    barbero = Barbero.query.get_or_404(barbero_id)
+    form = DisponibilidadForm() # This line should now work
+
+    if form.validate_on_submit():
+        try:
+            # Convertir strings a objetos time
+            hora_inicio = datetime.strptime(form.hora_inicio.data, '%H:%M').time()
+            hora_fin = datetime.strptime(form.hora_fin.data, '%H:%M').time()
+
+            # Validación simple de horas
+            if hora_fin <= hora_inicio:
+                flash('La hora de fin debe ser posterior a la hora de inicio.', 'danger')
+            else:
+                disponibilidad = DisponibilidadBarbero(
+                    barbero_id=barbero.id,
+                    dia_semana=form.dia_semana.data,
+                    hora_inicio=hora_inicio,
+                    hora_fin=hora_fin,
+                    activo=form.activo.data
+                )
+                db.session.add(disponibilidad)
+                db.session.commit()
+                flash('Disponibilidad añadida correctamente', 'success')
+                # Redirect back to the same page to show the updated list
+                return redirect(url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id))
+        except ValueError:
+            flash('Formato de hora inválido. Use HH:MM.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al añadir disponibilidad: {str(e)}', 'danger')
+            print(f"Error adding availability: {e}") # Log the error
+
+    # Mostrar disponibilidad actual
+    disponibilidades = DisponibilidadBarbero.query.filter_by(barbero_id=barbero.id).order_by(DisponibilidadBarbero.dia_semana, DisponibilidadBarbero.hora_inicio).all()
+
+    # Diccionario para mapear número de día a nombre (para la plantilla)
+    dias_semana = {
+        0: 'Lunes', 1: 'Martes', 2: 'Miércoles',
+        3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo' # Incluir Domingo si es necesario
+    }
+
+    return render_template('admin/disponibilidad.html',
+                           title=f'Gestionar Horarios de {barbero.nombre}',
+                           form=form,
+                           barbero=barbero,
+                           disponibilidades=disponibilidades,
+                           dias_semana=dias_semana) # Pass the dictionary to the template
+
+@bp.route('/barberos/disponibilidad/eliminar/<int:disp_id>', methods=['POST'])
+@login_required
+def eliminar_disponibilidad(disp_id):
+    if not current_user.is_admin():
+        abort(403)
+
+    disp = DisponibilidadBarbero.query.get_or_404(disp_id)
+    barbero_id = disp.barbero_id # Get the barbero_id before deleting
+    try:
+        db.session.delete(disp)
+        db.session.commit()
+        flash('Horario eliminado correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar el horario: {str(e)}', 'danger')
+        print(f"Error deleting availability: {e}") # Log the error
+
+    # Redirect back to the availability page for the specific barber
+    return redirect(url_for('admin.gestionar_disponibilidad', barbero_id=barbero_id))
+
+@bp.route('/barberos/<int:barbero_id>/disponibilidad/crear_predeterminada', methods=['POST'])
+@login_required
+def crear_disponibilidad_predeterminada(barbero_id):
+    if not current_user.is_admin():
+        abort(403)
+
+    barbero = Barbero.query.get_or_404(barbero_id)
+
+    # --- Example Logic for Default Slots ---
+    # Define your standard hours here
+    horario_estandar = {
+        0: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Lunes 9-13, 14-18
+        1: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Martes
+        2: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Miércoles
+        3: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Jueves
+        4: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Viernes
+        5: [(time(9, 0), time(14, 0))],                         # Sábado 9-14
+        # 6: [] # Domingo - No working hours
+    }
+
+    try:
+        # Optional: Delete existing slots before adding defaults
+        # DisponibilidadBarbero.query.filter_by(barbero_id=barbero_id).delete()
+        # db.session.flush() # Apply deletion immediately if needed
+
+        for dia, slots in horario_estandar.items():
+            for inicio, fin in slots:
+                nueva_disp = DisponibilidadBarbero(
+                    barbero_id=barbero.id,
+                    dia_semana=dia,
+                    hora_inicio=inicio,
+                    hora_fin=fin,
+                    activo=True
+                )
+                db.session.add(nueva_disp)
+
+        db.session.commit()
+        flash('Horario estándar aplicado correctamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al aplicar horario estándar: {str(e)}', 'danger')
+        print(f"Error applying default availability: {e}")
+
+    return redirect(url_for('admin.gestionar_disponibilidad', barbero_id=barbero_id))
 
 # --- Gestión de Servicios (CRUD) ---
 

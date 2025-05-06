@@ -99,375 +99,448 @@
     </section>
     
     <section class="availability">
-        <h2>Disponibilidad de Horarios</h2>
-        <div class="calendar">
-            <div class="day">
-                <h3>Lunes</h3>
-                <div class="time-slot available">09:00</div>
-                <div class="time-slot available">10:00</div>
-                <div class="time-slot booked">11:00</div>
-                <div class="time-slot booked">12:00</div>
-                <div class="time-slot available">13:00</div>
+    <h2>Agenda tu Cita</h2>
+    
+    <!-- Selector de barbero y servicio -->
+    <div class="booking-form">
+        <div class="form-group">
+            <label for="barbero-select">Selecciona un Barbero:</label>
+            <select id="barbero-select" class="select-barbero">
+                <option value="">-- Selecciona un barbero --</option>
+                {% if barberos %}
+                    {% for barbero in barberos %}
+                    <option value="{{ barbero.id }}">{{ barbero.nombre }}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled>No hay barberos disponibles</option>
+                {% endif %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="servicio-select">Selecciona un Servicio:</label>
+            <select id="servicio-select" class="select-servicio">
+                <option value="">-- Selecciona un servicio --</option>
+                {% if servicios %}
+                    {% for servicio in servicios %}
+                    <option value="{{ servicio.id }}" data-duracion="{{ servicio.duracion_estimada }}">
+                        {{ servicio.nombre }} - {{ servicio.precio }}€
+                    </option>
+                    {% endfor %}
+                {% else %}
+                    <option value="" disabled>No hay servicios disponibles</option>
+                {% endif %}
+            </select>
+        </div>
+    </div>
+    
+    <!-- Calendario y selección de horarios -->
+    <div class="calendar-container">
+        <h3>Selecciona un día:</h3>
+        <div class="date-selector">
+            {% for fecha in fechas_disponibles %}
+            <div class="date-option" data-fecha="{{ fecha.strftime('%Y-%m-%d') }}">
+                <div class="day-name">{{ fecha.strftime('%a') }}</div>
+                <div class="day-number">{{ fecha.day }}</div>
+                <div class="month-name">{{ fecha.strftime('%b') }}</div>
             </div>
-            <div class="day">
-                <h3>Martes</h3>
-                <div class="time-slot booked">09:00</div>
-                <div class="time-slot available">10:00</div>
-                <div class="time-slot available">11:00</div>
-                <div class="time-slot booked">12:00</div>
-                <div class="time-slot available">13:00</div>
+            {% endfor %}
+        </div>
+        
+        <div id="horarios-container" class="time-slots-container">
+            <p class="instruction-message">Selecciona un barbero y servicio para ver los horarios disponibles.</p>
+        </div>
+    </div>
+    
+    <!-- Panel de confirmación (oculto inicialmente) -->
+    <div class="booking-confirmation" id="booking-confirmation" style="display: none;">
+        <h3>Confirma tu Cita</h3>
+        <div class="booking-details" id="booking-details">
+            <!-- Detalles de la cita se llenarán aquí -->
+            <p><strong>Barbero:</strong> <span id="confirm-barbero"></span></p>
+            <p><strong>Servicio:</strong> <span id="confirm-servicio"></span></p>
+            <p><strong>Fecha:</strong> <span id="confirm-fecha"></span></p>
+            <p><strong>Hora:</strong> <span id="confirm-hora"></span></p>
+        </div>
+
+        <!-- Formulario de Información del Cliente (NUEVO) -->
+        <div class="client-info" id="client-info-form" style="margin-top: 1.5rem;">
+            <h4>Tus Datos</h4>
+            <div class="form-group">
+                <label for="client-name" class="form-label">Nombre Completo:</label>
+                <input type="text" id="client-name" name="client_name" class="form-input" required>
             </div>
-            <div class="day">
-                <h3>Miércoles</h3>
-                <div class="time-slot available">09:00</div>
-                <div class="time-slot available">10:00</div>
-                <div class="time-slot available">11:00</div>
-                <div class="time-slot available">12:00</div>
-                <div class="time-slot booked">13:00</div>
+            <div class="form-group">
+                <label for="client-email" class="form-label">Correo Electrónico:</label>
+                <input type="email" id="client-email" name="client_email" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="client-phone" class="form-label">Teléfono:</label>
+                <input type="tel" id="client-phone" name="client_phone" class="form-input" required>
+            </div>
+             <!-- Hidden fields para pasar IDs si es necesario, aunque JS lo manejará -->
+             <input type="hidden" id="selected-barbero-id" name="barbero_id">
+             <input type="hidden" id="selected-servicio-id" name="servicio_id">
+             <input type="hidden" id="selected-date" name="fecha">
+             <input type="hidden" id="selected-time" name="hora">
+        </div>
+        <!-- Fin Formulario de Información del Cliente -->
+
+        <button id="confirm-booking" class="book-button">Confirmar Cita</button>
+        <!-- Opcional: Botón para cancelar/volver atrás -->
+        <button type="button" class="cancel-button" onclick="hideConfirmationPanel()">Cancelar</button>
+    </div>
+</section>
+   
+    
+<!-- Sección Acerca de Nosotros -->
+<section id="about-section" class="about-section">
+    <div class="about-container">
+        <div class="section-title">
+            <h2>Acerca de Nosotros</h2>
+            <p>Tradición y excelencia en cada corte</p>
+        </div>
+        
+        <div class="about-content">
+            <h3>Nuestra Historia</h3>
+            <p>Fundada en 2010, nuestra barbería nació con la visión de recuperar el arte tradicional del barbero, combinado con técnicas modernas y un servicio excepcional. A lo largo de los años, nos hemos convertido en un referente de estilo y calidad.</p>
+            <p>Cada cliente que entra por nuestra puerta es recibido como parte de nuestra familia, creando una experiencia única que va más allá de un simple corte de cabello.</p>
+        </div>
+        
+        <div class="team-section">
+            <h3>Nuestro Equipo</h3>
+            <div class="team-members">
+                {% for barbero in barberos %}
+                <div class="team-member">
+                    <div class="member-img">
+                        {% if barbero.imagen_url %}
+                        <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}">
+                        {% else %}
+                        <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850" alt="{{ barbero.nombre }}">
+                        {% endif %}
+                    </div>
+                    <h4>{{ barbero.nombre }}</h4>
+                    <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
+                    <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
         
-        <div class="booking">
-            <p>¿Listo para un nuevo look? ¡Agenda tu cita ahora!</p>
-            <button class="book-button">Agendar Cita</button>
-        </div>
-    </section>
-    
-    <!-- Sección Acerca de Nosotros -->
-    <section id="about-section" class="about-section">
-        <div class="about-container">
-            <div class="section-title">
-                <h2>Acerca de Nosotros</h2>
-                <p>Tradición y excelencia en cada corte</p>
-            </div>
-            
-            <div class="about-content">
-                <h3>Nuestra Historia</h3>
-                <p>Fundada en 2010, nuestra barbería nació con la visión de recuperar el arte tradicional del barbero, combinado con técnicas modernas y un servicio excepcional. A lo largo de los años, nos hemos convertido en un referente de estilo y calidad.</p>
-                <p>Cada cliente que entra por nuestra puerta es recibido como parte de nuestra familia, creando una experiencia única que va más allá de un simple corte de cabello.</p>
-            </div>
-            
-            <div class="team-section">
-                <h3>Nuestro Equipo</h3>
-                <div class="team-members">
-                    <div class="team-member">
-                        <div class="member-img">
-                            <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850" alt="Juan Pérez">
-                        </div>
-                        <h4>Juan Pérez</h4>
-                        <p class="member-role">Maestro Barbero</p>
-                        <p>Especialista en cortes clásicos con más de 15 años de experiencia.</p>
-                    </div>
-                    
-                    <div class="team-member">
-                        <div class="member-img">
-                            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a" alt="Carlos Rodríguez">
-                        </div>
-                        <h4>Carlos Rodríguez</h4>
-                        <p class="member-role">Especialista en Barbas</p>
-                        <p>Maestro en el arte del arreglo y diseño de barbas perfectas.</p>
-                    </div>
-                    
-                    <div class="team-member">
-                        <div class="member-img">
-                            <img src="https://images.unsplash.com/photo-1571805341302-f857308690e3" alt="María González">
-                        </div>
-                        <h4>María González</h4>
-                        <p class="member-role">Estilista Senior</p>
-                        <p>Experta en las últimas tendencias y técnicas de corte moderno.</p>
-                    </div>
+        <div class="values-section">
+            <h3>Nuestros Valores</h3>
+            <div class="values-container">
+                <div class="value">
+                    <h4>Excelencia</h4>
+                    <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
+                </div>
+                <div class="value">
+                    <h4>Tradición</h4>
+                    <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
+                </div>
+                <div class="value">
+                    <h4>Innovación</h4>
+                    <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
                 </div>
             </div>
-            
-            <div class="values-section">
-                <h3>Nuestros Valores</h3>
-                <div class="values-container">
-                    <div class="value">
-                        <h4>Excelencia</h4>
-                        <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
-                    </div>
-                    <div class="value">
-                        <h4>Tradición</h4>
-                        <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
-                    </div>
-                    <div class="value">
-                        <h4>Innovación</h4>
-                        <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <footer>
-        <p>Barbería Clásica &copy; 2025</p>
-        <p>Calle Falsa 123 | Tel: 123456789</p>
-    </footer>
-    
-    <!-- Botón flotante de WhatsApp -->
-    <a href="https://wa.me/123456789" class="whatsapp-float" target="_blank">
-        <i class="whatsapp-icon">💬</i>
-    </a>
-
-    <!-- Panel del Carrito -->
-    <div class="cart-panel" id="cart-panel">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button class="close-cart" id="close-cart">&times;</button>
-        </div>
-        <div class="cart-items" id="cart-items">
-            <!-- Los productos se añadirán aquí dinámicamente -->
-            <div class="empty-cart">Tu carrito está vacío</div>
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total">€0.00</span>
-            </div>
-            <button class="checkout-button">Finalizar Compra</button>
         </div>
     </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
+</section>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.dot');
-            const prevArrow = document.querySelector('.prev-arrow');
-            const nextArrow = document.querySelector('.next-arrow');
-            let currentSlide = 0;
-            let slideInterval;
+<footer>
+    <p>Barbería Clásica &copy; 2025</p>
+    <p>Calle Falsa 123 | Tel: 123456789</p>
+</footer>
+
+<!-- Botón flotante de WhatsApp -->
+<a href="https://wa.me/123456789" class="whatsapp-float" target="_blank">
+    <i class="whatsapp-icon">💬</i>
+</a>
+
+<!-- Panel del Carrito -->
+<div class="cart-panel" id="cart-panel">
+    <div class="cart-header">
+        <h3>Tu Carrito</h3>
+        <button class="close-cart" id="close-cart">&times;</button>
+    </div>
+    <div class="cart-items" id="cart-items">
+        <!-- Los productos se añadirán aquí dinámicamente -->
+        <div class="empty-cart">Tu carrito está vacío</div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cart-total">€0.00</span>
+        </div>
+        <button class="checkout-button">Finalizar Compra</button>
+    </div>
+</div>
+<div class="cart-overlay" id="cart-overlay"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        const prevArrow = document.querySelector('.prev-arrow');
+        const nextArrow = document.querySelector('.next-arrow');
+        let currentSlide = 0;
+        let slideInterval;
+        
+        // Función para mostrar un slide específico
+        function showSlide(index) {
+            // Ocultar todos los slides
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
             
-            // Función para mostrar un slide específico
-            function showSlide(index) {
-                // Ocultar todos los slides
-                slides.forEach(slide => slide.classList.remove('active'));
-                dots.forEach(dot => dot.classList.remove('active'));
-                
-                // Mostrar el slide actual
-                slides[index].classList.add('active');
-                dots[index].classList.add('active');
-                currentSlide = index;
-            }
-            
-            // Función para ir al siguiente slide
-            function nextSlide() {
-                const newIndex = (currentSlide + 1) % slides.length;
-                showSlide(newIndex);
-            }
-            
-            // Función para ir al slide anterior
-            function prevSlide() {
-                const newIndex = (currentSlide - 1 + slides.length) % slides.length;
-                showSlide(newIndex);
-            }
-            
-            // Iniciar slider automático
-            function startSlideInterval() {
-                slideInterval = setInterval(nextSlide, 8000);
-            }
-            
-            // Detener slider automático
-            function stopSlideInterval() {
-                clearInterval(slideInterval);
-            }
-            
-            // Event listeners para controles
-            prevArrow.addEventListener('click', function() {
-                prevSlide();
-                stopSlideInterval();
-                startSlideInterval();
-            });
-            
-            nextArrow.addEventListener('click', function() {
-                nextSlide();
-                stopSlideInterval();
-                startSlideInterval();
-            });
-            
-            // Event listeners para puntos indicadores
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', function() {
-                    showSlide(index);
-                    stopSlideInterval();
-                    startSlideInterval();
-                });
-            });
-            
-            // Pausar slider al pasar el mouse
-            document.querySelector('.hero-slider').addEventListener('mouseenter', stopSlideInterval);
-            document.querySelector('.hero-slider').addEventListener('mouseleave', startSlideInterval);
-            
-            // Iniciar el slider
+            // Mostrar el slide actual
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+            currentSlide = index;
+        }
+        
+        // Función para ir al siguiente slide
+        function nextSlide() {
+            const newIndex = (currentSlide + 1) % slides.length;
+            showSlide(newIndex);
+        }
+        
+        // Función para ir al slide anterior
+        function prevSlide() {
+            const newIndex = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(newIndex);
+        }
+        
+        // Iniciar slider automático
+        function startSlideInterval() {
+            slideInterval = setInterval(nextSlide, 8000);
+        }
+        
+        // Detener slider automático
+        function stopSlideInterval() {
+            clearInterval(slideInterval);
+        }
+        
+        // Event listeners para controles
+        prevArrow.addEventListener('click', function() {
+            prevSlide();
+            stopSlideInterval();
             startSlideInterval();
         });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Manejo de anclajes con scroll suave
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href').substring(1);
-                    const targetElement = document.getElementById(targetId);
-                    
-                    if (targetElement) {
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 100, // Offset para no quedar exactamente al borde
-                            behavior: 'smooth'
-                        });
-                    }
-                });
+        
+        nextArrow.addEventListener('click', function() {
+            nextSlide();
+            stopSlideInterval();
+            startSlideInterval();
+        });
+        
+        // Event listeners para puntos indicadores
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', function() {
+                showSlide(index);
+                stopSlideInterval();
+                startSlideInterval();
             });
         });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elementos del DOM
-            const cartButton = document.getElementById('cart-button');
-            const cartPanel = document.getElementById('cart-panel');
-            const cartOverlay = document.getElementById('cart-overlay');
-            const closeCart = document.getElementById('close-cart');
-            const cartItems = document.getElementById('cart-items');
-            const cartCount = document.querySelector('.cart-count');
-            const cartTotal = document.getElementById('cart-total');
-            
-            // Carrito de compras
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            
-            // Actualizar contador del carrito
-            function updateCartCount() {
-                const count = cart.reduce((total, item) => total + item.quantity, 0);
-                cartCount.textContent = count;
-            }
-            
-            // Calcular total del carrito
-            function calculateTotal() {
-                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                cartTotal.textContent = `€${total.toFixed(2)}`;
-            }
-            
-            // Renderizar los productos en el carrito
-            function renderCart() {
-                if (cart.length === 0) {
-                    cartItems.innerHTML = '<div class="empty-cart">Tu carrito está vacío</div>';
-                    return;
-                }
-                
-                cartItems.innerHTML = cart.map(item => `
-                    <div class="cart-item" data-id="${item.id}">
-                        <img src="${item.image}" alt="${item.name}" class="cart-item-img">
-                        <div class="cart-item-details">
-                            <div class="cart-item-name">${item.name}</div>
-                            <div class="cart-item-price">€${item.price.toFixed(2)}</div>
-                            <div class="cart-item-quantity">
-                                <button class="quantity-btn decrease">-</button>
-                                <input type="text" class="quantity-input" value="${item.quantity}" readonly>
-                                <button class="quantity-btn increase">+</button>
-                            </div>
-                        </div>
-                        <button class="remove-item">&times;</button>
-                    </div>
-                `).join('');
-                
-                // Añadir event listeners para los botones de cantidad
-                document.querySelectorAll('.increase').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        const item = cart.find(item => item.id === id);
-                        item.quantity++;
-                        updateCart();
-                    });
-                });
-                
-                document.querySelectorAll('.decrease').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        const item = cart.find(item => item.id === id);
-                        if (item.quantity > 1) {
-                            item.quantity--;
-                            updateCart();
-                        }
-                    });
-                });
-                
-                document.querySelectorAll('.remove-item').forEach(button => {
-                    button.addEventListener('click', function() {
-                        const id = this.closest('.cart-item').dataset.id;
-                        cart = cart.filter(item => item.id !== id);
-                        updateCart();
-                    });
-                });
-            }
-            
-            // Actualizar el carrito y localStorage
-            function updateCart() {
-                localStorage.setItem('cart', JSON.stringify(cart));
-                renderCart();
-                updateCartCount();
-                calculateTotal();
-            }
-            
-            // Abrir/cerrar panel del carrito
-            cartButton.addEventListener('click', function(e) {
+        
+        // Pausar slider al pasar el mouse
+        document.querySelector('.hero-slider').addEventListener('mouseenter', stopSlideInterval);
+        document.querySelector('.hero-slider').addEventListener('mouseleave', startSlideInterval);
+        
+        // Iniciar el slider
+        startSlideInterval();
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Manejo de anclajes con scroll suave
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
-                cartPanel.classList.add('open');
-                cartOverlay.classList.add('open');
-                renderCart();
-                calculateTotal();
+                
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100, // Offset para no quedar exactamente al borde
+                        behavior: 'smooth'
+                    });
+                }
             });
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos del DOM
+        const cartButton = document.getElementById('cart-button');
+        const cartPanel = document.getElementById('cart-panel');
+        const cartOverlay = document.getElementById('cart-overlay');
+        const closeCart = document.getElementById('close-cart');
+        const cartItems = document.getElementById('cart-items');
+        const cartCount = document.querySelector('.cart-count');
+        const cartTotal = document.getElementById('cart-total');
+        
+        // Carrito de compras
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        // Actualizar contador del carrito
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            cartCount.textContent = count;
+        }
+        
+        // Calcular total del carrito
+        function calculateTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.textContent = `€${total.toFixed(2)}`;
+        }
+        
+        // Renderizar los productos en el carrito
+        function renderCart() {
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<div class="empty-cart">Tu carrito está vacío</div>';
+                return;
+            }
             
-            closeCart.addEventListener('click', function() {
-                cartPanel.classList.remove('open');
-                cartOverlay.classList.remove('open');
-            });
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item" data-id="${item.id}">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.name}</div>
+                        <div class="cart-item-price">€${item.price.toFixed(2)}</div>
+                        <div class="cart-item-quantity">
+                            <button class="quantity-btn decrease">-</button>
+                            <input type="text" class="quantity-input" value="${item.quantity}" readonly>
+                            <button class="quantity-btn increase">+</button>
+                        </div>
+                    </div>
+                    <button class="remove-item">&times;</button>
+                </div>
+            `).join('');
             
-            cartOverlay.addEventListener('click', function() {
-                cartPanel.classList.remove('open');
-                cartOverlay.classList.remove('open');
-            });
-            
-            // Añadir productos al carrito
-            document.querySelectorAll('.add-to-cart').forEach(button => {
+            // Añadir event listeners para los botones de cantidad
+            document.querySelectorAll('.increase').forEach(button => {
                 button.addEventListener('click', function() {
-                    const id = this.dataset.id;
-                    const name = this.dataset.name;
-                    const price = parseFloat(this.dataset.price);
-                    const image = this.dataset.image;
-                    
-                    // Comprobar si el producto ya está en el carrito
-                    const existingItem = cart.find(item => item.id === id);
-                    
-                    if (existingItem) {
-                        existingItem.quantity++;
-                    } else {
-                        cart.push({
-                            id,
-                            name,
-                            price,
-                            image,
-                            quantity: 1
-                        });
-                    }
-                    
-                    // Efecto visual de confirmación
-                    const originalText = this.textContent;
-                    this.textContent = '¡Añadido!';
-                    this.classList.add('added');
-                    
-                    setTimeout(() => {
-                        this.textContent = originalText;
-                        this.classList.remove('added');
-                    }, 1500);
-                    
+                    const id = this.closest('.cart-item').dataset.id;
+                    const item = cart.find(item => item.id === id);
+                    item.quantity++;
                     updateCart();
                 });
             });
             
-            // Inicializar contador del carrito al cargar la página
+            document.querySelectorAll('.decrease').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.closest('.cart-item').dataset.id;
+                    const item = cart.find(item => item.id === id);
+                    if (item.quantity > 1) {
+                        item.quantity--;
+                        updateCart();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.closest('.cart-item').dataset.id;
+                    cart = cart.filter(item => item.id !== id);
+                    updateCart();
+                });
+            });
+        }
+        
+        // Actualizar el carrito y localStorage
+        function updateCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
             updateCartCount();
+            calculateTotal();
+        }
+        
+        // Abrir/cerrar panel del carrito
+        cartButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            cartPanel.classList.add('open');
+            cartOverlay.classList.add('open');
+            renderCart();
+            calculateTotal();
         });
-    </script>
+        
+        closeCart.addEventListener('click', function() {
+            cartPanel.classList.remove('open');
+            cartOverlay.classList.remove('open');
+        });
+        
+        cartOverlay.addEventListener('click', function() {
+            cartPanel.classList.remove('open');
+            cartOverlay.classList.remove('open');
+        });
+        
+        // Añadir productos al carrito
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                const price = parseFloat(this.dataset.price);
+                const image = this.dataset.image;
+                
+                // Comprobar si el producto ya está en el carrito
+                const existingItem = cart.find(item => item.id === id);
+                
+                if (existingItem) {
+                    existingItem.quantity++;
+                } else {
+                    cart.push({
+                        id,
+                        name,
+                        price,
+                        image,
+                        quantity: 1
+                    });
+                }
+                
+                // Efecto visual de confirmación
+                const originalText = this.textContent;
+                this.textContent = '¡Añadido!';
+                this.classList.add('added');
+                
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.classList.remove('added');
+                }, 1500);
+                
+                updateCart();
+            });
+        });
+        
+        // Inicializar contador del carrito al cargar la página
+        updateCartCount();
+    });
+</script>
+<script>
+    // ... existing script ...
+
+    // Función para ocultar el panel (si añades el botón cancelar)
+    function hideConfirmationPanel() {
+        const bookingConfirmation = document.getElementById('booking-confirmation');
+        if (bookingConfirmation) {
+            bookingConfirmation.style.display = 'none';
+        }
+        // Opcional: resetear campos del formulario de cliente
+        const clientForm = document.getElementById('client-info-form');
+        if (clientForm) {
+            clientForm.reset(); // Si es un <form>, o limpiar inputs manualmente
+        }
+    }
+
+    // Asegúrate que tu función showConfirmation en booking.js
+    // haga visible el div 'booking-confirmation'
+    // Ejemplo (dentro de booking.js, en showConfirmation):
+    // bookingConfirmation.style.display = 'block';
+    // bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
+
+</script>
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
 </body>
 </html>

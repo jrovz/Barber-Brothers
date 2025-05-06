@@ -28,20 +28,12 @@ class ProductoForm(FlaskForm):
     submit = SubmitField('Guardar Producto')
 
 class BarberoForm(FlaskForm):
-    nombre = StringField('Nombre', validators=[DataRequired(), Length(max=100)])
-    especialidad = StringField('Especialidad', validators=[Optional(), Length(max=100)])
-    descripcion = TextAreaField('Descripción', validators=[Optional(), Length(max=500)])
-    activo = BooleanField('Servicio Activo', default=True)
-    # Mantener campo URL para compatibilidad hacia atrás
-    imagen_url = StringField('URL de Imagen Externa', validators=[Optional(), URL()])
-    
-    # Agregar campo para subir imagen
-    imagen_file = FileField('Subir Imagen', validators=[
-        Optional(),
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Solo archivos de imagen!')
-    ])
-    
-    submit = SubmitField('Guardar Barbero')
+    nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=100)])
+    especialidad = StringField('Especialidad', validators=[Length(max=100)])
+    descripcion = TextAreaField('Descripción')
+    imagen_file = FileField('Imagen', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Solo imágenes: jpg, png, jpeg')])
+    activo = BooleanField('Activo', default=True)
+    submit = SubmitField('Guardar')
 
 class ServicioForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(max=100)])
@@ -72,10 +64,9 @@ class DisponibilidadForm(FlaskForm):
     activo = BooleanField('Activo', default=True)
     
 class CitaForm(FlaskForm):
-    # 1. Cambiar a StringField para el nombre del cliente
-    cliente_id = StringField('Nombre del Cliente', validators=[
-        DataRequired(message="El nombre del cliente es obligatorio."),
-        Length(min=2, max=100, message="El nombre debe tener entre 2 y 100 caracteres.")
+    # 1. Cambiar a SelectField para el ID del cliente
+    cliente_id = SelectField('Cliente', coerce=int, validators=[
+        DataRequired(message="Debe seleccionar un cliente.")
     ])
 
     # 2. Campo Barbero (sin cambios aquí, se estilizará con CSS)
@@ -98,6 +89,7 @@ class CitaForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CitaForm, self).__init__(*args, **kwargs)
         # Poblar barberos y servicios aquí si no se hace en la ruta
-        # from app.models import Barbero, Servicio
+        # from app.models import Barbero, Servicio, Cliente # Asegúrate de importar Cliente si lo usas aquí
+        # self.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.order_by(Cliente.nombre).all()] # Ejemplo
         # self.barbero_id.choices = [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).order_by(Barbero.nombre).all()]
         # self.servicio.choices = [(s.nombre, s.nombre) for s in Servicio.query.order_by(Servicio.nombre).all()]

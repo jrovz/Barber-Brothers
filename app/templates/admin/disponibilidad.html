@@ -1,92 +1,121 @@
 {% extends "admin/admin_base.html" %}
+
 {% block content %}
 <div class="panel-header">
     <h1 class="panel-title">{{ title }}</h1>
-    <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn">Volver a Barberos</a>
+    <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-sm btn-secondary">← Volver a barberos</a>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
-        <div class="alert alert-{{ category or 'info' }}">
+        <div class="alert alert-{{ category }}">
             {{ message }}
         </div>
         {% endfor %}
     {% endif %}
 {% endwith %}
 
+<!-- Información del barbero -->
+<section class="barber-details">
+    <h2>Barbero: {{ barbero.nombre }}</h2>
+    <p>Estado: <span class="badge {% if barbero.activo %}badge-success{% else %}badge-danger{% endif %}">
+        {% if barbero.activo %}Activo{% else %}Inactivo{% endif %}
+    </span></p>
+</section>
+
+<!-- Formulario para nueva disponibilidad -->
 <section class="admin-form">
-    <h2 class="form-title">Añadir Disponibilidad</h2>
-    <form action="{{ url_for('admin.gestionar_disponibilidad', id=barbero.id) }}" method="POST">
+    <h2 class="form-title">Añadir Nuevo Horario</h2>
+    <form action="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" method="POST">
         {{ form.hidden_tag() }}
-        <div class="form-grid">
+        <div class="form-grid availability-form-grid"> <!-- Use a specific class if needed -->
             <div class="form-group">
                 {{ form.dia_semana.label(class="form-label") }}
                 {{ form.dia_semana(class="form-input") }}
                 {% for error in form.dia_semana.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
-            
             <div class="form-group">
                 {{ form.hora_inicio.label(class="form-label") }}
-                {{ form.hora_inicio(class="form-input", placeholder="09:00") }}
+                {{ form.hora_inicio(class="form-input", placeholder="HH:MM") }}
                 {% for error in form.hora_inicio.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
-            
             <div class="form-group">
                 {{ form.hora_fin.label(class="form-label") }}
-                {{ form.hora_fin(class="form-input", placeholder="18:00") }}
+                {{ form.hora_fin(class="form-input", placeholder="HH:MM") }}
                 {% for error in form.hora_fin.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
-            
-            <div class="form-group" style="display: flex; align-items: center;">
-                {{ form.activo(style="margin-right: 0.5rem;") }}
-                {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
+            <div class="form-group form-check-group">
+                {{ form.activo(class="form-check-input") }}
+                {{ form.activo.label(class="form-check-label") }}
                 {% for error in form.activo.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
         </div>
-        
-        {{ form.submit(class="btn", value="Añadir Disponibilidad") }}
+        <button type="submit" class="btn">Añadir Horario</button>
     </form>
 </section>
 
-<section>
-    <h2 class="form-title">Horarios Disponibles</h2>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Día</th>
-                <th>Hora Inicio</th>
-                <th>Hora Fin</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for disp in disponibilidades %}
-            <tr>
-                <td>{{ ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][disp.dia_semana] }}</td>
-                <td>{{ disp.hora_inicio.strftime('%H:%M') }}</td>
-                <td>{{ disp.hora_fin.strftime('%H:%M') }}</td>
-                <td>
-                    {% if disp.activo %}
-                        <span class="badge badge-primary" style="background-color: var(--color-success);">Activo</span>
-                    {% else %}
-                        <span class="badge" style="background-color: var(--color-text-muted); color: var(--color-bg-dark);">Inactivo</span>
+<!-- Lista de horarios existentes -->
+<section class="existing-availability">
+    <h2 class="section-title">Horarios Configurados</h2>
+    {% if disponibilidades %}
+    <div class="availability-grid">
+        {% for dia_num, dia_nombre in dias_semana.items() %}
+        <div class="availability-day">
+            <h3>{{ dia_nombre }}</h3>
+            <div class="time-slots">
+                {% set slots_found = false %}
+                {% for disp in disponibilidades %}
+                    {% if disp.dia_semana == dia_num %}
+                        {% set slots_found = true %}
+                        <div class="time-slot-item {% if not disp.activo %}inactive{% endif %}">
+                            <span class="time-range">{{ disp.hora_inicio.strftime('%H:%M') }} - {{ disp.hora_fin.strftime('%H:%M') }}</span>
+                            <div class="slot-actions">
+                                <span class="status-badge {% if disp.activo %}active{% else %}inactive{% endif %}">
+                                    {% if disp.activo %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                                <!-- Formulario para eliminar -->
+                                <form action="{{ url_for('admin.eliminar_disponibilidad', disp_id=disp.id) }}" method="post" class="inline-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Si usas CSRF #}
+                                    <button type="submit" class="btn-icon delete-btn" onclick="return confirm('¿Estás seguro de eliminar este horario?')">
+                                        <i class="fas fa-trash"></i> <!-- Asegúrate de tener FontAwesome o similar -->
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     {% endif %}
-                </td>
-                <td class="actions">
-                    <form action="{{ url_for('admin.eliminar_disponibilidad', id=disp.id) }}" method="POST" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" class="text-center">No hay horarios configurados.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+                {% if not slots_found %}
+                <p class="empty-message">No hay horarios configurados para {{ dia_nombre }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-data">
+        <p>No hay horarios configurados para este barbero.</p>
+    </div>
+    {% endif %}
 </section>
+
+<!-- Ayuda para configuración rápida -->
+<section class="quick-setup">
+    <h2 class="section-title">Configuración Rápida</h2>
+    <div class="setup-options">
+        <div class="setup-card">
+            <h3>Horario Estándar</h3>
+            <p>Configuración rápida para un horario típico de barbería:</p>
+            <ul>
+                <li>Lunes a viernes: 9:00-13:00 y 15:00-20:00</li>
+                <li>Sábados: 9:00-14:00</li>
+            </ul>
+            <form action="{{ url_for('admin.crear_disponibilidad_predeterminada', barbero_id=barbero.id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-sm btn-secondary">Aplicar Horario Estándar</button>
+            </form>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
