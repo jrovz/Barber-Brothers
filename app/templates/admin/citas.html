@@ -18,56 +18,67 @@
 <!-- Formulario para nueva cita -->
 <section class="admin-form">
     <h2 class="section-title">Crear Nueva Cita</h2>
-    <form action="{{ url_for('admin.gestionar_citas') }}" method="post">
+    <form action="{{ url_for('admin.gestionar_citas') }}" method="post" id="citaAdminForm">
         {{ form.hidden_tag() }}
         <div class="form-grid">
             <div class="form-group">
-                {{ form.cliente_id.label(class="form-label") }}
-                {{ form.cliente_id(class="form-input", placeholder="Nombre completo del cliente") }}
-                {% if form.cliente_id.errors %}
-                    {% for error in form.cliente_id.errors %}
+                {{ form.cliente_nombre.label(class="form-label") }}
+                {{ form.cliente_nombre(class="form-input", id="admin_cliente_nombre", placeholder="Escribe el nombre del cliente") }}
+                {% if form.cliente_nombre.errors %}
+                    {% for error in form.cliente_nombre.errors %}
                         <span class="error-message">{{ error }}</span>
                     {% endfor %}
                 {% endif %}
             </div>
             <div class="form-group">
                 {{ form.barbero_id.label(class="form-label") }}
-                {{ form.barbero_id(class="form-select") }}
-                {% if form.barbero_id.errors %}
-                    {% for error in form.barbero_id.errors %}
-                        <span class="error-message">{{ error }}</span>
-                    {% endfor %}
-                {% endif %}
+                {{ form.barbero_id(class="form-select", id="admin_barbero_select") }}
+                {% if form.barbero_id.errors %}{% for e in form.barbero_id.errors %}<span class="error-message">{{e}}</span>{% endfor %}{% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.servicio_id.label(class="form-label") }}
+                {{ form.servicio_id(class="form-select", id="admin_servicio_select") }}
+                {% if form.servicio_id.errors %}{% for e in form.servicio_id.errors %}<span class="error-message">{{e}}</span>{% endfor %}{% endif %}
             </div>
             
-            <div class="form-group">
-                {{ form.fecha.label(class="form-label") }}
-                {# Añadir clase 'datepicker-input' para JS #}
-                {{ form.fecha(class="form-input datepicker-input", placeholder="Seleccione fecha y hora") }}
-                {% if form.fecha.errors %}
-                    {% for error in form.fecha.errors %}
-                    <span class="error-message">{{ error }}</span>
-                    {% endfor %}
-                {% endif %}
+            <!-- INICIO: Nuevo Selector de Fecha Estilo Calendario -->
+            <div class="form-group calendar-group">
+                <label class="form-label">Fecha de la Cita:</label>
+                <div class="admin-calendar-controls">
+                    <button type="button" id="admin_prev_days" class="btn btn-sm btn-outline">&lt;</button>
+                    <span id="admin_current_month_year" class="current-month-year"></span>
+                    <button type="button" id="admin_next_days" class="btn btn-sm btn-outline">&gt;</button>
+                </div>
+                <div id="admin_calendar_days_container" class="calendar-days-grid">
+                    <!-- Los días se generarán aquí con JS -->
+                </div>
+                <input type="hidden" id="admin_fecha_cita_hidden" name="fecha_cita">
             </div>
-            
-            <div class="form-group">
-                {{ form.servicio.label(class="form-label") }}
-                {{ form.servicio(class="form-select") }}
-                {% if form.servicio.errors %}
-                    {% for error in form.servicio.errors %}
-                        <span class="error-message">{{ error }}</span>
-                    {% endfor %}
-                {% endif %}
-            </div>
+            <!-- FIN: Nuevo Selector de Fecha Estilo Calendario -->
             
             <div class="form-group">
                 {{ form.estado.label(class="form-label") }}
-                {{ form.estado(class="form-select") }}
+                {{ form.estado(class="form-select", id="admin_estado_cita") }}
                 {% for error in form.estado.errors %}
-                <span class="error">{{ error }}</span>
+                <span class="error-message">{{ error }}</span>
                 {% endfor %}
             </div>
+
+            <!-- Campo oculto para la hora seleccionada -->
+            <input type="hidden" id="admin_hora_cita" name="hora_cita">
+        </div>
+
+        <!-- Contenedor para los slots de horario -->
+        <div class="form-group">
+            <label class="form-label">Horarios Disponibles:</label>
+            <div id="admin_horarios_container" class="time-slots-container admin-time-slots">
+                <p class="instruction-message">Selecciona barbero, servicio y fecha para ver horarios.</p>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="admin_notas_cita" class="form-label">Notas (Opcional):</label>
+            <textarea id="admin_notas_cita" name="notas_cita" class="form-input" rows="3"></textarea>
         </div>
         
         <button type="submit" class="btn">Crear Cita</button>
@@ -124,7 +135,7 @@
                 <td>{{ cita.id }}</td>
                 <td>{{ cita.cliente.nombre if cita.cliente else 'N/A' }}</td>
                 <td>{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</td>
-                <td>{{ cita.servicio }}</td>
+                <td>{{ cita.servicio.nombre if cita.servicio else 'N/A' }}</td> {# MODIFIED: Assuming Cita has a relationship 'servicio' that gives the Servicio object #}
                 <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>
                     <span class="badge 
@@ -151,16 +162,167 @@
         </tbody>
     </table>
 </section>
+
+<!-- ELIMINADO: Script de flatpickr para el campo de fecha anterior -->
+<!-- El nuevo input type="date" no necesita flatpickr para la funcionalidad básica -->
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr(".datepicker-input", {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i", // Debe coincidir con el format de WTForms
-            defaultDate: "{{ form.fecha.data or datetime.now().strftime('%Y-%m-%d %H:%M') }}", // Fecha actual o la existente            locale: "es", // Usar localización en español
-            time_24hr: true,
-            minuteIncrement: 15, // Intervalos de 15 minutos
-            minDate: "today" // Opcional: no permitir fechas pasadas
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const barberoSelect = document.getElementById('admin_barbero_select');
+    const servicioSelect = document.getElementById('admin_servicio_select');
+    // const fechaInput = document.getElementById('admin_fecha_cita_hidden'); // Ya no se usa directamente aquí para el listener
+    const horariosContainer = document.getElementById('admin_horarios_container');
+    const horaCitaHiddenInput = document.getElementById('admin_hora_cita');
+
+    // --- INICIO: Lógica del Calendario Visual para Crear Cita ---
+    const calendarDaysContainer = document.getElementById('admin_calendar_days_container');
+    const currentMonthYearSpan = document.getElementById('admin_current_month_year');
+    const prevDaysButton = document.getElementById('admin_prev_days');
+    const nextDaysButton = document.getElementById('admin_next_days');
+    const fechaCitaHiddenInput = document.getElementById('admin_fecha_cita_hidden'); // El input oculto que actualiza el calendario
+
+    let currentCalendarDate = new Date(); 
+    currentCalendarDate.setHours(0,0,0,0); 
+
+    function formatAdminDate(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Definición ÚNICA y MEJORADA de fetchHorarios
+    function fetchHorarios() {
+        const barberoId = barberoSelect.value;
+        const servicioId = servicioSelect.value;
+        const fecha = fechaCitaHiddenInput.value; // Usar el valor del input oculto del calendario
+
+        // Asegurarse que los IDs "0" (opciones por defecto) no se envíen
+        if (barberoId && barberoId !== "0" && servicioId && servicioId !== "0" && fecha) {
+            horariosContainer.innerHTML = '<p class="loading-message">Cargando horarios...</p>'; // Mensaje de carga
+            fetch(`/api/disponibilidad/${barberoId}/${fecha}?servicio_id=${servicioId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        // Intentar parsear el error si es JSON, sino usar el statusText
+                        return response.json().catch(() => { throw new Error(`Error ${response.status}: ${response.statusText}`) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    horariosContainer.innerHTML = ''; 
+                    if (data.error) {
+                        horariosContainer.innerHTML = `<p class="error-message">${data.error}</p>`;
+                        return;
+                    }
+                    // data.horarios ahora debería ser una lista de strings ["HH:MM", ...]
+                    if (data.horarios && data.horarios.length > 0) {
+                        data.horarios.forEach(slotHora => { // slotHora es ahora un string "HH:MM"
+                            const slotButton = document.createElement('button');
+                            slotButton.type = 'button'; 
+                            slotButton.classList.add('time-slot'); 
+                            slotButton.textContent = slotHora;
+                            slotButton.dataset.time = slotHora;
+                            slotButton.addEventListener('click', function() {
+                                document.querySelectorAll('#admin_horarios_container .time-slot').forEach(btn => btn.classList.remove('selected'));
+                                this.classList.add('selected');
+                                horaCitaHiddenInput.value = this.dataset.time;
+                            });
+                            horariosContainer.appendChild(slotButton);
+                        });
+                    } else {
+                        horariosContainer.innerHTML = `<p class="instruction-message">${data.mensaje || 'No hay horarios disponibles para la selección actual.'}</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching horarios:', error);
+                    horariosContainer.innerHTML = `<p class="error-message">Error al cargar horarios: ${error.message}. Intenta de nuevo.</p>`;
+                });
+        } else {
+            horariosContainer.innerHTML = '<p class="instruction-message">Selecciona barbero, servicio y fecha para ver horarios.</p>';
+            if(horaCitaHiddenInput) horaCitaHiddenInput.value = ''; 
+        }
+    }
+
+    function renderAdminCalendar() {
+        calendarDaysContainer.innerHTML = ''; 
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const tempDateForMonth = new Date(currentCalendarDate);
+        currentMonthYearSpan.textContent = tempDateForMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
+        for (let i = 0; i < 7; i++) { 
+            const dayDate = new Date(currentCalendarDate);
+            dayDate.setDate(currentCalendarDate.getDate() + i);
+
+            const dayButton = document.createElement('button');
+            dayButton.type = 'button';
+            dayButton.classList.add('calendar-day-btn');
+            
+            const dayNumberSpan = document.createElement('span');
+            dayNumberSpan.classList.add('day-number');
+            dayNumberSpan.textContent = dayDate.getDate();
+            
+            const dayMonthSpan = document.createElement('span');
+            dayMonthSpan.classList.add('day-month');
+            dayMonthSpan.textContent = dayDate.toLocaleDateString('es-ES', { month: 'short' });
+
+            dayButton.appendChild(dayNumberSpan);
+            dayButton.appendChild(dayMonthSpan);
+            
+            dayButton.dataset.date = formatAdminDate(dayDate);
+
+            if (dayDate < today) {
+                dayButton.classList.add('disabled');
+                dayButton.disabled = true;
+            } else {
+                dayButton.addEventListener('click', function() {
+                    document.querySelectorAll('#admin_calendar_days_container .calendar-day-btn').forEach(btn => btn.classList.remove('selected'));
+                    this.classList.add('selected');
+                    fechaCitaHiddenInput.value = this.dataset.date;
+                    // Disparar el evento change explícitamente o llamar a fetchHorarios
+                    // fechaCitaHiddenInput.dispatchEvent(new Event('change')); // Si fetchHorarios escuchara a este input
+                    fetchHorarios(); // Llamar directamente es más fiable aquí
+                });
+            }
+            if (formatAdminDate(dayDate) === fechaCitaHiddenInput.value) {
+                dayButton.classList.add('selected');
+            }
+             if (formatAdminDate(dayDate) === formatAdminDate(today)) {
+                dayButton.classList.add('today');
+            }
+            calendarDaysContainer.appendChild(dayButton);
+        }
+    }
+
+    prevDaysButton.addEventListener('click', () => {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() - 7);
+        renderAdminCalendar();
+        // Opcional: limpiar horarios si la fecha cambia y no hay selección automática
+        // horariosContainer.innerHTML = '<p class="instruction-message">Selecciona barbero, servicio y fecha para ver horarios.</p>';
+        // if(horaCitaHiddenInput) horaCitaHiddenInput.value = '';
     });
+
+    nextDaysButton.addEventListener('click', () => {
+        currentCalendarDate.setDate(currentCalendarDate.getDate() + 7);
+        renderAdminCalendar();
+        // Opcional: limpiar horarios
+        // horariosContainer.innerHTML = '<p class="instruction-message">Selecciona barbero, servicio y fecha para ver horarios.</p>';
+        // if(horaCitaHiddenInput) horaCitaHiddenInput.value = '';
+    });
+    
+    // Event listeners
+    if(barberoSelect) barberoSelect.addEventListener('change', fetchHorarios);
+    if(servicioSelect) servicioSelect.addEventListener('change', fetchHorarios);
+    // No necesitamos un listener para fechaCitaHiddenInput.value si el calendario llama a fetchHorarios() directamente.
+
+    // Inicializar calendario y cargar horarios si ya hay una fecha seleccionada (ej. al recargar con error)
+    renderAdminCalendar(); 
+    if (fechaCitaHiddenInput.value) { // Si hay una fecha pre-cargada
+        fetchHorarios();
+    }
+
+    // Eliminar la segunda definición de fetchHorarios que estaba más abajo si aún existe.
+});
 </script>
 {% endblock %}

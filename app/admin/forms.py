@@ -83,19 +83,15 @@ class DisponibilidadForm(FlaskForm):
     activo = BooleanField('Activo', default=True)
     
 class CitaForm(FlaskForm):
-    # 1. Cambiar a SelectField para el ID del cliente
-    cliente_id = SelectField('Cliente', coerce=int, validators=[
-        DataRequired(message="Debe seleccionar un cliente.")
+    # Cambiado de SelectField a StringField
+    cliente_nombre = StringField('Nombre del Cliente', validators=[
+        DataRequired(message="El nombre del cliente es obligatorio."),
+        Length(min=3, max=100, message="El nombre debe tener entre 3 y 100 caracteres.")
     ])
+    # cliente_id = SelectField('Cliente', ...) // Eliminado o comentado
 
-    # 2. Campo Barbero (sin cambios aquí, se estilizará con CSS)
     barbero_id = SelectField('Barbero Asignado', coerce=int, validators=[DataRequired(message="Debe seleccionar un barbero.")])
-
-    # 3. Campo Fecha (sin cambios aquí, se usará JS para el picker)
-    # Asegúrate que el formato coincida con el que usará el date picker
-    fecha = DateTimeField('Fecha y Hora de la Cita', format='%Y-%m-%d %H:%M', validators=[DataRequired(message="La fecha y hora son obligatorias.")])
-
-    servicio = SelectField('Servicio Solicitado', validators=[DataRequired(message="Debe seleccionar un servicio.")])
+    servicio_id = SelectField('Servicio Solicitado', coerce=int, validators=[DataRequired(message="Debe seleccionar un servicio.")])
     estado = SelectField('Estado de la Cita', choices=[
         ('pendiente', 'Pendiente'),
         ('confirmada', 'Confirmada'),
@@ -104,11 +100,11 @@ class CitaForm(FlaskForm):
     ], default='pendiente')
     submit = SubmitField('Guardar Cita')
 
-    # Método para poblar choices dinámicamente (opcional pero recomendado)
     def __init__(self, *args, **kwargs):
         super(CitaForm, self).__init__(*args, **kwargs)
-        # Poblar barberos y servicios aquí si no se hace en la ruta
-        # from app.models import Barbero, Servicio, Cliente # Asegúrate de importar Cliente si lo usas aquí
-        # self.cliente_id.choices = [(c.id, c.nombre) for c in Cliente.query.order_by(Cliente.nombre).all()] # Ejemplo
-        # self.barbero_id.choices = [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).order_by(Barbero.nombre).all()]
-        # self.servicio.choices = [(s.nombre, s.nombre) for s in Servicio.query.order_by(Servicio.nombre).all()]
+        from app.models import Barbero, Servicio # Cliente ya no se importa para choices aquí
+        # Las choices de barbero y servicio se siguen poblando como antes
+        self.barbero_id.choices = [(0, 'Selecciona un barbero')] + [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).order_by(Barbero.nombre).all()]
+        self.servicio_id.choices = [(0, 'Selecciona un servicio')] + [(s.id, s.nombre) for s in Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()]
+        # Añadir opción por defecto también para estado si se desea
+        self.estado.choices = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada'), ('cancelada', 'Cancelada'), ('completada', 'Completada')]

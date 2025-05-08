@@ -307,7 +307,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="admin-logo">
-                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Barber Brothers Logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Barber Brothers Logo">
                 <h3 class="admin-title">Panel Admin</h3>
             </div>
             
@@ -317,7 +317,7 @@
                     <li class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
                     <li class="{{ 'active' if 'producto' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_productos') }}">Productos</a></li>
                     <li class="{{ 'active' if 'barbero' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_barberos') }}">Barberos</a></li>
-                    <li class="{{ 'active' if 'categoria' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_categorias') }}">Categorías</a></li>
+                    {# <li class="{{ 'active' if 'categoria' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_categorias') }}">Categorías</a></li> #} {# ELIMINADO #}
                     <li class="{{ 'active' if 'servicio' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_servicios') }}">Servicios</a></li>
                     <li class="{{ 'active' if 'cita' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_citas') }}">Citas</a></li>
                     

@@ -13,7 +13,7 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <img src="/static/logo.jpg" alt="Barbería Clásica">
+                <img src="/static/logo.png" alt="Barbería Clásica">
             </div>
             <nav>
                 <ul>
@@ -37,89 +37,39 @@
         <p>La mejor selección para lucir impecable</p>
     </div>
     
-    <!-- Sección Productos para Peinar -->
-     {% if productos_peinar %}
-    <section class="category">
-        <h2>Productos para Peinar</h2>
-        <div class="products">
-            {% for producto in productos_peinar %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
+    {% if categorias_con_productos %}
+        {% for item in categorias_con_productos %}
+        <section class="category">
+            <h2>{{ item.categoria.nombre }}</h2>
+            <div class="products">
+                {% for producto in item.productos %}
+                <div class="product">
+                    <div class="product-img">
+                        <img src="{{ producto.imagen_url if producto.imagen_url else url_for('static', filename='images/placeholder_product.png') }}" alt="{{ producto.nombre }}">
+                    </div>
+                    <div class="product-info">
+                        <div class="product-title">{{ producto.nombre }}</div>
+                        <div class="product-price">{{ producto.precio|cop_format }}</div>
+                        <div class="product-description">{{ producto.descripcion }}</div>
+                        <button class="buy-button add-to-cart" 
+                                data-id="{{ producto.id }}" 
+                                data-name="{{ producto.nombre }}" 
+                                data-price="{{ producto.precio }}" 
+                                data-image="{{ producto.imagen_url if producto.imagen_url else url_for('static', filename='images/placeholder_product.png') }}">
+                            Añadir al Carrito
+                        </button>
+                    </div>
                 </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">{{ producto.precio|cop_format }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
-    </section>
+        </section>
+        {% endfor %}
+    {% else %}
+        <section class="category" style="text-align: center; padding: 2rem;">
+            <p>No hay productos disponibles en este momento. Por favor, vuelve a consultar más tarde.</p>
+        </section>
     {% endif %}
-
-    <!-- Sección Productos para Barba -->
-     {% if productos_barba %}
-    <section class="category">
-        <h2>Productos para Barba</h2>
-        <div class="products">
-            {% for producto in productos_barba %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
-                </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">{{ producto.precio|cop_format }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
-
-    <!-- Sección Accesorios -->
-     {% if productos_accesorios %}
-    <section class="category">
-        <h2>Accesorios</h2>
-        <div class="products">
-            {% for producto in productos_accesorios %}
-            <div class="product">
-                <div class="product-img">
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}">
-                </div>
-                <div class="product-info">
-                    <div class="product-title">{{ producto.nombre }}</div>
-                    <div class="product-price">{{ producto.precio|cop_format }}</div>
-                    <div class="product-description">{{ producto.descripcion }}</div>
-                    <button class="buy-button add-to-cart" 
-                            data-id="{{ producto.id }}" 
-                            data-name="{{ producto.nombre }}" 
-                            data-price="{{ producto.precio }}" 
-                            data-image="{{ producto.imagen_url }}">
-                        Añadir al Carrito
-                    </button>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
-    {% endif %}
+    
     <footer>
         <p>Barbería &copy; 2025</p>
         <p>Calle Falsa 123 | Tel: 123456789</p>

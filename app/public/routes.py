@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from app.public import bp
 from app.models.producto import Producto
@@ -109,43 +109,35 @@ def contact():
 def productos():
     """Página de productos agrupados por categoría."""
     
-    productos_peinar = []
-    productos_barba = []
-    productos_accesorios = []
+    categorias_con_productos = [] # Nueva estructura para pasar a la plantilla
 
     try:
-        categoria_peinar = Categoria.query.filter(Categoria.nombre.ilike('peinar')).first()
-        if categoria_peinar:
-            productos_peinar = Producto.query.filter_by(
-                categoria_id=categoria_peinar.id, 
-                activo=True
-            ).order_by(Producto.nombre).all()
-
-        categoria_barba = Categoria.query.filter(Categoria.nombre.ilike('barba')).first()
-        if categoria_barba:
-            productos_barba = Producto.query.filter_by(
-                categoria_id=categoria_barba.id, 
-                activo=True
-            ).order_by(Producto.nombre).all()
-
-        categoria_accesorios = Categoria.query.filter(Categoria.nombre.ilike('accesorios')).first()
-        if categoria_accesorios:
-            productos_accesorios = Producto.query.filter_by(
-                categoria_id=categoria_accesorios.id, 
+        # Obtener todas las categorías ordenadas por nombre
+        todas_categorias = Categoria.query.order_by(Categoria.nombre).all()
+        
+        for categoria in todas_categorias:
+            # Obtener productos activos para esta categoría
+            # Asumiendo que Producto tiene una relación llamada 'categoria_rel' y un campo 'activo'
+            productos_activos = Producto.query.filter_by(
+                categoria_id=categoria.id, 
                 activo=True
             ).order_by(Producto.nombre).all()
             
+            # Si la categoría tiene productos activos, añadirla a la lista
+            if productos_activos:
+                categorias_con_productos.append({
+                    'categoria': categoria, # Pasamos el objeto categoría completo
+                    'productos': productos_activos
+                })
+                
     except Exception as e:
         flash(f"Error al cargar productos: {str(e)}", "danger")
         # Log the error for debugging
         current_app.logger.error(f"Error in /productos route: {e}")
 
-
     return render_template(
         'public/productos.html',
-        productos_peinar=productos_peinar,
-        productos_barba=productos_barba,
-        productos_accesorios=productos_accesorios
+        categorias_con_productos=categorias_con_productos # Pasamos la nueva estructura
     )
 
 @bp.route('/checkout', methods=['GET', 'POST'])
@@ -221,39 +213,33 @@ def disponibilidad_barbero(barbero_id, fecha):
         fecha_dt = datetime.strptime(fecha, '%Y-%m-%d').date()
         barbero = Barbero.query.get_or_404(barbero_id)
 
-        # Obtener servicio_id y duración del query param
         servicio_id = request.args.get('servicio_id', type=int)
-        duracion_servicio = 30 # Duración por defecto si no se proporciona servicio
+        duracion_servicio = 30 
 
         if servicio_id:
             servicio = Servicio.query.get(servicio_id)
             if servicio and servicio.duracion_estimada:
-                # Asumiendo que duracion_estimada es un string como "30 min" o solo "30"
                 try:
-                    # Extraer solo los dígitos
                     duracion_str = ''.join(filter(str.isdigit, str(servicio.duracion_estimada)))
                     if duracion_str:
                          duracion_servicio = int(duracion_str)
-                    else: # Si no hay dígitos, usar defecto
+                    else: 
                          print(f"Warning: No se pudo extraer duración numérica de '{servicio.duracion_estimada}'. Usando {duracion_servicio} min.")
                 except (ValueError, TypeError):
                      print(f"Warning: Error al convertir duración '{servicio.duracion_estimada}'. Usando {duracion_servicio} min.")
-                     # Mantener el valor por defecto
         else:
              print("Warning: No se proporcionó servicio_id. Usando duración por defecto.")
 
+        horarios_obj_list = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
 
-        # --- Lógica de Fallback Eliminada ---
-        # Ya no generamos horarios predeterminados si no hay configuración.
-        # El método obtener_horarios_disponibles debe manejar esto.
-
-        # Llamar al método del modelo pasando la duración
-        # ASUMIENDO que el método ahora acepta duracion_servicio
-        horarios = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
-
+        horarios_disponibles_str = []
+        if horarios_obj_list:
+            for slot in horarios_obj_list:
+                if slot['disponible']:
+                    horarios_disponibles_str.append(slot['hora'])
+        
         mensaje_respuesta = f'Horarios disponibles para {barbero.nombre} el {fecha}'
-        if not horarios:
-             # Verificar si hay disponibilidad configurada para ese día
+        if not horarios_disponibles_str: # Comprobar la lista de strings filtrada
              disponibilidades_dia = barbero.get_disponibilidad_por_dia(fecha_dt.weekday())
              if not disponibilidades_dia:
                  mensaje_respuesta = f"{barbero.nombre} no tiene horario configurado para este día."
@@ -264,8 +250,8 @@ def disponibilidad_barbero(barbero_id, fecha):
         return jsonify({
             'barbero': barbero.nombre,
             'fecha': fecha,
-            'horarios': horarios,
-            'mensaje': mensaje_respuesta # Mensaje informativo
+            'horarios': horarios_disponibles_str, # Usar la lista de strings de horas disponibles
+            'mensaje': mensaje_respuesta 
         })
 
     except ValueError as ve:

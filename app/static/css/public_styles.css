@@ -388,9 +388,10 @@ footer p {
 /* Estilos del Slider Hero */
 .hero-slider {
     position: relative;
-    height: 750px; /* Aumentado de 500px a 700px */
+    height: 740px; /* Aumentado de 500px a 700px */
     overflow: hidden;
     border-bottom: 1px solid var(--color-border);
+    background-color: #111; /* Fondo si las imágenes no cargan o para transiciones */ /* AÑADIDO/MODIFICADO */
 }
 
 .slider-container {
@@ -408,11 +409,16 @@ footer p {
     opacity: 0;
     transition: opacity 1s ease;
     z-index: 1;
+    display: flex; /* AÑADIDO: Para centrar contenido */
+    align-items: center; /* AÑADIDO: Centra verticalmente */
+    justify-content: center; /* AÑADIDO: Centra horizontalmente */
+    overflow: hidden; /* AÑADIDO: Evita que el contenido se desborde */
+    /* background-color: #000; */ /* COMENTADO/ELIMINADO: .hero-slider ya tiene un fondo, y .instagram-embed-slide tendrá el suyo */
 }
 
 .slide.active {
     opacity: 1;
-    z-index: 2;
+    z-index: 2; /* Asegúrate que este z-index sea mayor que el de .slide normal si no es .active */
 }
 
 .slide-bg {
@@ -432,7 +438,10 @@ footer p {
     transform: scale(1.1);
 }
 
-.slide::before {
+/* ELIMINADO EL .slide::before que aplicaba un gradiente a todos los slides.
+   Si lo necesitas para los slides de producto, deberías aplicarlo de forma más específica,
+   quizás dentro de .slide-content o a un nuevo pseudo-elemento en .slide:not(.instagram-embed-slide) */
+/* .slide::before {
     content: '';
     position: absolute;
     top: 0;
@@ -440,32 +449,33 @@ footer p {
     width: 100%;
     height: 100%;
     background: linear-gradient(rgba(31, 42, 32, 0.6), rgba(31, 42, 32, 0.8));
-    z-index: 1;
-}
+    z-index: 1; 
+} */
 
 .slide-content {
     position: relative;
     z-index: 2;
-    height: 100%;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    height: 100%; /* Asegura que ocupe todo el alto */
     display: flex;
-    align-items: flex-end; /* Cambio: alineación en la parte inferior */
-    justify-content: flex-start; /* Cambio: alineación a la izquierda */
-    padding: 0;
-    text-align: left;
-    color: var(--color-bg-card);
+    align-items: flex-end; /* Alinea .product-highlight al fondo */
+    justify-content: flex-start; /* Alinea .product-highlight a la izquierda */
+    padding: 3rem; /* Espaciado general desde los bordes del slide */
+    text-align: left; /* Asegura que el texto dentro de .product-highlight se alinee a la izquierda */
+    /* color: var(--color-bg-card); */ /* Este color parece incorrecto para el texto, el texto es blanco/crema */
 }
 
 .product-highlight {
-    background: none; /* Eliminar el fondo blanco */
-    padding: 3rem; /* Aumentado para mayor espaciado */
-    max-width: 650px; /* Ligeramente más ancho */
-    margin-bottom: 3rem; /* Espacio adicional en la parte inferior */
-    border-left: none; /* Eliminar el borde */
+    background: none;
+    padding: 0; /* El padding ahora lo maneja .slide-content para el posicionamiento general */
+    max-width: 600px; /* Ajusta según necesites */
+    margin: 0; /* Eliminamos márgenes para que se pegue al padding de .slide-content */
     transform: translateY(30px);
     opacity: 0;
     transition: transform 0.8s ease, opacity 0.8s ease;
-    position: relative; /* Para posicionar el gradiente */
+    position: relative; 
     z-index: 2;
+    color: var(--color-text-primary); /* Aseguramos color de texto primario */
 }
 
 /* Añadir un gradiente oscuro detrás del texto para mejorar legibilidad */
@@ -487,6 +497,59 @@ footer p {
     pointer-events: none;
     transform: translate(-20%, 20%); /* Ajusta el posicionamiento del gradiente */
 }
+
+/* NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM */
+.hero-slider .slide.instagram-embed-slide {
+    background-color: #181818; /* Fondo oscuro para el área no ocupada por el embed */
+    padding: 30px; /* Aumentamos un poco el padding para dar más aire y espacio al box-shadow */
+    /* Las propiedades de flexbox heredadas de .slide se encargarán del centrado */
+}
+
+.hero-slider .slide.instagram-embed-slide .instagram-media {
+    margin: 0 !important; 
+    border-radius: 8px !important;
+    box-shadow: 0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.3); /* Sombra original + una más pronunciada para profundidad */
+    /* Alternativamente, una sombra más suave pero definida: */
+    /* box-shadow: var(--shadow-medium); */
+    max-width: 540px; /* Respetamos el max-width común de Instagram */
+    width: 100%; /* Hacemos que intente ocupar el ancho disponible hasta su max-width */
+}
+
+.hero-slider .slide.instagram-embed-slide .instagram-media iframe {
+    max-width: 100%; 
+    border-radius: 8px; /* Hereda el borde redondeado */
+    display: block; /* Para evitar espacios extra debajo del iframe */
+}
+
+/* NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM (REFORZADOS) */
+.hero-slider .slide.instagram-embed-slide {
+    background-color: #181818 !important; /* Fondo oscuro para el área no ocupada por el embed */
+    padding: 30px !important; /* Espacio alrededor del embed */
+    /* Las propiedades de flexbox heredadas de .slide se encargarán del centrado */
+}
+
+.hero-slider .slide.instagram-embed-slide .instagram-media {
+    /* Anulando estilos inline del blockquote de Instagram */
+    background: #FFF !important; /* Mantenemos el fondo blanco del embed si se desea, o cámbialo */
+    border: none !important; /* Eliminamos el borde inline si no lo queremos */
+    border-radius: 8px !important; /* Nuestro borde redondeado deseado */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.3) !important; /* Nuestra sombra personalizada */
+    margin: 0 auto !important; /* Centrado horizontal si el flex del padre no es suficiente y para anular el margin:1px inline */
+    padding: 0 !important; /* Anulamos el padding inline si no lo necesitamos en el blockquote mismo */
+    max-width: 540px !important; /* Respetamos el max-width común de Instagram */
+    min-width: 300px !important; /* Un min-width razonable, anulando el inline de 326px si es necesario */
+    width: 100% !important; /* Hacemos que intente ocupar el ancho disponible hasta su max-width */
+    /* Importante: El script de Instagram puede ajustar la altura dinámicamente. */
+    /* No intentes forzar una altura aquí a menos que sepas exactamente lo que haces. */
+}
+
+.hero-slider .slide.instagram-embed-slide .instagram-media iframe {
+    max-width: 100%; 
+    border-radius: 8px; /* El iframe hereda el borde redondeado del blockquote */
+    display: block; /* Para evitar espacios extra debajo del iframe */
+    margin: 0 auto; /* Asegura que el iframe también se centre si tiene un ancho menor al blockquote */
+}
+/* FIN DE NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM */
 
 .slide.active .product-highlight {
     transform: translateY(0);
@@ -587,8 +650,6 @@ footer p {
     right: 20px;
 }
 
-
-
 /*Estilos responsivos para pantallas pequeñas*/
 @media (max-width: 768px) {
     .header-container {
@@ -612,41 +673,77 @@ footer p {
         margin: 0 auto;
         max-height: 70px; /* Aumentado de 50px a 70px */
     }
+
+    .product-highlight h2 {
+        font-size: 2rem;
+    }
+    
+    .product-highlight p {
+        font-size: 1rem;
+    }
+    
+    .product-highlight {
+        padding: 1.5rem;
+    }
+    
+    .slider-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        border-width: 1.5px;
+    }
+
+    .hero-slider {
+        height: 550px; /* Altura reducida pero aún mayor que la original */
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-width: 1.5px;
+    }
 }
 
-/* .hero {
-    background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1');
-    background-size: cover;
-    background-position: center;
-    height: 500px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: var(--color-text-accent);
-    text-align: center;
-    border-bottom: 1px solid var(--color-border);
+@media (max-width: 480px) {
+    .services-grid {
+        grid-template-columns: 1fr; /* Single column on very small screens */
+    }
+
+    .slide-content { /* Ajustar padding para pantallas pequeñas */
+        padding: 1.5rem;
+    }
+
+    .product-highlight h2 {
+        font-size: 1.8rem; /* Ajustar tamaño de fuente para móviles */
+    }
+    .product-highlight p {
+        font-size: 1rem; /* Ajustar tamaño de fuente para móviles */
+    }
+
+    /* AÑADIDO: Ajustes para el embed de Instagram en móviles muy pequeños si es necesario */
+    .hero-slider .slide.instagram-embed-slide {
+        padding: 15px; /* Menos padding en pantallas pequeñas */
+    }
+
+    .hero-slider .slide.instagram-embed-slide .instagram-media {
+        min-width: 0; /* Permite que el embed se encoja más si es necesario */
+        /* box-shadow: 0 0 1px 0 rgba(0,0,0,0.5),0 1px 5px 0 rgba(0,0,0,0.1); */ /* Sombra más sutil para móviles */
+    }
 }
 
-.hero-content {
-    background-color: rgba(15, 15, 15, 0.8);
-    padding: 2.5rem;
-    border-radius: 3px;
-    border: 1px solid var(--color-border);
-    max-width: 600px;
-}
+/* En tu media query para móviles pequeños */
+@media (max-width: 480px) {
+    // ... otros estilos ...
 
-.hero-content h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 2.2rem;
-    margin-bottom: 1rem;
-    letter-spacing: 1px;
-}
+    .hero-slider .slide.instagram-embed-slide {
+        padding: 15px !important; /* Menos padding en pantallas pequeñas */
+    }
 
-.hero-content p {
-    color: var(--color-text-muted);
-    font-style: italic;
-    margin-bottom: 1.5rem;
-} */
+    .hero-slider .slide.instagram-embed-slide .instagram-media {
+        min-width: 0 !important; /* Permite que el embed se encoja más si es necesario */
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.2) !important; /* Sombra más sutil para móviles */
+    }
+}
 
 .services {
     display: flex;
@@ -978,7 +1075,7 @@ footer p {
     font-size: 1.1rem;
     border: 1px solid var(--color-border);
     background-color: var(--color-bg-dark);
-    color: var(--color-text-primary);
+    color: var (--color-text-primary);
     border-radius: 4px;
     font-family: 'Lora', serif;
     cursor: pointer;
@@ -1401,8 +1498,6 @@ textarea.form-control {
 
 /* --- Estilos para la pagina de servicios ---*/
 
-/* ...existing code... */
-
 /* --- Estilos para la pagina de servicios ---*/
 
 .services-page-section {
@@ -1498,44 +1593,51 @@ textarea.form-control {
     text-align: center; /* Center align price */
     margin-top: auto; /* Push price towards the bottom if needed */
     padding-top: 1rem; /* Space above price */
-    border-top: 1px solid var(--color-border); /* Separator above price */
+    border-top: 1px solid var (--color-border); /* Separator above price */
 }
 
-
-
 @media (max-width: 768px) {
-            .product-highlight h2 {
-                font-size: 2rem;
-            }
-            
-            .product-highlight p {
-                font-size: 1rem;
-            }
-            
-            .product-highlight {
-                padding: 1.5rem;
-            }
-            
-            .slider-arrow {
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
-                border-width: 1.5px;
-            }
+    .product-highlight h2 {
+        font-size: 2rem;
+    }
+    
+    .product-highlight p {
+        font-size: 1rem;
+    }
+    
+    .product-highlight {
+        padding: 1.5rem;
+    }
+    
+    .slider-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        border-width: 1.5px;
+    }
 
-            .hero-slider {
-                height: 550px; /* Altura reducida pero aún mayor que la original */
-            }
+    .hero-slider {
+        height: 550px; /* Altura reducida pero aún mayor que la original */
+    }
 
-            .dot {
-                width: 10px;
-                height: 10px;
-                border-width: 1.5px;
-            }
-        }
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-width: 1.5px;
+    }
+}
 
 @media (max-width: 480px) {
     .services-grid {
         grid-template-columns: 1fr; /* Single column on very small screens */
+    }
+
+    /* AÑADIDO: Ajustes para el embed de Instagram en móviles muy pequeños si es necesario */
+    .hero-slider .slide.instagram-embed-slide {
+        padding: 10px; /* Menos padding en pantallas pequeñas */
+    }
+
+    .hero-slider .slide.instagram-embed-slide .instagram-media {
+        min-width: 0; /* Permite que el embed se encoja más si es necesario */
     }
 }

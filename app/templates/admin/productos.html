@@ -3,6 +3,7 @@
 {% block content %}
 <div class="panel-header">
     <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn">Gestionar Categorías</a> {# BOTÓN AÑADIDO AQUÍ #}
 </div>
 
 {# Mostrar mensajes flash #}
@@ -38,7 +39,6 @@
                 {{ form.categoria_id.label(class="form-label") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
                 {{ form.categoria_id(class="form-input") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
                 {% for error in form.categoria_id.errors %}<span class="error">{{ error }}</span>{% endfor %}
-                <small style="display: block; margin-top: 5px;"><a href="{{ url_for('admin.gestionar_categorias') }}" style="color: var(--color-accent);">Gestionar categorías</a></small> {# AÑADIDO: Enlace para gestionar categorías #}
             </div>
             
             <!-- Sección de imagen actualizada -->

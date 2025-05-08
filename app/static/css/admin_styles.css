@@ -782,3 +782,221 @@ textarea.form-input {
 /* Add .badge-warning, .badge-info if needed */
 
 /* --- END Styles for disponibilidad.html --- */
+
+/* --- Estilos para Slots de Horario en Admin --- */
+.admin-time-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem; /* Espacio entre slots */
+    padding: 0.5rem 0; /* Un poco de padding vertical */
+    border: 1px solid var(--color-border);
+    padding: 1rem;
+    border-radius: 4px;
+    background-color: var(--color-bg-medium);
+    min-height: 50px; /* Para que no colapse si está vacío */
+}
+
+.admin-time-slots .time-slot {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.admin-time-slots .time-slot:hover {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-color: var(--color-primary);
+}
+
+.admin-time-slots .time-slot.selected {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-color: var(--color-text-accent); /* Un borde más oscuro o diferente para el seleccionado */
+    font-weight: bold;
+}
+
+.admin-time-slots .instruction-message,
+.admin-time-slots .error-message {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.admin-time-slots .error-message {
+    color: var(--color-danger);
+    font-style: normal;
+}
+
+/* --- Formularios --- */
+.form-input,
+select.form-select, /* Aplicar también a select con esta clase */
+textarea.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: var(--color-bg-input, #1e1e1e); /* Fondo más oscuro para inputs */
+    color: var(--color-text-input, #e0e0e0);
+    border: 1px solid var(--color-border-input, #3a3a3a); /* Borde sutil */
+    border-radius: 4px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    line-height: 1.5; /* Mejorar legibilidad */
+}
+
+select.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23cccccc'%3E%3Cpath fill-rule='evenodd' d='M8 11.293l-4.146-4.147a.5.5 0 0 1 .708-.708L8 9.879l3.438-3.438a.5.5 0 0 1 .707.707L8 11.293z'/%3E%3C/svg%3E"); /* Flecha SVG (color #cccccc) */
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem; /* Espacio para la flecha */
+}
+
+.form-input:focus,
+select.form-select:focus,
+textarea.form-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.3); /* Sombra más pronunciada */
+    outline: none;
+}
+
+.error-message {
+    color: var(--color-danger);
+    font-size: 0.85em;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* --- Estilos para el Calendario Visual en Admin --- */
+.form-group.calendar-group {
+    /* Si necesitas agrupar el label y el calendario */
+}
+
+.admin-calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem;
+    background-color: var(--color-bg-input, #1e1e1e);
+    border-radius: 4px;
+}
+.admin-calendar-controls .btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.9rem;
+    background-color: var(--color-bg-medium);
+    border: 1px solid var(--color-border-input);
+}
+.admin-calendar-controls .btn-sm:hover {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+}
+
+.current-month-year {
+    font-weight: 500;
+    color: var(--color-text-main);
+}
+
+.calendar-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr); /* 7 días a la semana */
+    gap: 5px; /* Espacio entre botones de día */
+    padding: 0.5rem;
+    background-color: var(--color-bg-input, #1e1e1e);
+    border-radius: 4px;
+    border: 1px solid var(--color-border-input, #3a3a3a);
+}
+
+.calendar-day-btn {
+    background-color: var(--color-bg-medium); /* Color de fondo de los días */
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-input);
+    padding: 0.6rem 0.2rem; /* Ajustar padding */
+    text-align: center;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+}
+.calendar-day-btn .day-number {
+    font-size: 1.1em;
+    font-weight: 500;
+}
+.calendar-day-btn .day-month {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.calendar-day-btn:hover {
+    background-color: var(--color-primary-hover);
+    color: var(--color-bg-dark);
+    transform: translateY(-1px);
+}
+
+.calendar-day-btn.selected {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-color: var(--color-primary);
+    font-weight: bold;
+}
+
+.calendar-day-btn.disabled {
+    background-color: var(--color-bg-disabled, #2a2a2a);
+    color: var(--color-text-disabled, #555);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+.calendar-day-btn.today {
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+}
+
+
+/* --- Estilos para Slots de Horario en Admin (Ajustes) --- */
+.admin-time-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem; /* Espacio entre slots */
+    padding: 0.75rem;
+    border: 1px solid var(--color-border-input, #3a3a3a);
+    border-radius: 4px;
+    background-color: var(--color-bg-input, #1e1e1e);
+    min-height: 50px;
+}
+
+.admin-time-slots .time-slot {
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-input);
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.admin-time-slots .time-slot:hover {
+    background-color: var(--color-primary-hover);
+    color: var(--color-bg-dark);
+    border-color: var(--color-primary-hover);
+}
+
+.admin-time-slots .time-slot.selected {
+    background-color: var(--color-primary);
+    color: var(--color-bg-dark);
+    border-color: var(--color-primary);
+    font-weight: bold;
+}
