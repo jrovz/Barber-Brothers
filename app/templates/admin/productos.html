@@ -31,13 +31,14 @@
             </div>
             <div class="form-group">
                 {{ form.precio.label(class="form-label") }}
-                {{ form.precio(class="form-input", step="1") }}
+                {{ form.precio(class="form-input", step="0.01") }} {# Ajustar step si es necesario, e.g., step="1" si son enteros #}
                 {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
-                {{ form.categoria.label(class="form-label") }}
-                {{ form.categoria(class="form-input") }}
-                {% for error in form.categoria.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                {{ form.categoria_id.label(class="form-label") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
+                {{ form.categoria_id(class="form-input") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
+                {% for error in form.categoria_id.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small style="display: block; margin-top: 5px;"><a href="{{ url_for('admin.gestionar_categorias') }}" style="color: var(--color-accent);">Gestionar categorías</a></small> {# AÑADIDO: Enlace para gestionar categorías #}
             </div>
             
             <!-- Sección de imagen actualizada -->
@@ -74,7 +75,7 @@
                 <th>Imagen</th>
                 <th>Nombre</th>
                 <th>Precio</th>
-                <th>Categoría</th>
+                <th>Categoría</th> {# Mantenemos el encabezado #}
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -83,11 +84,11 @@
             <tr>
                 <td>{{ producto.id }}</td>
                 <td>
-                    <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;">
+                    <img src="{{ producto.imagen_url if producto.imagen_url else url_for('static', filename='images/placeholder_product.png') }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;"> {# Añadido placeholder si no hay imagen #}
                 </td>
                 <td>{{ producto.nombre }}</td>
                 <td>{{ producto.precio|cop_format }}</td>
-                <td>{{ producto.categoria|capitalize }}</td>
+                <td>{{ producto.categoria_rel.nombre if producto.categoria_rel else 'Sin Categoría' }}</td> {# MODIFICADO: para mostrar el nombre de la categoría desde la relación #}
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
                     {# Formulario para eliminar #}

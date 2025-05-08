@@ -1,0 +1,31 @@
+<!-- filepath: app/templates/admin/editar_categoria.html -->
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn btn-secondary">Volver a Categorías</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <h2 class="form-title">Editar Categoría: {{ categoria.nombre }}</h2>
+    <form action="{{ url_for('admin.editar_categoria', id=categoria.id) }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.nombre.label(class="form-label") }}
+            {{ form.nombre(class="form-input", value=categoria.nombre) }} {# Pre-llenar el valor #}
+            {% for error in form.nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+        {{ form.submit(class="btn") }}
+    </form>
+</section>
+{% endblock %}

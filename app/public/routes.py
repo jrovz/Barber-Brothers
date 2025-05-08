@@ -5,6 +5,7 @@ from app.models.producto import Producto
 from app.models.cliente import Cliente, Mensaje
 from app.models.servicio import Servicio # Asegúrate de que este modelo existe
 from app.models.barbero import Barbero, DisponibilidadBarbero
+from app.models.categoria import Categoria # <<< IMPORT Categoria MODEL
 from app import db
 from datetime import datetime, timedelta, time
 
@@ -108,25 +109,38 @@ def contact():
 def productos():
     """Página de productos agrupados por categoría."""
     
-    # Consultar productos activos y agruparlos por categoría
-    productos_peinar = Producto.query.filter_by(
-        categoria='peinar', 
-        activo=True
-    ).order_by(Producto.nombre).all()
-    
-    productos_barba = Producto.query.filter_by(
-        categoria='barba', 
-        activo=True
-    ).order_by(Producto.nombre).all()
-    
-    productos_accesorios = Producto.query.filter_by(
-        categoria='accesorios', 
-        activo=True
-    ).order_by(Producto.nombre).all()
-    
-    # También obtener todos los productos si se necesita
-    # todos_productos = Producto.query.filter_by(activo=True).order_by(Producto.nombre).all()
-    
+    productos_peinar = []
+    productos_barba = []
+    productos_accesorios = []
+
+    try:
+        categoria_peinar = Categoria.query.filter(Categoria.nombre.ilike('peinar')).first()
+        if categoria_peinar:
+            productos_peinar = Producto.query.filter_by(
+                categoria_id=categoria_peinar.id, 
+                activo=True
+            ).order_by(Producto.nombre).all()
+
+        categoria_barba = Categoria.query.filter(Categoria.nombre.ilike('barba')).first()
+        if categoria_barba:
+            productos_barba = Producto.query.filter_by(
+                categoria_id=categoria_barba.id, 
+                activo=True
+            ).order_by(Producto.nombre).all()
+
+        categoria_accesorios = Categoria.query.filter(Categoria.nombre.ilike('accesorios')).first()
+        if categoria_accesorios:
+            productos_accesorios = Producto.query.filter_by(
+                categoria_id=categoria_accesorios.id, 
+                activo=True
+            ).order_by(Producto.nombre).all()
+            
+    except Exception as e:
+        flash(f"Error al cargar productos: {str(e)}", "danger")
+        # Log the error for debugging
+        current_app.logger.error(f"Error in /productos route: {e}")
+
+
     return render_template(
         'public/productos.html',
         productos_peinar=productos_peinar,

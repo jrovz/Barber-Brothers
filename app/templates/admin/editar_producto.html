@@ -33,9 +33,10 @@
                 {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
-                {{ form.categoria.label(class="form-label") }}
-                {{ form.categoria(class="form-input") }}
-                {% for error in form.categoria.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                {{ form.categoria_id.label(class="form-label") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
+                {{ form.categoria_id(class="form-input") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
+                {% for error in form.categoria_id.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small style="display: block; margin-top: 5px;"><a href="{{ url_for('admin.gestionar_categorias') }}" style="color: var(--color-accent);">Gestionar categorías</a></small> {# AÑADIDO: Enlace para gestionar categorías #}
             </div>
             
             <!-- Imagen actual -->

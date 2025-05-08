@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
     <header>
@@ -124,7 +125,7 @@
                 {% if servicios %}
                     {% for servicio in servicios %}
                     <option value="{{ servicio.id }}" data-duracion="{{ servicio.duracion_estimada }}">
-                        {{ servicio.nombre }} - {{ servicio.precio }}€
+                        {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP
                     </option>
                     {% endfor %}
                 {% else %}

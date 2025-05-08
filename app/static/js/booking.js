@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedDate = null;
     let selectedTime = null;
     
+    // Obtener el token CSRF de la etiqueta meta
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
     // Inicializar estado
     function init() {
         // Mostrar mensaje de depuración
@@ -73,7 +76,11 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             horariosContainer.innerHTML = '<p class="instruction-message">Cargando horarios...</p>';
             
-            const response = await fetch(`/api/disponibilidad/${selectedBarbero}/${selectedDate}?servicio_id=${selectedServicio}`);
+            // Asegúrate que selectedBarbero y selectedServicio son los IDs
+            const barberoId = barberoSelect.value; // Usar el valor del select
+            const servicioId = servicioSelect.value; // Usar el valor del select
+
+            const response = await fetch(`/api/disponibilidad/${barberoId}/${selectedDate}?servicio_id=${servicioId}`);
             const data = await response.json();
             
             if (!response.ok) {
@@ -88,7 +95,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Renderizar horarios
             horariosContainer.innerHTML = data.horarios.map(slot => {
                 const className = slot.disponible ? 'time-slot available' : 'time-slot booked';
-                return `<div class="${className}" data-hora="${slot.hora}">${slot.hora}</div>`;
+                // Si no es disponible, añadir el atributo disabled
+                const disabledAttr = slot.disponible ? '' : 'disabled'; 
+                return `<div class="${className}" data-hora="${slot.hora}" ${disabledAttr}>${slot.hora}</div>`;
             }).join('');
             
             // Añadir event listeners a slots disponibles
@@ -101,10 +110,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Añadir selección actual
                     this.classList.add('selected');
-                    selectedTime = this.dataset.hora;
+                    const clickedTime = this.dataset.hora; // Usar una variable local para claridad
+                    selectedTime = clickedTime; // Actualizar la variable global si aún la necesitas en otros lados
                     
-                    // Mostrar confirmación
-                    showConfirmation();
+                    // Obtener los nombres y IDs necesarios para showConfirmationPanel
+                    const currentBarberoId = barberoSelect.value;
+                    const currentBarberoName = barberoSelect.options[barberoSelect.selectedIndex].text;
+                    const currentServicioId = servicioSelect.value;
+                    const currentServicioName = servicioSelect.options[servicioSelect.selectedIndex].text.split(' - ')[0]; // Asumiendo formato "Nombre - Precio"
+                    const currentDate = selectedDate; // Ya está en la variable global correcta
+
+                    // Llamar a la función correcta con todos los datos
+                    showConfirmationPanel(currentBarberoId, currentBarberoName, currentServicioId, currentServicioName, currentDate, clickedTime);
                 });
             });
             
@@ -250,85 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Confirmación de cita
-    if (confirmButton) {
-        confirmButton.addEventListener('click', async function() {
-            // Validar campos del cliente
-            const clientNameInput = document.getElementById('client-name');
-            const clientEmailInput = document.getElementById('client-email');
-            const clientPhoneInput = document.getElementById('client-phone');
-
-            const clientName = clientNameInput ? clientNameInput.value.trim() : '';
-            const clientEmail = clientEmailInput ? clientEmailInput.value.trim() : '';
-            const clientPhone = clientPhoneInput ? clientPhoneInput.value.trim() : '';
-            
-            if (!clientName || !clientEmail || !clientPhone) {
-                alert('Por favor, completa todos tus datos (Nombre, Correo, Teléfono).');
-                return;
-            }
-            
-            // Validar email
-            if (!validateEmail(clientEmail)) {
-                alert('Por favor, ingresa un correo electrónico válido.');
-                return;
-            }
-            
-            // Validar que todos los datos de la cita estén seleccionados
-            if (!selectedBarbero || !selectedServicio || !selectedDate || !selectedTime) {
-                alert('Error: Faltan datos de la cita. Por favor, selecciona barbero, servicio, fecha y hora.');
-                return;
-            }
-
-            try {
-                // Deshabilitar botón mientras se procesa
-                confirmButton.disabled = true;
-                confirmButton.textContent = 'Procesando...';
-                
-                // Enviar datos al servidor (NUEVO ENDPOINT)
-                const response = await fetch('/api/agendar-cita', { // Endpoint para agendar
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // Si usas CSRF con fetch, necesitarás incluir el token
-                        // 'X-CSRFToken': '{{ csrf_token() }}' // Esto no funciona directamente en JS, necesitarías obtenerlo de otra forma
-                    },
-                    body: JSON.stringify({
-                        barbero_id: selectedBarbero,
-                        servicio_id: selectedServicio,
-                        fecha: selectedDate, // Formato YYYY-MM-DD
-                        hora: selectedTime,   // Formato HH:MM
-                        nombre_cliente: clientName, // Cambiado para claridad
-                        email_cliente: clientEmail,   // Cambiado para claridad
-                        telefono_cliente: clientPhone // Cambiado para claridad
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Error al agendar la cita. Inténtalo de nuevo.');
-                }
-                
-                // Mostrar mensaje de éxito
-                bookingConfirmation.innerHTML = `
-                    <h3>¡Cita Confirmada!</h3>
-                    <p>Tu cita con ${document.getElementById('confirm-barbero').textContent} para ${document.getElementById('confirm-servicio').textContent} el ${document.getElementById('confirm-fecha').textContent} a las ${selectedTime} ha sido agendada correctamente.</p>
-                    <p>Recibirás una confirmación por correo electrónico.</p>
-                    <p>ID de Reserva: ${data.cita_id}</p> 
-                    <button class="book-button" onclick="window.location.reload()">Hacer otra Reserva</button>
-                `;
-                
-            } catch (error) {
-                console.error('Error al confirmar cita:', error);
-                alert(`Error al agendar: ${error.message}`);
-                
-                // Reactivar botón
-                confirmButton.disabled = false;
-                confirmButton.textContent = 'Confirmar Cita';
-            }
-        });
-    }
-    
     // Función para validar email
     function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -338,27 +276,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar
     init();
 
+    // CONSERVAR ESTE BLOQUE DE CONFIRMACIÓN DE CITA (APROX. LÍNEAS 329-393)
     if (confirmButton) {
-        confirmButton.addEventListener('click', function() {
+        confirmButton.addEventListener('click', function() { // Puede ser async si prefieres, pero el .then() ya maneja asincronía
             // 1. Get data
             const bookingData = {
                 nombre: clientNameInput.value.trim(),
                 email: clientEmailInput.value.trim(),
                 telefono: clientPhoneInput.value.trim(),
-                barbero_id: selectedBarberoIdInput.value,
-                servicio_id: selectedServicioIdInput.value,
-                fecha: selectedDateInput.value,
-                hora: selectedTimeInput.value
-                // Add notas if you have an input for it
+                barbero_id: selectedBarberoIdInput.value,    // De campo oculto
+                servicio_id: selectedServicioIdInput.value,  // De campo oculto
+                fecha: selectedDateInput.value,           // De campo oculto
+                hora: selectedTimeInput.value             // De campo oculto
             };
+
+            console.log("Data to be sent to backend:", bookingData); // DEBUG: Verifica esto en la consola del navegador
+            if (!csrfToken) {
+                console.error('CSRF token not found!');
+                alert('Error de configuración: No se pudo encontrar el token de seguridad. Por favor, recarga la página.');
+                return;
+            }
 
             // 2. Basic Validation
             if (!bookingData.nombre || !bookingData.email || !bookingData.telefono) {
                 alert('Por favor, completa tu nombre, correo electrónico y teléfono.');
                 return;
             }
+            if (!validateEmail(bookingData.email)) {
+                alert('Por favor, ingresa un correo electrónico válido.');
+                return;
+            }
             if (!bookingData.barbero_id || !bookingData.servicio_id || !bookingData.fecha || !bookingData.hora) {
-                alert('Error: Faltan detalles de la cita. Por favor, selecciona de nuevo.');
+                alert('Error: Faltan detalles de la cita (barbero, servicio, fecha u hora). Por favor, selecciona de nuevo.');
+                console.error("Frontend validation failed. Missing booking details:", bookingData);
                 return;
             }
 
@@ -371,32 +321,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Include CSRF token if needed for POST requests
-                    // 'X-CSRFToken': '{{ csrf_token() }}' // This needs backend setup if using Flask-WTF CSRF
+                    'X-CSRFToken': csrfToken // <--- AÑADIR EL TOKEN CSRF AQUÍ
                 },
                 body: JSON.stringify(bookingData)
             })
-            .then(response => response.json())
+            .then(response => {
+                // Primero, verifica si la respuesta es realmente JSON antes de intentar parsearla
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return response.json();
+                } else {
+                    // Si no es JSON, lee como texto y lanza un error para que se maneje en el .catch
+                    return response.text().then(text => {
+                        throw new Error("Respuesta inesperada del servidor (no es JSON): " + text);
+                    });
+                }
+            })
             .then(data => {
                 if (data.success) {
                     // 5. Handle Success
                     bookingConfirmationPanel.innerHTML = `
                         <h3>¡Cita Confirmada!</h3>
                         <p>${data.mensaje || 'Tu cita ha sido agendada correctamente.'}</p>
+                        <p>ID de Reserva: ${data.cita_id}</p>
                         <p>Recibirás una confirmación por correo (si aplica).</p>
-                        <button onclick="window.location.reload()">Agendar otra cita</button>
+                        <button class="book-button" onclick="window.location.reload()">Agendar otra cita</button>
                     `;
-                    // Optionally clear form or redirect after a delay
                 } else {
-                    // 6. Handle Error
+                    // 6. Handle Error (JSON error from backend)
                     alert(`Error al agendar la cita: ${data.error || 'Inténtalo de nuevo.'}`);
                     confirmButton.disabled = false; // Re-enable button
                     confirmButton.textContent = 'Confirmar Cita';
                 }
             })
             .catch(error => {
-                console.error('Error en fetch:', error);
-                alert('Ocurrió un error de red. Por favor, inténtalo de nuevo.');
+                console.error('Error en fetch o al procesar respuesta:', error);
+                alert(`Ocurrió un error: ${error.message}`);
                 confirmButton.disabled = false; // Re-enable button
                 confirmButton.textContent = 'Confirmar Cita';
             });
@@ -407,17 +367,30 @@ document.addEventListener('DOMContentLoaded', function() {
     function showConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora) {
         document.getElementById('confirm-barbero').textContent = barberoName;
         document.getElementById('confirm-servicio').textContent = servicioName;
-        document.getElementById('confirm-fecha').textContent = fecha; // Format as needed
+        
+        const fechaObj = new Date(fecha + 'T00:00:00'); 
+        const fechaFormateadaParaDisplay = fechaObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        document.getElementById('confirm-fecha').textContent = fechaFormateadaParaDisplay;
         document.getElementById('confirm-hora').textContent = hora;
 
-        // Populate hidden fields
-        selectedBarberoIdInput.value = barberoId;
-        selectedServicioIdInput.value = servicioId;
-        selectedDateInput.value = fecha; // Ensure YYYY-MM-DD format
-        selectedTimeInput.value = hora; // Ensure HH:MM format
+        if (selectedBarberoIdInput) selectedBarberoIdInput.value = barberoId;
+        if (selectedServicioIdInput) selectedServicioIdInput.value = servicioId;
+        if (selectedDateInput) selectedDateInput.value = fecha; 
+        if (selectedTimeInput) selectedTimeInput.value = hora;   
 
-        bookingConfirmationPanel.style.display = 'block';
-        bookingConfirmationPanel.scrollIntoView({ behavior: 'smooth' });
+        if (clientInfoForm) {
+            clientInfoForm.style.display = 'block';
+        }
+
+        if (bookingConfirmationPanel) {
+            bookingConfirmationPanel.style.display = 'block';
+            bookingConfirmationPanel.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     // Example of how showConfirmationPanel might be called when a time slot is clicked

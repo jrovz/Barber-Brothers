@@ -1,0 +1,64 @@
+<!-- filepath: app/templates/admin/categorias.html -->
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}" style="padding: 0.75rem; margin-bottom: 1rem; border: 1px solid transparent; border-radius: .25rem; color: #fff; background-color: {{ 'var(--color-danger)' if category == 'danger' else ('var(--color-success)' if category == 'success' else 'var(--color-info)') }};">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <h2 class="form-title">Añadir Nueva Categoría</h2>
+    <form action="{{ url_for('admin.gestionar_categorias') }}" method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.nombre.label(class="form-label") }}
+            {{ form.nombre(class="form-input") }}
+            {% for error in form.nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+        {{ form.submit(class="btn") }}
+    </form>
+</section>
+
+<section>
+    <h2 class="form-title">Categorías Existentes</h2>
+    {% if categorias %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Productos Asociados</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for categoria in categorias %}
+            <tr>
+                <td>{{ categoria.id }}</td>
+                <td>{{ categoria.nombre }}</td>
+                <td>{{ categoria.productos.count() }}</td> {# Muestra cuántos productos tiene esta categoría #}
+                <td class="actions">
+                    <a href="{{ url_for('admin.editar_categoria', id=categoria.id) }}" class="btn btn-small btn-edit">Editar</a>
+                    <form action="{{ url_for('admin.eliminar_categoria', id=categoria.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta categoría? Solo se eliminará si no tiene productos asociados.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay categorías registradas.</p>
+    {% endif %}
+</section>
+{% endblock %}
