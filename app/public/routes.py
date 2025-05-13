@@ -2,10 +2,11 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, c
 from flask_login import login_required, current_user
 from app.public import bp
 from app.models.producto import Producto
-from app.models.cliente import Cliente, Mensaje
+from app.models.cliente import Cliente, Mensaje, Cita
 from app.models.servicio import Servicio # Asegúrate de que este modelo existe
 from app.models.barbero import Barbero, DisponibilidadBarbero
 from app.models.categoria import Categoria # <<< IMPORT Categoria MODEL
+from app.models.email import send_appointment_confirmation_email # Importar la función de envío
 from app import db
 from datetime import datetime, timedelta, time
 
@@ -267,22 +268,29 @@ def disponibilidad_barbero(barbero_id, fecha):
 def agendar_cita():
     try:
         data = request.json
-        print(f"Datos recibidos para agendar cita: {data}")
-        
-        # Validar datos requeridos
+        current_app.logger.info(f"Datos recibidos para agendar cita: {data}")
+
         required_fields = ['barbero_id', 'servicio_id', 'fecha', 'hora', 'nombre', 'email', 'telefono']
         for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'Falta el campo: {field}'}), 400
-                
-        # Convertir fecha y hora a objeto datetime
+            if field not in data or not data[field]:
+                current_app.logger.error(f"Campo faltante o vacío: {field}")
+                return jsonify({'error': f'Falta el campo o está vacío: {field}'}), 400
+
         fecha_hora_str = f"{data['fecha']} {data['hora']}"
         fecha_hora = datetime.strptime(fecha_hora_str, '%Y-%m-%d %H:%M')
-        
-        # Crear o buscar cliente en la base de datos
-        from app.models.cliente import Cliente, Cita
+
+        # Verificar si el horario ya está ocupado por una cita confirmada o pendiente de confirmación
+        cita_existente_confirmada = Cita.query.filter(
+            Cita.barbero_id == int(data['barbero_id']),
+            Cita.fecha == fecha_hora,
+            Cita.estado.in_(['confirmada', 'pendiente_confirmacion']) # Considerar ambas
+        ).first()
+
+        if cita_existente_confirmada:
+            current_app.logger.warning(f"Intento de agendar cita en horario ocupado: Barbero {data['barbero_id']} a las {fecha_hora}")
+            return jsonify({'error': 'Este horario ya no está disponible. Por favor, selecciona otro.'}), 409 # 409 Conflict
+
         cliente = Cliente.query.filter_by(email=data['email']).first()
-        
         if not cliente:
             cliente = Cliente(
                 nombre=data['nombre'],
@@ -290,28 +298,89 @@ def agendar_cita():
                 telefono=data['telefono']
             )
             db.session.add(cliente)
-            db.session.flush()  # Para obtener el ID generado
-        
-        # Crear la cita
+            db.session.flush() # Para obtener el ID del cliente si es nuevo
+        else: # Actualizar datos si el cliente existe
+            cliente.nombre = data['nombre']
+            cliente.telefono = data['telefono']
+            # No es necesario db.session.add(cliente) si ya existe y solo se modifica
+
         nueva_cita = Cita(
             cliente_id=cliente.id,
             barbero_id=int(data['barbero_id']),
-            servicio_id=int(data['servicio_id']), 
+            servicio_id=int(data['servicio_id']),
             fecha=fecha_hora,
-            estado='confirmada',
+            estado='pendiente_confirmacion', # Estado inicial
             notas=data.get('notas', '')
         )
-        
         db.session.add(nueva_cita)
-        db.session.commit()
-        
+        db.session.commit() # Commit para obtener el ID de nueva_cita
+
+        token = nueva_cita.generate_confirmation_token()
+        current_app.logger.info(f"Cita ID {nueva_cita.id} creada, token generado. Enviando correo a {cliente.email}")
+
+        # Enviar correo de confirmación
+        # Las relaciones barbero_rel y servicio_rel se cargarán automáticamente al acceder a ellas
+        # en la plantilla del correo si no son lazy='dynamic' o si se accede a ellas antes.
+        # Para estar seguros, podemos precargarlas o pasar los nombres directamente.
+        # Aquí, el modelo Cita ya tiene las relaciones, así que deberían funcionar.
+
+        send_appointment_confirmation_email(
+            cliente_email=cliente.email,
+            cliente_nombre=cliente.nombre,
+            cita=nueva_cita, # Pasamos el objeto cita completo
+            token=token
+        )
+
         return jsonify({
             'success': True,
-            'mensaje': 'Cita agendada correctamente',
+            'mensaje': 'Solicitud de cita recibida. Por favor, revisa tu correo electrónico para confirmar la cita en la próxima hora.',
             'cita_id': nueva_cita.id
         })
-        
+
+    except ValueError as ve:
+        current_app.logger.error(f"Error de formato en agendar_cita: {str(ve)}")
+        return jsonify({'error': f'Formato de fecha u hora inválido: {str(ve)}'}), 400
     except Exception as e:
         db.session.rollback()
-        print(f"Error al agendar cita: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error al agendar cita: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Ocurrió un error al procesar tu solicitud. Inténtalo de nuevo más tarde.'}), 500
+
+@bp.route('/confirmar-cita/<token>', methods=['GET'])
+def confirmar_cita_route(token):
+    cita = Cita.verify_confirmation_token(token) # El método ya maneja la expiración
+    
+    if not cita:
+        flash('El enlace de confirmación no es válido, ha expirado o la cita ya fue confirmada/cancelada.', 'danger')
+        return render_template('public/confirmation_status.html',
+                               success=False,
+                               message='El enlace de confirmación no es válido, ha expirado o la cita ya no puede ser confirmada.')
+
+    # Doble verificación de disponibilidad (opcional pero recomendado)
+    # En caso de que otro usuario haya confirmado una cita para el mismo slot mientras este token estaba pendiente.
+    conflicting_cita = Cita.query.filter(
+        Cita.barbero_id == cita.barbero_id,
+        Cita.fecha == cita.fecha,
+        Cita.id != cita.id,
+        Cita.estado == 'confirmada'
+    ).first()
+
+    if conflicting_cita:
+        cita.estado = 'cancelada_conflicto' # O algún estado que indique esto
+        db.session.commit()
+        flash('Lo sentimos, este horario fue tomado justo antes de tu confirmación. Por favor, agenda de nuevo.', 'danger')
+        return render_template('public/confirmation_status.html',
+                               success=False,
+                               message='Lo sentimos, este horario fue tomado justo antes de tu confirmación. Por favor, agenda de nuevo.')
+
+    cita.estado = 'confirmada'
+    cita.confirmed_at = datetime.utcnow()
+    # El token ya no es necesario en la BD una vez usado si se genera bajo demanda.
+    # Si lo estuvieras guardando, aquí lo invalidarías.
+    db.session.commit()
+    
+    flash('¡Tu cita ha sido confirmada exitosamente!', 'success')
+    # Opcional: Enviar notificación al barbero/admin.
+    return render_template('public/confirmation_status.html',
+                           success=True,
+                           message='¡Tu cita ha sido confirmada exitosamente!',
+                           cita=cita) # Pasar la cita para mostrar detalles

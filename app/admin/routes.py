@@ -544,52 +544,57 @@ def gestionar_citas():
     if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
         abort(403)
     form = CitaForm()
-    # Las choices se pueblan en el __init__ del formulario
 
     if request.method == 'POST':
-        fecha_str = request.form.get('fecha_cita') # Este vendrá del nuevo calendario
+        fecha_str = request.form.get('fecha_cita')
         hora_str = request.form.get('hora_cita')
 
         if not fecha_str or not hora_str:
             flash('Debe seleccionar una fecha y un horario para la cita.', 'danger')
-        elif form.validate_on_submit():
+        elif form.validate_on_submit(): # La validación ahora incluye el email
             try:
                 fecha_hora_obj = datetime.strptime(f"{fecha_str} {hora_str}", '%Y-%m-%d %H:%M')
                 
                 cliente_nombre_form = form.cliente_nombre.data.strip()
-                cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
+                cliente_email_form = form.cliente_email.data.strip().lower() # Guardar email en minúsculas
+
+                # Buscar cliente por email primero (más único)
+                cliente = Cliente.query.filter(db.func.lower(Cliente.email) == cliente_email_form).first()
                 
                 if not cliente:
-                    # Crear nuevo cliente. Considera añadir campos para email/teléfono en el futuro.
-                    cliente_email = f"{cliente_nombre_form.replace(' ', '').lower()}@barberbrothers.com" # Email placeholder
-                    cliente_telefono = "0000000000" # Teléfono placeholder
-                    
-                    existing_email_cliente = Cliente.query.filter(db.func.lower(Cliente.email) == db.func.lower(cliente_email)).first()
-                    if existing_email_cliente:
-                        flash(f'Ya existe un cliente con un email similar generado para "{cliente_nombre_form}". Por favor, verifica o usa un nombre de cliente único.', 'danger')
-                        # No redirigir aquí, dejar que el formulario se muestre con el error
-                    else:
-                        cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email, telefono=cliente_telefono)
-                        db.session.add(cliente)
-                        # El commit se hará junto con la cita
-                        flash(f'Nuevo cliente "{cliente_nombre_form}" será creado.', 'info')
-                
-                if cliente: # Procede solo si el cliente es válido (encontrado o por crear sin conflicto de email)
-                    nueva_cita = Cita(
-                        cliente_id=cliente.id if cliente.id else None, # Si es nuevo, el ID se asignará al hacer flush/commit
-                        barbero_id=form.barbero_id.data,
-                        servicio_id=form.servicio_id.data,
-                        fecha=fecha_hora_obj,
-                        estado=form.estado.data,
-                        notas=request.form.get('notas_cita', '')
-                    )
-                    if not cliente.id: # Si el cliente es nuevo y no tiene ID aún
-                        nueva_cita.cliente = cliente # Asignar el objeto cliente directamente
+                    # Si no se encuentra por email, intentar por nombre (menos fiable, pero como fallback)
+                    cliente_por_nombre = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
+                    if cliente_por_nombre:
+                        # Si existe un cliente con ese nombre pero diferente email, podría ser un problema.
+                        # Por ahora, se creará uno nuevo si el email no coincide.
+                        # Considerar una lógica más avanzada si es necesario.
+                        pass
 
-                    db.session.add(nueva_cita)
-                    db.session.commit()
-                    flash('Cita creada correctamente.', 'success')
-                    return redirect(url_for('admin.gestionar_citas'))
+                    # Crear nuevo cliente si no se encontró por email
+                    cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', "0000000000")) # Asumir un campo de teléfono o placeholder
+                    db.session.add(cliente)
+                    flash(f'Nuevo cliente "{cliente_nombre_form}" con email "{cliente_email_form}" será creado.', 'info')
+                elif cliente.nombre.lower() != cliente_nombre_form.lower():
+                    # Si el email existe pero el nombre es diferente, actualizar el nombre.
+                    flash(f'Cliente encontrado por email. Nombre actualizado de "{cliente.nombre}" a "{cliente_nombre_form}".', 'info')
+                    cliente.nombre = cliente_nombre_form
+                
+                # Aquí 'cliente' ya está definido (existente o nuevo)
+                nueva_cita = Cita(
+                    cliente_id=cliente.id if cliente.id else None, 
+                    barbero_id=form.barbero_id.data,
+                    servicio_id=form.servicio_id.data,
+                    fecha=fecha_hora_obj,
+                    estado=form.estado.data,
+                    notas=request.form.get('notas_cita', '')
+                )
+                if not cliente.id: 
+                    nueva_cita.cliente = cliente 
+
+                db.session.add(nueva_cita)
+                db.session.commit()
+                flash('Cita creada correctamente.', 'success')
+                return redirect(url_for('admin.gestionar_citas'))
 
             except ValueError:
                 flash('Formato de fecha u hora inválido.', 'danger')
@@ -598,12 +603,10 @@ def gestionar_citas():
                 current_app.logger.error(f"Error al crear la cita: {str(e)}")
                 flash(f'Error al crear la cita: {str(e)}', 'danger')
         else:
-            # Errores de validación del formulario
             flash('Por favor corrige los errores en el formulario.', 'warning')
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
-
 
     citas_lista = Cita.query.order_by(Cita.fecha.desc()).all()
     return render_template("admin/citas.html", title="Gestionar Citas", citas=citas_lista, form=form, datetime=datetime)
@@ -619,8 +622,7 @@ def editar_cita(id):
     if request.method == 'GET':
         if cita.cliente:
             form.cliente_nombre.data = cita.cliente.nombre
-        # Las choices de barbero y servicio se pueblan en el __init__ del form
-        # Preseleccionar valores para barbero, servicio, estado
+            form.cliente_email.data = cita.cliente.email # Poblar email
         form.barbero_id.data = cita.barbero_id
         form.servicio_id.data = cita.servicio_id
         form.estado.data = cita.estado
@@ -631,45 +633,56 @@ def editar_cita(id):
 
         if not fecha_str or not hora_str:
             flash('Debe seleccionar una fecha y un horario para la cita.', 'danger')
-        elif form.validate_on_submit():
+        elif form.validate_on_submit(): # Validación incluye email
             try:
                 fecha_hora_obj = datetime.strptime(f"{fecha_str} {hora_str}", '%Y-%m-%d %H:%M')
                 
                 cliente_nombre_form = form.cliente_nombre.data.strip()
-                # Si el nombre del cliente cambió, buscar o crear uno nuevo.
-                # Si el nombre no cambió, usar el cliente_id existente de la cita.
-                if cita.cliente and cita.cliente.nombre.lower() != cliente_nombre_form.lower():
-                    cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
-                    if not cliente:
-                        cliente_email = f"{cliente_nombre_form.replace(' ', '').lower()}@barberbrothers.com"
-                        cliente_telefono = "0000000000"
-                        existing_email_cliente = Cliente.query.filter(db.func.lower(Cliente.email) == db.func.lower(cliente_email)).first()
-                        if existing_email_cliente:
-                             flash(f'Ya existe un cliente con un email similar generado para "{cliente_nombre_form}". Por favor, verifica o usa un nombre de cliente único.', 'danger')
-                             cliente = None # Marcar como inválido para no proceder
-                        else:
-                            cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email, telefono=cliente_telefono)
-                            db.session.add(cliente)
-                            flash(f'Cliente actualizado/creado: "{cliente_nombre_form}".', 'info')
-                    cita.cliente = cliente # Asignar el nuevo objeto cliente
-                elif not cita.cliente: # Si la cita no tenía cliente y se añadió uno
-                    cliente = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
-                    if not cliente:
-                        # Crear nuevo cliente
-                        cliente_email = f"{cliente_nombre_form.replace(' ', '').lower()}@barberbrothers.com"
-                        cliente_telefono = "0000000000"
-                        existing_email_cliente = Cliente.query.filter(db.func.lower(Cliente.email) == db.func.lower(cliente_email)).first()
-                        if existing_email_cliente:
-                             flash(f'Ya existe un cliente con un email similar generado para "{cliente_nombre_form}". Por favor, verifica o usa un nombre de cliente único.', 'danger')
-                             cliente = None # Marcar como inválido
-                        else:
-                            cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email, telefono=cliente_telefono)
-                            db.session.add(cliente)
-                            flash(f'Nuevo cliente "{cliente_nombre_form}" será creado.', 'info')
-                    cita.cliente = cliente
+                cliente_email_form = form.cliente_email.data.strip().lower()
+
+                # Lógica para manejar el cliente
+                cliente_actual_id = cita.cliente_id
+                cliente_encontrado_por_email = Cliente.query.filter(db.func.lower(Cliente.email) == cliente_email_form).first()
+
+                if cliente_encontrado_por_email:
+                    # Si el email ya existe y pertenece a otro cliente, es un error.
+                    if cliente_actual_id and cliente_encontrado_por_email.id != cliente_actual_id:
+                        flash(f'El correo electrónico "{cliente_email_form}" ya está en uso por otro cliente. Por favor, usa un correo diferente o verifica los datos.', 'danger')
+                        cliente_para_cita = None # Indica que no se puede proceder
+                    else:
+                        # El email es el mismo o pertenece al cliente actual. Actualizar nombre si es necesario.
+                        cliente_encontrado_por_email.nombre = cliente_nombre_form
+                        # Considerar actualizar teléfono si se añade ese campo
+                        cliente_para_cita = cliente_encontrado_por_email
+                else:
+                    # El email es nuevo.
+                    # Si la cita ya tenía un cliente, y el email cambió, se considera crear uno nuevo
+                    # o actualizar el existente si el admin lo desea (esto es más complejo, por ahora creamos/actualizamos basado en el nuevo email).
+                    if cita.cliente and cita.cliente.email.lower() != cliente_email_form : # Email ha cambiado
+                         # Se podría preguntar si se quiere crear un nuevo cliente o actualizar el email del existente.
+                         # Por simplicidad, si el email es nuevo, creamos un nuevo cliente.
+                         # O, si se quiere actualizar el email del cliente existente:
+                         # cita.cliente.email = cliente_email_form
+                         # cita.cliente.nombre = cliente_nombre_form
+                         # cliente_para_cita = cita.cliente
+                         # flash('Email del cliente actualizado.', 'info')
+                         
+                         # Opción: Crear nuevo cliente si el email es nuevo y diferente al original
+                         cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', cita.cliente.telefono if cita.cliente else "0000000000"))
+                         db.session.add(cliente_para_cita)
+                         flash(f'Nuevo cliente creado con email "{cliente_email_form}" ya que el email cambió.', 'info')
+
+                    elif not cita.cliente: # La cita no tenía cliente, crear uno nuevo
+                        cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', "0000000000"))
+                        db.session.add(cliente_para_cita)
+                        flash(f'Nuevo cliente "{cliente_nombre_form}" será creado.', 'info')
+                    else: # El email no cambió, y el cliente ya existía
+                        cita.cliente.nombre = cliente_nombre_form # Solo actualizar nombre
+                        cliente_para_cita = cita.cliente
 
 
-                if cita.cliente: # Procede solo si el cliente es válido
+                if cliente_para_cita: 
+                    cita.cliente = cliente_para_cita
                     cita.barbero_id = form.barbero_id.data
                     cita.servicio_id = form.servicio_id.data
                     cita.fecha = fecha_hora_obj
@@ -678,7 +691,7 @@ def editar_cita(id):
                     db.session.commit()
                     flash('Cita actualizada correctamente.', 'success')
                     return redirect(url_for('admin.gestionar_citas'))
-                # else: si el cliente no es válido (ej. conflicto de email), el flash ya se mostró
+                # else: el flash de error de email duplicado ya se mostró
 
             except ValueError:
                 flash('Formato de fecha u hora inválido.', 'danger')
@@ -691,7 +704,6 @@ def editar_cita(id):
             for field, errors in form.errors.items():
                 for error in errors:
                     flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
-
 
     return render_template('admin/editar_cita.html', 
                            title="Editar Cita", 

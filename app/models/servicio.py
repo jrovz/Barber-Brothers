@@ -10,6 +10,6 @@ class Servicio(db.Model):
     duracion_estimada = db.Column(db.String(50), nullable=True) # Ej: "30 min", "1 hora"
     activo = db.Column(db.Boolean, default=True, nullable=False) # Para mostrar/ocultar en el sitio público
     creado = db.Column(db.DateTime, default=datetime.utcnow)
-
+    imagen_url = db.Column(db.String(255), nullable=True) # URL de la imagen del servicio
     def __repr__(self):
         return f'<Servicio {self.nombre}>'

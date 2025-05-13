@@ -89,7 +89,11 @@ class CitaForm(FlaskForm):
         Length(min=3, max=100, message="El nombre debe tener entre 3 y 100 caracteres.")
     ])
     # cliente_id = SelectField('Cliente', ...) // Eliminado o comentado
-
+    cliente_email = StringField('Correo Electrónico del Cliente', validators=[
+        DataRequired(message="El correo electrónico es obligatorio."),
+        Email(message="Correo electrónico no válido."),
+        Length(max=120)
+    ])
     barbero_id = SelectField('Barbero Asignado', coerce=int, validators=[DataRequired(message="Debe seleccionar un barbero.")])
     servicio_id = SelectField('Servicio Solicitado', coerce=int, validators=[DataRequired(message="Debe seleccionar un servicio.")])
     estado = SelectField('Estado de la Cita', choices=[

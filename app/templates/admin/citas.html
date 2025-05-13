@@ -30,6 +30,15 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            <div class="form-group"> <!-- NUEVO CAMPO EMAIL -->
+                {{ form.cliente_email.label(class="form-label") }}
+                {{ form.cliente_email(class="form-input", id="admin_cliente_email", placeholder="correo@ejemplo.com") }}
+                {% if form.cliente_email.errors %}
+                    {% for error in form.cliente_email.errors %}
+                        <span class="error-message">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
             <div class="form-group">
                 {{ form.barbero_id.label(class="form-label") }}
                 {{ form.barbero_id(class="form-select", id="admin_barbero_select") }}

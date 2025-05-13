@@ -12,7 +12,16 @@ class Config:
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB límite de tamaño
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ['true', '1', 't']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    # Forma recomendada de configurar MAIL_DEFAULT_SENDER
+    MAIL_DEFAULT_SENDER_NAME = os.environ.get('MAIL_DEFAULT_SENDER_NAME', 'Barber Brothers')
+    MAIL_DEFAULT_SENDER = (MAIL_DEFAULT_SENDER_NAME, os.environ.get('MAIL_USERNAME'))
 
+    
 class DevelopmentConfig(Config):
     DEBUG = True
     # Lee la URL de PostgreSQL del entorno, si no existe, usa SQLite como fallback

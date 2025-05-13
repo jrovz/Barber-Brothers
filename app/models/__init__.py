@@ -4,3 +4,4 @@ from app.models.cliente import Cliente, Mensaje, Cita
 from app.models.barbero import Barbero 
 from app.models.admin import User
 from .servicio import Servicio 
+from app.models.email import send_appointment_confirmation_email

@@ -733,7 +733,7 @@ footer p {
 
 /* En tu media query para móviles pequeños */
 @media (max-width: 480px) {
-    // ... otros estilos ...
+   
 
     .hero-slider .slide.instagram-embed-slide {
         padding: 15px !important; /* Menos padding en pantallas pequeñas */
@@ -1063,31 +1063,98 @@ footer p {
     margin-bottom: 0.8rem;
     font-family: 'Playfair Display', serif;
     font-weight: 500;
-    color: var(--color-text-primary);
+    color: var(--color-text-primary); /* Aseguramos que la etiqueta sea legible */
     font-size: 1.1rem;
 }
 
 .select-barbero,
 .select-servicio,
-.form-input {
+.form-input { /* Aplicamos estilos base a todos los inputs del formulario */
     width: 100%;
     padding: 1rem;
-    font-size: 1.1rem;
+    font-size: 1rem; /* Ligeramente reducido para mejor proporción */
     border: 1px solid var(--color-border);
-    background-color: var(--color-bg-dark);
-    color: var (--color-text-primary);
+    background-color: var(--color-bg-dark); /* Fondo oscuro para el select */
+    color: var(--color-text-primary); /* Color del texto para la opción SELECCIONADA */
     border-radius: 4px;
     font-family: 'Lora', serif;
-    cursor: pointer;
+    cursor: pointer; /* Mantenemos cursor pointer para selects, para inputs de texto es text */
+    /* La flecha se aplica aquí para los selects */
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23b39656' class='bi bi-caret-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 3rem; /* Espacio para la flecha personalizada */
+}
+
+/* Anulación para los inputs de texto específicos del formulario de cliente */
+#client-name,
+#client-email,
+#client-phone {
+    background-image: none; /* Quita la flecha */
+    padding-right: 1rem;    /* Restablece el padding original sin espacio para la flecha */
+    cursor: text;           /* Cambia el cursor a tipo texto */
+}
+
+/* Estilo específico para las opciones dentro del select (limitado por navegador) */
+.select-barbero option,
+.select-servicio option {
+    background-color: var(--color-bg-dark); /* Fondo de las opciones */
+    color: var(--color-text-primary); /* Color del texto de las opciones */
+    padding: 0.5rem 1rem; /* Añade padding a las opciones si el navegador lo permite */
+}
+
+/* Estilo para cuando el select está enfocado */
+.select-barbero:focus,
+.select-servicio:focus,
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(179, 150, 86, 0.3); /* Usando tu color de acento para el resplandor */
+}
+
+/* Placeholder text color for general inputs if you have them */
+.form-input::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.7;
 }
 
 .date-selector {
     display: flex;
     gap: 0.8rem;
     overflow-x: auto;
-    padding: 1.5rem 0;
+    padding: 1.5rem 0.5rem; /* Añadido padding lateral para que la sombra del scroll no se corte */
     margin-bottom: 2.5rem;
-    justify-content: center;
+    /* justify-content: center; */ /* Comentado o eliminado si quieres que inicie a la izquierda */
+    -webkit-overflow-scrolling: touch; /* Para un scroll más suave en iOS */
+
+    /* Estilos para la barra de desplazamiento (WebKit/Blink - Chrome, Safari, Edge) */
+    &::-webkit-scrollbar {
+        height: 10px; /* Altura de la barra de scroll horizontal */
+    }
+
+    &::-webkit-scrollbar-track {
+        background: var(--color-bg-dark); /* Fondo de la pista */
+        border-radius: 5px;
+        margin: 0 0.5rem; /* Margen para que no pegue a los bordes del contenedor */
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--color-accent); /* Color del "pulgar" del scroll */
+        border-radius: 5px;
+        border: 2px solid var(--color-bg-dark); /* Borde alrededor del pulgar, del mismo color que la pista */
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-accent-hover); /* Color del pulgar al pasar el mouse */
+    }
+
+    /* Estilos para la barra de desplazamiento (Firefox) */
+    scrollbar-width: thin; /* Puede ser 'auto', 'thin', o 'none' */
+    scrollbar-color: var(--color-accent) var(--color-bg-dark); /* color del pulgar y color de la pista */
 }
 
 .date-option {
@@ -1138,14 +1205,15 @@ footer p {
 
 .time-slots-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Ajustado minmax para que quepan más o se ajusten mejor */
+    gap: 1rem; /* Reducido un poco el gap */
     margin-top: 2rem;
-    max-height: 300px;
+    max-height: 250px; /* Ajusta según necesidad */
     overflow-y: auto;
     padding: 1rem;
     background-color: var(--color-bg-dark);
     border-radius: 4px;
+    border: 1px solid var(--color-border); /* Añadido borde para consistencia */
 }
 
 .time-slot {
@@ -1181,6 +1249,44 @@ footer p {
     text-decoration: line-through;
 }
 
+/* NUEVOS ESTILOS O AJUSTES PARA .time-slot-btn */
+.time-slot-btn {
+    padding: 0.8rem 0.5rem; /* Ajusta el padding para mejor apariencia */
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem; /* Ligeramente más pequeño para que quepan más */
+    font-weight: 500;
+    background-color: var(--color-bg-light); /* Fondo base */
+    color: var(--color-text-secondary); /* Color de texto base */
+    font-family: 'Lora', serif;
+}
+
+.time-slot-btn:hover {
+    background-color: var(--color-accent);
+    color: white; /* O var(--color-bg-main) para texto oscuro sobre fondo dorado */
+    border-color: var(--color-accent-hover);
+    transform: translateY(-2px);
+}
+
+.time-slot-btn.selected {
+    background-color: var(--color-accent-hover); /* Un dorado más intenso para el seleccionado */
+    color: white; /* O var(--color-bg-main) */
+    border-color: var(--color-accent);
+    box-shadow: 0 0 8px rgba(179, 150, 86, 0.5); /* Sombra sutil dorada */
+}
+
+/* Si tenías .time-slot.booked, y aún lo necesitas para mostrar slots no disponibles (aunque la API actual no los envía) */
+.time-slot-btn.booked {
+    background-color: var(--color-bg-medium); /* Fondo más oscuro */
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
 .instruction-message {
     grid-column: 1 / -1;
     text-align: center;
@@ -1197,6 +1303,29 @@ footer p {
     border: 1px solid var(--color-border);
     border-radius: 8px;
     background-color: var(--color-bg-light);
+}
+
+.cancel-button {
+    /* Hereda de .action-button si la usas, o define aquí: */
+    padding: 0.8rem 1.5rem;
+    font-size: 0.95rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Lora', serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+    
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border); /* Borde sutil */
+}
+
+.cancel-button:hover {
+    background-color: var(--color-bg-light); /* Un fondo ligero al pasar el mouse */
+    color: var(--color-text-primary);
+    border-color: var(--color-text-secondary);
 }
 
 .booking-details {

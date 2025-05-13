@@ -4,13 +4,15 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 import os
+from app.utils import format_cop
+from flask_mail import Mail
 
 # Definir extensiones
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
-
+mail = Mail()
 # Configuración de login
 login_manager.login_view = 'admin.login'
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
@@ -27,7 +29,7 @@ def create_app(config_name='default'):
     app = Flask(__name__, 
                 static_folder='static',
                 static_url_path='/static')
-    
+    mail.init_app(app)
     # CORRECCIÓN: Configuración de carga de archivos con ruta absoluta explícita
     basedir = os.path.abspath(os.path.dirname(__file__))
     print(f"Basedir original: {basedir}")
@@ -44,7 +46,7 @@ def create_app(config_name='default'):
     
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    
+    app.jinja_env.filters['cop_format'] = format_cop
     # Crear carpeta de uploads si no existe
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
@@ -66,11 +68,7 @@ def create_app(config_name='default'):
         # Tu código existente...
         return response
     
-    @app.template_filter('cop_format')
-    def cop_format(value):
-        # Tu código existente...
-        pass
-        
+    
     # Inicializar extensiones con la app
     db.init_app(app)
     migrate.init_app(app, db)

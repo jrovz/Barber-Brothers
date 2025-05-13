@@ -1,0 +1,18 @@
+// filepath: app/templates/email/confirm_appointment.txt
+Hola {{ cliente_nombre }},
+
+Gracias por solicitar una cita en Barber Brothers.
+
+Por favor, confirma los detalles de tu cita visitando el siguiente enlace:
+{{ confirm_url }}
+
+Detalles de la cita:
+Servicio: {{ cita.servicio_rel.nombre if cita.servicio_rel else 'Servicio no especificado' }}
+Barbero: {{ cita.barbero_rel.nombre if cita.barbero_rel else 'Barbero no especificado' }}
+Fecha y Hora: {{ cita.fecha.strftime('%d/%m/%Y a las %H:%M') }}
+
+Si no solicitaste esta cita, por favor ignora este correo.
+El enlace de confirmación expirará en 1 hora.
+
+Saludos,
+El equipo de Barber Brothers
