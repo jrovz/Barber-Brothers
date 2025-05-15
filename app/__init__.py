@@ -29,7 +29,7 @@ def create_app(config_name='default'):
     app = Flask(__name__, 
                 static_folder='static',
                 static_url_path='/static')
-    mail.init_app(app)
+   
     # CORRECCIÓN: Configuración de carga de archivos con ruta absoluta explícita
     basedir = os.path.abspath(os.path.dirname(__file__))
     print(f"Basedir original: {basedir}")
@@ -55,7 +55,7 @@ def create_app(config_name='default'):
     # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])
-    
+    mail.init_app(app)
      # Verificar rutas después de cargar configuración completa
     @app.before_request
     def verify_upload_path():

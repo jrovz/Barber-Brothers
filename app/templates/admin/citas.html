@@ -144,7 +144,7 @@
                 <td>{{ cita.id }}</td>
                 <td>{{ cita.cliente.nombre if cita.cliente else 'N/A' }}</td>
                 <td>{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</td>
-                <td>{{ cita.servicio.nombre if cita.servicio else 'N/A' }}</td> {# MODIFIED: Assuming Cita has a relationship 'servicio' that gives the Servicio object #}
+                <td>{{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</td> {# MODIFIED: Assuming Cita has a relationship 'servicio' that gives the Servicio object #}
                 <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>
                     <span class="badge 

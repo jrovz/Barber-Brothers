@@ -3,10 +3,11 @@
 {% block content %}
 <div class="panel-header">
     <h1 class="panel-title">{{ title }}</h1>
-    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn">Gestionar Categorías</a> {# BOTÓN AÑADIDO AQUÍ #}
+    
+    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn">Gestionar Categorías</a>
 </div>
 
-{# Mostrar mensajes flash #}
+
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
@@ -34,6 +35,11 @@
                 {{ form.precio.label(class="form-label") }}
                 {{ form.precio(class="form-input", step="0.01") }} {# Ajustar step si es necesario, e.g., step="1" si son enteros #}
                 {% for error in form.precio.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.cantidad.label(class="form-label") }}
+                {{ form.cantidad(class="form-input", min="0") }}
+                {% for error in form.cantidad.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
                 {{ form.categoria_id.label(class="form-label") }} {# MODIFICADO: de form.categoria a form.categoria_id #}
@@ -76,6 +82,7 @@
                 <th>Nombre</th>
                 <th>Precio</th>
                 <th>Categoría</th> {# Mantenemos el encabezado #}
+                <th>Cantidad</th> <!-- Nueva columna -->
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -89,6 +96,7 @@
                 <td>{{ producto.nombre }}</td>
                 <td>{{ producto.precio|cop_format }}</td>
                 <td>{{ producto.categoria_rel.nombre if producto.categoria_rel else 'Sin Categoría' }}</td> {# MODIFICADO: para mostrar el nombre de la categoría desde la relación #}
+                <td>{{ producto.cantidad }}</td> <!-- Mostrar la cantidad -->
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
                     {# Formulario para eliminar #}

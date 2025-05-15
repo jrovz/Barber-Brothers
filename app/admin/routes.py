@@ -81,25 +81,23 @@ def dashboard():
 @bp.route('/productos', methods=['GET', 'POST'])
 @login_required
 def gestionar_productos():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
-        
     form = ProductoForm()
     if form.validate_on_submit():
         imagen_url = None
         if form.imagen_file.data:
             imagen_url = save_image(form.imagen_file.data, 'productos')
-        elif form.imagen_url.data: # Use URL if file not provided
+        elif form.imagen_url.data:
             imagen_url = form.imagen_url.data
         
         selected_categoria_id = form.categoria_id.data
-        if selected_categoria_id == 0: # 'Sin Categoría'
+        if selected_categoria_id == 0:
             selected_categoria_id = None
 
         nuevo_producto = Producto(
             nombre=form.nombre.data,
             descripcion=form.descripcion.data,
             precio=form.precio.data,
+            cantidad=form.cantidad.data,  # Guardar la cantidad
             categoria_id=selected_categoria_id,
             imagen_url=imagen_url
         )
@@ -122,8 +120,6 @@ def gestionar_productos():
 @bp.route('/productos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_producto(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     producto = Producto.query.get_or_404(id)
     form = ProductoForm(obj=producto if request.method == 'GET' else None)
     
@@ -131,7 +127,7 @@ def editar_producto(id):
         producto.nombre = form.nombre.data
         producto.descripcion = form.descripcion.data
         producto.precio = form.precio.data
-        
+        producto.cantidad = form.cantidad.data  # Actualizar la cantidad
         selected_categoria_id = form.categoria_id.data
         producto.categoria_id = selected_categoria_id if selected_categoria_id != 0 else None
         
@@ -150,11 +146,11 @@ def editar_producto(id):
             flash(f'Error al actualizar producto: {str(e)}', 'danger')
         return redirect(url_for('admin.gestionar_productos'))
     
-    # Pre-fill form for GET request if not using obj=producto for some fields
     if request.method == 'GET':
         form.nombre.data = producto.nombre
         form.descripcion.data = producto.descripcion
         form.precio.data = producto.precio
+        form.cantidad.data = producto.cantidad  # Prellenar la cantidad
         form.categoria_id.data = producto.categoria_id if producto.categoria_id is not None else 0
         form.imagen_url.data = producto.imagen_url
 

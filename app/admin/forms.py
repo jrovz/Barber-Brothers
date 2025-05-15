@@ -28,10 +28,8 @@ class ProductoForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(max=100)])
     descripcion = TextAreaField('Descripción', validators=[Optional(), Length(max=500)])
     precio = DecimalField('Precio (COP)', validators=[DataRequired(), NumberRange(min=0)])
-    
-    # Cambiar StringField a SelectField para categoría
-    categoria_id = SelectField('Categoría', coerce=int, validators=[Optional()]) # Usar Optional si una categoría no es estrictamente requerida
-    
+    categoria_id = SelectField('Categoría', coerce=int, validators=[Optional()])
+    cantidad = IntegerField('Cantidad en Inventario', validators=[DataRequired(), NumberRange(min=0)])  # Nuevo campo
     imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()])
     imagen_file = FileField('Subir Imagen', validators=[
         Optional(),

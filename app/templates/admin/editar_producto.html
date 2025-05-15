@@ -65,6 +65,12 @@
                 {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
                 <small class="form-text text-muted">Si subes una nueva imagen, reemplazará la actual</small>
             </div>
+            
+            <div class="form-group">
+                {{ form.cantidad.label(class="form-label") }}
+                {{ form.cantidad(class="form-input") }}
+                {% for error in form.cantidad.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
         </div>
         
         <div class="form-group">
