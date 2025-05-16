@@ -35,6 +35,187 @@ body {
     color: var(--color-text-primary);
     font-family: 'Lora', serif;
     line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* --- Componentes Comunes --- */
+
+/* Botones unificados */
+.btn, 
+.slide-btn, 
+.book-button, 
+.buy-button, 
+.checkout-button, 
+.submit-btn {
+    display: inline-block;
+    padding: 0.8rem 1.8rem;
+    background-color: var(--color-accent);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-family: 'Lora', serif;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn:hover, 
+.slide-btn:hover, 
+.book-button:hover, 
+.buy-button:hover, 
+.checkout-button:hover, 
+.submit-btn:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.buy-button, 
+.checkout-button {
+    width: 100%;
+}
+
+.slide-btn {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+/* Botón secundario */
+.cancel-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.95rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Lora', serif;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+}
+
+.cancel-button:hover {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-primary);
+    border-color: var(--color-text-secondary);
+}
+
+/* Inputs y formularios unificados */
+.form-input,
+.form-control,
+.select-barbero,
+.select-servicio {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    border-radius: 4px;
+    font-family: 'Lora', serif;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23b39656' class='bi bi-caret-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 3rem;
+    cursor: pointer;
+}
+
+#client-name,
+#client-email,
+#client-phone,
+textarea.form-input,
+textarea.form-control {
+    background-image: none;
+    padding-right: 1rem;
+    cursor: text;
+}
+
+textarea.form-input,
+textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.form-input:focus,
+.form-control:focus,
+.select-barbero:focus,
+.select-servicio:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(179, 150, 86, 0.3);
+}
+
+.form-input::placeholder,
+.form-control::placeholder {
+    color: var(--color-text-muted);
+    opacity: 0.7;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.8rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: 1.1rem;
+}
+
+/* Time slots unificados */
+.time-slot,
+.time-slot-btn {
+    padding: 0.8rem 0.5rem;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-secondary);
+    font-family: 'Lora', serif;
+    margin: 0.5rem 0;
+}
+
+.time-slot:hover,
+.time-slot-btn:hover {
+    background-color: var(--color-accent);
+    color: white;
+    border-color: var(--color-accent-hover);
+    transform: translateY(-2px);
+}
+
+.time-slot.selected,
+.time-slot-btn.selected {
+    background-color: var(--color-accent-hover);
+    color: white;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 8px rgba(179, 150, 86, 0.5);
+}
+
+.time-slot.available,
+.time-slot-btn.available {
+    background-color: var(--color-bg-light);
+}
+
+.time-slot.booked,
+.time-slot-btn.booked {
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+    text-decoration: line-through;
+    opacity: 0.6;
 }
 
 /* --- Header --- */
@@ -51,6 +232,9 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 0 1rem;
+    overflow: hidden;
+    position: relative;
 }
 
 .logo {
@@ -110,13 +294,135 @@ header nav ul li a:hover::after {
     width: 100%;
 }
 
+/* --- Menú Hamburguesa --- */
+.menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1100;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.menu-toggle-icon,
+.menu-toggle-icon::before,
+.menu-toggle-icon::after {
+    content: '';
+    display: block;
+    background-color: var(--color-text-accent);
+    height: 3px;
+    width: 25px;
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+}
+
+.menu-toggle-icon::before {
+    transform: translateY(-8px);
+}
+
+.menu-toggle-icon::after {
+    transform: translateY(5px);
+}
+
+.menu-toggle.open .menu-toggle-icon {
+    background-color: transparent;
+}
+
+.menu-toggle.open .menu-toggle-icon::before {
+    transform: translateY(0px) rotate(45deg);
+}
+
+.menu-toggle.open .menu-toggle-icon::after {
+    transform: translateY(-3px) rotate(-45deg);
+}
+
+.mobile-menu {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: var(--color-bg-dark);
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 280px;
+    max-width: 90%;
+    padding: 1.5rem;
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-medium);
+    z-index: 1050;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.mobile-menu.open {
+    display: flex;
+    transform: translateX(0);
+}
+
+.mobile-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-menu ul li {
+    margin: 0;
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-menu ul li:last-child {
+    border-bottom: none;
+}
+
+.mobile-menu ul li a {
+    display: block;
+    padding: 1rem 0.5rem;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-menu ul li a:hover {
+    background-color: var(--color-bg-medium);
+    color: var(--color-accent-hover);
+}
+
+.mobile-menu .cart-icon a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobile-menu .cart-icon .cart-symbol {
+    margin-right: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.mobile-menu .cart-icon .cart-count {
+    position: static;
+    background-color: var(--color-accent);
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    color: white;
+}
+
 /* --- Footer --- */
 footer {
     background-color: var(--color-bg-dark);
     color: var(--color-text-muted);
     text-align: center;
     padding: 1.5rem;
-    margin-top: 2rem; /* Ajusta según sea necesario */
+    margin-top: 2rem;
     border-top: 1px solid var(--color-border);
 }
 
@@ -158,7 +464,11 @@ footer p {
 /* --- Carrito de Compras (Icono y Panel) --- */
 .cart-icon {
     position: relative;
-    margin-left: 1.5rem;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
 }
 
 .cart-symbol {
@@ -185,7 +495,7 @@ footer p {
 .cart-panel {
     position: fixed;
     top: 0;
-    right: -350px; /* Inicialmente oculto */
+    right: -350px;
     width: 350px;
     height: 100vh;
     background-color: var(--color-bg-main);
@@ -198,7 +508,7 @@ footer p {
 }
 
 .cart-panel.open {
-    right: 0; /* Mostrar panel */
+    right: 0;
 }
 
 .cart-overlay {
@@ -311,7 +621,7 @@ footer p {
 }
 
 .remove-item {
-    color: #c9341c; /* Un rojo para eliminar */
+    color: #c9341c;
     background: none;
     border: none;
     cursor: pointer;
@@ -333,65 +643,15 @@ footer p {
     color: var(--color-text-primary);
 }
 
-.checkout-button {
-    width: 100%;
-    padding: 0.8rem;
-    background-color: var(--color-accent);
-    color: white;
-    border: none;
-    border-radius: 3px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.checkout-button:hover {
-    background-color: var(--color-accent-hover);
-}
-
-/* --- Media Queries Comunes (Header y Carrito) --- */
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-    }
-    
-    .logo {
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    
-    header nav ul {
-        justify-content: center;
-    }
-    
-    header nav ul li {
-        margin: 0 0.75rem;
-    }
-
-    .logo img {
-        margin: 0 auto;
-        max-height: 70px; 
-    }
-}
-
-@media (max-width: 500px) {
-    .cart-panel {
-        width: 300px;
-    }
-}
-
-/* --- FIN DE ESTILOS COMUNES --- */
-/* Aquí irán los estilos específicos de cada página más adelante */
-
 /* --- Estilos para la Página de Inicio --- */
 
 /* Estilos del Slider Hero */
 .hero-slider {
     position: relative;
-    height: 740px; /* Aumentado de 500px a 700px */
+    height: 740px;
     overflow: hidden;
     border-bottom: 1px solid var(--color-border);
-    background-color: #111; /* Fondo si las imágenes no cargan o para transiciones */ /* AÑADIDO/MODIFICADO */
+    background-color: #111;
 }
 
 .slider-container {
@@ -409,16 +669,15 @@ footer p {
     opacity: 0;
     transition: opacity 1s ease;
     z-index: 1;
-    display: flex; /* AÑADIDO: Para centrar contenido */
-    align-items: center; /* AÑADIDO: Centra verticalmente */
-    justify-content: center; /* AÑADIDO: Centra horizontalmente */
-    overflow: hidden; /* AÑADIDO: Evita que el contenido se desborde */
-    /* background-color: #000; */ /* COMENTADO/ELIMINADO: .hero-slider ya tiene un fondo, y .instagram-embed-slide tendrá el suyo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .slide.active {
     opacity: 1;
-    z-index: 2; /* Asegúrate que este z-index sea mayor que el de .slide normal si no es .active */
+    z-index: 2;
 }
 
 .slide-bg {
@@ -428,7 +687,7 @@ footer p {
     width: 100%;
     height: 100%;
     background-size: cover;
-    background-position: center 30%; /* Ajustado para mejor composición vertical */
+    background-position: center 30%;
     filter: brightness(0.8);
     transform: scale(1);
     transition: transform 6s ease;
@@ -438,44 +697,29 @@ footer p {
     transform: scale(1.1);
 }
 
-/* ELIMINADO EL .slide::before que aplicaba un gradiente a todos los slides.
-   Si lo necesitas para los slides de producto, deberías aplicarlo de forma más específica,
-   quizás dentro de .slide-content o a un nuevo pseudo-elemento en .slide:not(.instagram-embed-slide) */
-/* .slide::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(31, 42, 32, 0.6), rgba(31, 42, 32, 0.8));
-    z-index: 1; 
-} */
-
 .slide-content {
     position: relative;
     z-index: 2;
-    width: 100%; /* Asegura que ocupe todo el ancho */
-    height: 100%; /* Asegura que ocupe todo el alto */
+    width: 100%;
+    height: 100%;
     display: flex;
-    align-items: flex-end; /* Alinea .product-highlight al fondo */
-    justify-content: flex-start; /* Alinea .product-highlight a la izquierda */
-    padding: 3rem; /* Espaciado general desde los bordes del slide */
-    text-align: left; /* Asegura que el texto dentro de .product-highlight se alinee a la izquierda */
-    /* color: var(--color-bg-card); */ /* Este color parece incorrecto para el texto, el texto es blanco/crema */
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 3rem;
+    text-align: left;
 }
 
 .product-highlight {
     background: none;
-    padding: 0; /* El padding ahora lo maneja .slide-content para el posicionamiento general */
-    max-width: 600px; /* Ajusta según necesites */
-    margin: 0; /* Eliminamos márgenes para que se pegue al padding de .slide-content */
+    padding: 0;
+    max-width: 600px;
+    margin: 0;
     transform: translateY(30px);
     opacity: 0;
     transition: transform 0.8s ease, opacity 0.8s ease;
     position: relative; 
     z-index: 2;
-    color: var(--color-text-primary); /* Aseguramos color de texto primario */
+    color: var(--color-text-primary);
 }
 
 /* Añadir un gradiente oscuro detrás del texto para mejorar legibilidad */
@@ -498,59 +742,6 @@ footer p {
     transform: translate(-20%, 20%); /* Ajusta el posicionamiento del gradiente */
 }
 
-/* NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM */
-.hero-slider .slide.instagram-embed-slide {
-    background-color: #181818; /* Fondo oscuro para el área no ocupada por el embed */
-    padding: 30px; /* Aumentamos un poco el padding para dar más aire y espacio al box-shadow */
-    /* Las propiedades de flexbox heredadas de .slide se encargarán del centrado */
-}
-
-.hero-slider .slide.instagram-embed-slide .instagram-media {
-    margin: 0 !important; 
-    border-radius: 8px !important;
-    box-shadow: 0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.3); /* Sombra original + una más pronunciada para profundidad */
-    /* Alternativamente, una sombra más suave pero definida: */
-    /* box-shadow: var(--shadow-medium); */
-    max-width: 540px; /* Respetamos el max-width común de Instagram */
-    width: 100%; /* Hacemos que intente ocupar el ancho disponible hasta su max-width */
-}
-
-.hero-slider .slide.instagram-embed-slide .instagram-media iframe {
-    max-width: 100%; 
-    border-radius: 8px; /* Hereda el borde redondeado */
-    display: block; /* Para evitar espacios extra debajo del iframe */
-}
-
-/* NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM (REFORZADOS) */
-.hero-slider .slide.instagram-embed-slide {
-    background-color: #181818 !important; /* Fondo oscuro para el área no ocupada por el embed */
-    padding: 30px !important; /* Espacio alrededor del embed */
-    /* Las propiedades de flexbox heredadas de .slide se encargarán del centrado */
-}
-
-.hero-slider .slide.instagram-embed-slide .instagram-media {
-    /* Anulando estilos inline del blockquote de Instagram */
-    background: #FFF !important; /* Mantenemos el fondo blanco del embed si se desea, o cámbialo */
-    border: none !important; /* Eliminamos el borde inline si no lo queremos */
-    border-radius: 8px !important; /* Nuestro borde redondeado deseado */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.3) !important; /* Nuestra sombra personalizada */
-    margin: 0 auto !important; /* Centrado horizontal si el flex del padre no es suficiente y para anular el margin:1px inline */
-    padding: 0 !important; /* Anulamos el padding inline si no lo necesitamos en el blockquote mismo */
-    max-width: 540px !important; /* Respetamos el max-width común de Instagram */
-    min-width: 300px !important; /* Un min-width razonable, anulando el inline de 326px si es necesario */
-    width: 100% !important; /* Hacemos que intente ocupar el ancho disponible hasta su max-width */
-    /* Importante: El script de Instagram puede ajustar la altura dinámicamente. */
-    /* No intentes forzar una altura aquí a menos que sepas exactamente lo que haces. */
-}
-
-.hero-slider .slide.instagram-embed-slide .instagram-media iframe {
-    max-width: 100%; 
-    border-radius: 8px; /* El iframe hereda el borde redondeado del blockquote */
-    display: block; /* Para evitar espacios extra debajo del iframe */
-    margin: 0 auto; /* Asegura que el iframe también se centre si tiene un ancho menor al blockquote */
-}
-/* FIN DE NUEVOS ESTILOS PARA SLIDES DE INSTAGRAM */
-
 .slide.active .product-highlight {
     transform: translateY(0);
     opacity: 1;
@@ -558,47 +749,57 @@ footer p {
 
 .product-highlight h2 {
     font-family: 'Playfair Display', serif;
-    font-size: 2.8rem; /* Aumentar tamaño */
+    font-size: 2.8rem;
     margin-bottom: 1rem;
-    color: #ffffff; /* Cambiar a blanco puro */
+    color: #ffffff;
     letter-spacing: 1px;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.5); /* Añadir sombra para legibilidad */
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
 }
 
 .product-highlight p {
-    color: #f5f0e6; /* Cambiar a color más claro */
+    color: #f5f0e6;
     font-size: 1.3rem;
     margin-bottom: 1.8rem;
     font-style: italic;
-    text-shadow: 1px 1px 6px rgba(0,0,0,0.5); /* Añadir sombra para legibilidad */
+    text-shadow: 1px 1px 6px rgba(0,0,0,0.5);
 }
 
-.slide-btn {
-    display: inline-block;
-    padding: 0.8rem 1.8rem;
-    background-color: var(--color-accent);
-    color: white;
-    text-decoration: none;
-    font-family: 'Lora', serif;
-    border-radius: 3px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: background-color 0.3s;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2); /* Añadir sombra al botón */
+/* Estilos para Slides de Instagram */
+.hero-slider .slide.instagram-embed-slide {
+    background-color: #181818 !important;
+    padding: 30px !important;
 }
 
+.hero-slider .slide.instagram-embed-slide .instagram-media {
+    background: #FFF !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1), 0 5px 15px rgba(0,0,0,0.3) !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    max-width: 540px !important;
+    min-width: 300px !important;
+    width: 100% !important;
+}
+
+.hero-slider .slide.instagram-embed-slide .instagram-media iframe {
+    max-width: 100%; 
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Controles del Slider */
 .slider-arrow {
     position: absolute;
-    top: 50%; /* Mantiene la posición al 50% de la altura */
-    transform: translateY(-50%); /* Centra el elemento respecto a su propio tamaño */
+    top: 50%;
+    transform: translateY(-50%);
     width: 50px;
     height: 50px;
     background-color: transparent;
     border: 2px solid var(--color-accent);
     border-radius: 50%;
-    z-index: 15; /* Aumentado para asegurar que esté por encima de otros elementos */
+    z-index: 15;
     cursor: pointer;
     font-size: 1.5rem;
     color: var(--color-accent);
@@ -613,7 +814,15 @@ footer p {
     opacity: 1;
     border-color: white;
     color: white;
-    background-color: rgba(0, 0, 0, 0.3); /* Ligeramente más oscuro para mejor visibilidad */
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.prev-arrow {
+    left: 20px;
+}
+
+.next-arrow {
+    right: 20px;
 }
 
 .slider-dots {
@@ -630,121 +839,19 @@ footer p {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: transparent; /* Fondo transparente */
-    border: 2px solid rgba(255, 255, 255, 0.5); /* Borde blanco semi-transparente */
+    background-color: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .dot.active {
-    background-color: transparent; /* Mantener fondo transparente */
-    border-color: var(--color-accent); /* Borde dorado para el punto activo */
+    background-color: transparent;
+    border-color: var(--color-accent);
     transform: scale(1.2);
 }
 
-.prev-arrow {
-    left: 20px;
-}
-
-.next-arrow {
-    right: 20px;
-}
-
-/*Estilos responsivos para pantallas pequeñas*/
-@media (max-width: 768px) {
-    .header-container {
-        flex-direction: column;
-    }
-    
-    .logo {
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    
-    header nav ul {
-        justify-content: center;
-    }
-    
-    header nav ul li {
-        margin: 0 0.75rem;
-    }
-
-    .logo img {
-        margin: 0 auto;
-        max-height: 70px; /* Aumentado de 50px a 70px */
-    }
-
-    .product-highlight h2 {
-        font-size: 2rem;
-    }
-    
-    .product-highlight p {
-        font-size: 1rem;
-    }
-    
-    .product-highlight {
-        padding: 1.5rem;
-    }
-    
-    .slider-arrow {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-        border-width: 1.5px;
-    }
-
-    .hero-slider {
-        height: 550px; /* Altura reducida pero aún mayor que la original */
-    }
-
-    .dot {
-        width: 10px;
-        height: 10px;
-        border-width: 1.5px;
-    }
-}
-
-@media (max-width: 480px) {
-    .services-grid {
-        grid-template-columns: 1fr; /* Single column on very small screens */
-    }
-
-    .slide-content { /* Ajustar padding para pantallas pequeñas */
-        padding: 1.5rem;
-    }
-
-    .product-highlight h2 {
-        font-size: 1.8rem; /* Ajustar tamaño de fuente para móviles */
-    }
-    .product-highlight p {
-        font-size: 1rem; /* Ajustar tamaño de fuente para móviles */
-    }
-
-    /* AÑADIDO: Ajustes para el embed de Instagram en móviles muy pequeños si es necesario */
-    .hero-slider .slide.instagram-embed-slide {
-        padding: 15px; /* Menos padding en pantallas pequeñas */
-    }
-
-    .hero-slider .slide.instagram-embed-slide .instagram-media {
-        min-width: 0; /* Permite que el embed se encoja más si es necesario */
-        /* box-shadow: 0 0 1px 0 rgba(0,0,0,0.5),0 1px 5px 0 rgba(0,0,0,0.1); */ /* Sombra más sutil para móviles */
-    }
-}
-
-/* En tu media query para móviles pequeños */
-@media (max-width: 480px) {
-   
-
-    .hero-slider .slide.instagram-embed-slide {
-        padding: 15px !important; /* Menos padding en pantallas pequeñas */
-    }
-
-    .hero-slider .slide.instagram-embed-slide .instagram-media {
-        min-width: 0 !important; /* Permite que el embed se encoja más si es necesario */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.2) !important; /* Sombra más sutil para móviles */
-    }
-}
-
+/* Servicios */
 .services {
     display: flex;
     flex-wrap: wrap;
@@ -782,6 +889,7 @@ footer p {
     color: var(--color-text-muted);
 }
 
+/* Disponibilidad */
 .availability {
     background-color: var(--color-bg-medium);
     padding: 4rem 2rem;
@@ -860,24 +968,6 @@ footer p {
     font-size: 1.2rem;
     color: var(--color-text-muted);
     font-style: italic;
-}
-
-.book-button {
-    background-color: var(--color-accent);
-    color: var(--color-text-primary);
-    border: none;
-    padding: 1rem 2.5rem;
-    font-size: 1rem;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Lora', serif;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.book-button:hover {
-    background-color: var(--color-accent-hover);
 }
 
 /* Estilos para la sección Acerca de */
@@ -1038,9 +1128,10 @@ footer p {
 }
 
 .value p {
-    color: var (--color-text-muted);
+    color: var(--color-text-muted);
 }
 
+/* Reservas */
 .booking-form {
     max-width: 900px;
     margin: 0 auto 3rem;
@@ -1054,107 +1145,36 @@ footer p {
     box-shadow: var(--shadow-medium);
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.8rem;
-    font-family: 'Playfair Display', serif;
-    font-weight: 500;
-    color: var(--color-text-primary); /* Aseguramos que la etiqueta sea legible */
-    font-size: 1.1rem;
-}
-
-.select-barbero,
-.select-servicio,
-.form-input { /* Aplicamos estilos base a todos los inputs del formulario */
-    width: 100%;
-    padding: 1rem;
-    font-size: 1rem; /* Ligeramente reducido para mejor proporción */
-    border: 1px solid var(--color-border);
-    background-color: var(--color-bg-dark); /* Fondo oscuro para el select */
-    color: var(--color-text-primary); /* Color del texto para la opción SELECCIONADA */
-    border-radius: 4px;
-    font-family: 'Lora', serif;
-    cursor: pointer; /* Mantenemos cursor pointer para selects, para inputs de texto es text */
-    /* La flecha se aplica aquí para los selects */
-    appearance: none; 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23b39656' class='bi bi-caret-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1em;
-    padding-right: 3rem; /* Espacio para la flecha personalizada */
-}
-
-/* Anulación para los inputs de texto específicos del formulario de cliente */
-#client-name,
-#client-email,
-#client-phone {
-    background-image: none; /* Quita la flecha */
-    padding-right: 1rem;    /* Restablece el padding original sin espacio para la flecha */
-    cursor: text;           /* Cambia el cursor a tipo texto */
-}
-
-/* Estilo específico para las opciones dentro del select (limitado por navegador) */
-.select-barbero option,
-.select-servicio option {
-    background-color: var(--color-bg-dark); /* Fondo de las opciones */
-    color: var(--color-text-primary); /* Color del texto de las opciones */
-    padding: 0.5rem 1rem; /* Añade padding a las opciones si el navegador lo permite */
-}
-
-/* Estilo para cuando el select está enfocado */
-.select-barbero:focus,
-.select-servicio:focus,
-.form-input:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(179, 150, 86, 0.3); /* Usando tu color de acento para el resplandor */
-}
-
-/* Placeholder text color for general inputs if you have them */
-.form-input::placeholder {
-    color: var(--color-text-muted);
-    opacity: 0.7;
-}
-
 .date-selector {
     display: flex;
     gap: 0.8rem;
     overflow-x: auto;
-    padding: 1.5rem 0.5rem; /* Añadido padding lateral para que la sombra del scroll no se corte */
+    padding: 1.5rem 0.5rem;
     margin-bottom: 2.5rem;
-    /* justify-content: center; */ /* Comentado o eliminado si quieres que inicie a la izquierda */
-    -webkit-overflow-scrolling: touch; /* Para un scroll más suave en iOS */
+    -webkit-overflow-scrolling: touch;
 
-    /* Estilos para la barra de desplazamiento (WebKit/Blink - Chrome, Safari, Edge) */
     &::-webkit-scrollbar {
-        height: 10px; /* Altura de la barra de scroll horizontal */
+        height: 10px;
     }
 
     &::-webkit-scrollbar-track {
-        background: var(--color-bg-dark); /* Fondo de la pista */
+        background: var(--color-bg-dark);
         border-radius: 5px;
-        margin: 0 0.5rem; /* Margen para que no pegue a los bordes del contenedor */
+        margin: 0 0.5rem;
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: var(--color-accent); /* Color del "pulgar" del scroll */
+        background-color: var(--color-accent);
         border-radius: 5px;
-        border: 2px solid var(--color-bg-dark); /* Borde alrededor del pulgar, del mismo color que la pista */
+        border: 2px solid var(--color-bg-dark);
     }
 
     &::-webkit-scrollbar-thumb:hover {
-        background-color: var(--color-accent-hover); /* Color del pulgar al pasar el mouse */
+        background-color: var(--color-accent-hover);
     }
 
-    /* Estilos para la barra de desplazamiento (Firefox) */
-    scrollbar-width: thin; /* Puede ser 'auto', 'thin', o 'none' */
-    scrollbar-color: var(--color-accent) var(--color-bg-dark); /* color del pulgar y color de la pista */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) var(--color-bg-dark);
 }
 
 .date-option {
@@ -1205,86 +1225,15 @@ footer p {
 
 .time-slots-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Ajustado minmax para que quepan más o se ajusten mejor */
-    gap: 1rem; /* Reducido un poco el gap */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
     margin-top: 2rem;
-    max-height: 250px; /* Ajusta según necesidad */
+    max-height: 250px;
     overflow-y: auto;
     padding: 1rem;
     background-color: var(--color-bg-dark);
     border-radius: 4px;
-    border: 1px solid var(--color-border); /* Añadido borde para consistencia */
-}
-
-.time-slot {
-    padding: 1rem;
-    text-align: center;
     border: 1px solid var(--color-border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1.1rem;
-    font-weight: 500;
-}
-
-.time-slot.available {
-    background-color: var(--color-bg-light);
-}
-
-.time-slot.available:hover {
-    background-color: var(--color-accent);
-    color: white;
-}
-
-.time-slot.selected {
-    background-color: var(--color-accent);
-    color: white;
-    border-color: var(--color-accent);
-}
-
-.time-slot.booked {
-    background-color: #e9e9e9;
-    color: #999;
-    cursor: not-allowed;
-    text-decoration: line-through;
-}
-
-/* NUEVOS ESTILOS O AJUSTES PARA .time-slot-btn */
-.time-slot-btn {
-    padding: 0.8rem 0.5rem; /* Ajusta el padding para mejor apariencia */
-    text-align: center;
-    border: 1px solid var(--color-border);
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 0.95rem; /* Ligeramente más pequeño para que quepan más */
-    font-weight: 500;
-    background-color: var(--color-bg-light); /* Fondo base */
-    color: var(--color-text-secondary); /* Color de texto base */
-    font-family: 'Lora', serif;
-}
-
-.time-slot-btn:hover {
-    background-color: var(--color-accent);
-    color: white; /* O var(--color-bg-main) para texto oscuro sobre fondo dorado */
-    border-color: var(--color-accent-hover);
-    transform: translateY(-2px);
-}
-
-.time-slot-btn.selected {
-    background-color: var(--color-accent-hover); /* Un dorado más intenso para el seleccionado */
-    color: white; /* O var(--color-bg-main) */
-    border-color: var(--color-accent);
-    box-shadow: 0 0 8px rgba(179, 150, 86, 0.5); /* Sombra sutil dorada */
-}
-
-/* Si tenías .time-slot.booked, y aún lo necesitas para mostrar slots no disponibles (aunque la API actual no los envía) */
-.time-slot-btn.booked {
-    background-color: var(--color-bg-medium); /* Fondo más oscuro */
-    color: var(--color-text-muted);
-    cursor: not-allowed;
-    text-decoration: line-through;
-    opacity: 0.6;
 }
 
 .instruction-message {
@@ -1305,29 +1254,6 @@ footer p {
     background-color: var(--color-bg-light);
 }
 
-.cancel-button {
-    /* Hereda de .action-button si la usas, o define aquí: */
-    padding: 0.8rem 1.5rem;
-    font-size: 0.95rem;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Lora', serif;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    font-weight: 500;
-    
-    background-color: transparent;
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border); /* Borde sutil */
-}
-
-.cancel-button:hover {
-    background-color: var(--color-bg-light); /* Un fondo ligero al pasar el mouse */
-    color: var(--color-text-primary);
-    border-color: var(--color-text-secondary);
-}
-
 .booking-details {
     margin: 1.5rem 0;
 }
@@ -1337,7 +1263,6 @@ footer p {
 }
 
 /* --- Estilos para la Página de Productos --- */
-
 .page-title {
     text-align: center;
     padding: 3rem 0;
@@ -1448,30 +1373,7 @@ footer p {
     line-height: 1.6;
 }
 
-.buy-button {
-    display: block;
-    width: 100%;
-    padding: 0.9rem;
-    background-color: var(--color-accent);
-    color: var(--color-text-primary);
-    text-align: center;
-    border: none;
-    border-radius: 2px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Lora', serif;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-}
-
-.buy-button:hover {
-    background-color: var(--color-accent-hover);
-}
-
 /* Estilos contacto */
-
-
 .contact-container {
     display: flex;
     flex-wrap: wrap;
@@ -1515,7 +1417,7 @@ footer p {
 
 .info-block p {
     line-height: 1.6;
-    color: var (--color-text-muted);
+    color: var(--color-text-muted);
     margin-bottom: 0.5rem;
 }
 
@@ -1531,57 +1433,6 @@ footer p {
     color: var(--color-text-muted);
     margin-bottom: 1.5rem;
     font-style: italic;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.9rem;
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: 3px;
-    font-size: 1rem;
-    color: var(--color-text-primary);
-    font-family: 'Lora', serif;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(97, 78, 58, 0.3);
-}
-
-textarea.form-control {
-    min-height: 150px;
-    resize: vertical;
-}
-
-.submit-btn {
-    background-color: var(--color-accent);
-    color: var(--color-text-primary);
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    font-family: 'Lora', serif;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.submit-btn:hover {
-    background-color: var(--color-accent-hover);
 }
 
 .map-container {
@@ -1626,12 +1477,9 @@ textarea.form-control {
 }
 
 /* --- Estilos para la pagina de servicios ---*/
-
-/* --- Estilos para la pagina de servicios ---*/
-
 .services-page-section {
-    padding: 4rem 1.5rem; /* Similar padding to about section */
-    background-color: var(--color-bg-medium); /* Consistent background */
+    padding: 4rem 1.5rem;
+    background-color: var(--color-bg-medium);
     border-top: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
 }
@@ -1641,47 +1489,22 @@ textarea.form-control {
     margin: 0 auto;
 }
 
-/* Re-use the existing section-title style if applicable */
-/* If you don't have a shared .section-title, define it here: */
-
-/* 
-.services-page-section .section-title {
-    text-align: center;
-    padding: 3rem 0;
-    background-color: var(--color-bg-light);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.services-page-section .section-title h2 {
-    font-family: 'Playfair Display', serif;
-    color: var(--color-text-accent);
-    font-size: 2.2rem;
-    margin-bottom: 0.5rem;
-}
-
-.services-page-section .section-title p {
-    color: var(--color-text-muted);
-    font-size: 1rem;
-    font-style: italic;
-} */
-
 .services-grid {
     display: grid;
-    /* Adjust grid columns for responsiveness */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: 2.5rem; /* Consistent gap */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
     justify-content: center;
 }
 
 .service-item {
-    background-color: var(--color-bg-card); /* Card background */
+    background-color: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    padding: 2rem; /* Generous padding */
+    padding: 2rem;
     border-radius: 3px;
     box-shadow: var(--shadow-soft);
     transition: transform 0.3s, box-shadow 0.3s;
     display: flex;
-    flex-direction: column; /* Stack content vertically */
+    flex-direction: column;
 }
 
 .service-item:hover {
@@ -1689,84 +1512,222 @@ textarea.form-control {
     box-shadow: var(--shadow-medium);
 }
 
-.service-icon { /* Optional: If you add icons */
-    font-size: 2.5rem; 
+.service-icon {
+    font-size: 2.5rem;
     color: var(--color-accent);
     margin-bottom: 1rem;
-    text-align: center; /* Center the icon */
+    text-align: center;
 }
 
 .service-name {
     font-family: 'Playfair Display', serif;
     color: var(--color-text-accent);
-    font-size: 1.5rem; /* Slightly larger for service name */
+    font-size: 1.5rem;
     margin-bottom: 0.8rem;
     padding-bottom: 0.6rem;
-    border-bottom: 1px solid var(--color-border); /* Subtle separator */
-    text-align: center; /* Center align name */
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
 }
 
 .service-description {
-    color: var(--color-text-secondary); /* Use secondary text color */
+    color: var(--color-text-secondary);
     font-size: 0.95rem;
-    line-height: 1.7; /* Slightly more line height */
-    margin-bottom: 1.5rem; /* Space before price */
-    flex-grow: 1; /* Allow description to take available space */
-    text-align: center; /* Center align description */
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+    text-align: center;
 }
 
 .service-price {
-    font-size: 1.4rem; /* Prominent price */
-    color: var(--color-text-primary); /* Primary text color for price */
+    font-size: 1.4rem;
+    color: var(--color-text-primary);
     font-weight: 500;
-    text-align: center; /* Center align price */
-    margin-top: auto; /* Push price towards the bottom if needed */
-    padding-top: 1rem; /* Space above price */
-    border-top: 1px solid var (--color-border); /* Separator above price */
+    text-align: center;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
 }
 
+/* --- Media Queries --- */
 @media (max-width: 768px) {
+    /* Header y navegación */
+    .header-container {
+        max-height: 100px;
+        padding: 1rem 0;
+    }
+    
+    .logo {
+        text-align: center;
+    }
+    
+    .logo img {
+        max-height: 100%;
+        width: auto;
+    }
+    
+    /* Navegación y menú móvil */
+    header nav {
+        display: none;
+    }
+    
+    .desktop-menu {
+        display: none; /* Ocultar menú desktop en móvil */
+    }
+    
+    .menu-toggle {
+        display: block; /* Mostrar hamburguesa en móvil */
+    }
+    
+    .mobile-menu {
+        position: fixed; /* Cambiado de absolute a fixed para mejor comportamiento */
+        top: 0;
+        right: 0;
+        width: 80%; /* Ancho más razonable para móvil */
+        max-width: 300px;
+        height: 100vh; /* Altura completa */
+        padding: 5rem 1.5rem 1.5rem; /* Espacio para la hamburguesa */
+        background-color: var(--color-bg-dark);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .mobile-menu.open {
+        transform: translateX(0);
+        display: flex !important;
+    }
+    
+    .mobile-menu ul {
+        flex-direction: column;
+    }
+    
+    .mobile-menu ul li {
+        margin: 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .mobile-menu ul li a {
+        padding: 1rem 0.5rem;
+        color: var(--color-text-primary);
+        font-size: 1.1rem;
+    }
+    
+    .mobile-menu .cart-icon .cart-count {
+        position: static;
+    }
+    
+    /* Carrito en móvil */
+    .cart-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    .cart-panel.open {
+        transform: translateX(0);
+    }
+    
+    .cart-overlay {
+        background-color: rgba(0, 0, 0, 0.5);
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    .cart-overlay.open {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .cart-header {
+        background-color: var(--color-bg-dark);
+    }
+    
+    .cart-footer {
+        background-color: var(--color-bg-dark);
+    }
+    
+    .cart-icon {
+        position: relative;
+        margin-left: 0;
+        margin-top: 1rem;
+    }
+    
+    /* Hero slider */
+    .hero-slider {
+        height: 700px;
+    }
+    
     .product-highlight h2 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     
     .product-highlight p {
         font-size: 1rem;
     }
     
-    .product-highlight {
-        padding: 1.5rem;
+    /* Grids */
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
-    .slider-arrow {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-        border-width: 1.5px;
+    /* Botones */
+    .btn, 
+    .slide-btn, 
+    .book-button, 
+    .buy-button, 
+    .checkout-button, 
+    .submit-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
     }
-
-    .hero-slider {
-        height: 550px; /* Altura reducida pero aún mayor que la original */
+    
+    .btn-small {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
     }
-
-    .dot {
-        width: 10px;
-        height: 10px;
-        border-width: 1.5px;
+    
+    /* Imágenes */
+    img {
+        max-width: 100%;
+        height: auto;
     }
-}
-
-@media (max-width: 480px) {
-    .services-grid {
-        grid-template-columns: 1fr; /* Single column on very small screens */
+    
+    .product-img {
+        height: auto;
     }
-
-    /* AÑADIDO: Ajustes para el embed de Instagram en móviles muy pequeños si es necesario */
-    .hero-slider .slide.instagram-embed-slide {
-        padding: 10px; /* Menos padding en pantallas pequeñas */
+    
+    /* Formularios */
+    .form-group {
+        margin-bottom: 1rem;
     }
-
-    .hero-slider .slide.instagram-embed-slide .instagram-media {
-        min-width: 0; /* Permite que el embed se encoja más si es necesario */
+    
+    .form-input,
+    .form-control,
+    .select-barbero,
+    .select-servicio,
+    select.form-input,
+    textarea.form-input {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+    
+    /* Booking form */
+    .booking-form {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Footer */
+    footer {
+        padding: 1rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Contacto */
+    .contact-container {
+        flex-direction: column;
     }
 }

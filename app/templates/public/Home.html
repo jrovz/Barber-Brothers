@@ -16,13 +16,15 @@
             <div class="logo">
                 <img src="/static/logo.png" alt="Barbería Clásica">
             </div>
-            <nav>
+
+            <!-- Navegación Desktop (NUEVA) -->
+            <nav class="desktop-menu">
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
                     <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon">
+                    <li class="cart-icon"> 
                         <a href="#" id="cart-button">
                             <i class="cart-symbol">🛒</i>
                             <span class="cart-count">0</span>
@@ -30,6 +32,27 @@
                     </li>
                 </ul>
             </nav>
+
+            <!-- Botón Hamburguesa (Solo para móvil) -->
+            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span class="menu-toggle-icon"></span>
+            </button>
+
+            <!-- Menú Móvil (Separado) -->
+            <div class="mobile-menu" id="mobile-menu">
+                <ul>
+                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
+                    <li class="cart-icon"> 
+                        <a href="#" id="cart-button-mobile">
+                            <i class="cart-symbol">🛒</i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </header>
     
@@ -577,5 +600,7 @@
 </script>
 <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
 <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+<!-- Añade esto antes de cerrar el body -->
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>
 </html>

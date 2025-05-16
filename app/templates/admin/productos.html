@@ -81,8 +81,8 @@
                 <th>Imagen</th>
                 <th>Nombre</th>
                 <th>Precio</th>
-                <th>Categoría</th> {# Mantenemos el encabezado #}
-                <th>Cantidad</th> <!-- Nueva columna -->
+                <th>Categoría</th> 
+                <th>Cantidad</th> 
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -99,9 +99,8 @@
                 <td>{{ producto.cantidad }}</td> <!-- Mostrar la cantidad -->
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
-                    {# Formulario para eliminar #}
                     <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Si tienes CSRF global #}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
                     </form>
                 </td>
