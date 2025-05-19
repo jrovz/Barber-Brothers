@@ -133,8 +133,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Abrir panel del carrito
     function openCartPanel() {
         if (cartPanel && cartOverlay) {
+            // Cerrar el menú móvil si está abierto
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuOverlay = document.getElementById('menu-overlay');
+            
+            if (mobileMenu && mobileMenu.classList.contains('open')) {
+                mobileMenu.classList.remove('open');
+                if (menuToggle) menuToggle.classList.remove('open');
+                if (menuOverlay) menuOverlay.classList.remove('open');
+            }
+            
+            // Abrir el carrito
             cartPanel.classList.add('open');
             cartOverlay.classList.add('open');
+            document.body.classList.add('menu-open'); // Prevenir scroll
+            
             renderCart();
             calculateTotal();
         }
@@ -145,12 +159,25 @@ document.addEventListener('DOMContentLoaded', function() {
          if (cartPanel && cartOverlay) {
             cartPanel.classList.remove('open');
             cartOverlay.classList.remove('open');
+            
+            // Restaurar scroll solo si el menú móvil no está abierto
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (!mobileMenu || !mobileMenu.classList.contains('open')) {
+                document.body.classList.remove('menu-open');
+            }
         }
-    }
-
-    // Event listeners principales
+    }    // Event listeners principales
     if (cartButton) {
         cartButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCartPanel();
+        });
+    }
+    
+    // Botón de carrito móvil (si existe)
+    const cartButtonMobile = document.getElementById('cart-button-mobile');
+    if (cartButtonMobile) {
+        cartButtonMobile.addEventListener('click', function(e) {
             e.preventDefault();
             openCartPanel();
         });

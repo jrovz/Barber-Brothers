@@ -77,9 +77,8 @@
             {{ form.descripcion(class="form-input", rows=3) }}
             {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
         </div>
-        
-        {{ form.submit(class="btn", value="Actualizar Servicio") }}
-        <a href="{{ url_for('admin.gestionar_servicios') }}" class="btn btn-secondary" style="margin-left: 1rem; background-color: var(--color-text-muted); color: var(--color-bg-dark);">Cancelar</a>
+          {{ form.submit(class="btn", value="Actualizar Servicio") }}
+        <a href="{{ url_for('admin.gestionar_servicios') }}" class="btn btn-outline" style="margin-left: 1rem;">Cancelar</a>
     </form>
 </section>
 

@@ -110,3 +110,19 @@ class CitaForm(FlaskForm):
         self.servicio_id.choices = [(0, 'Selecciona un servicio')] + [(s.id, s.nombre) for s in Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()]
         # Añadir opción por defecto también para estado si se desea
         self.estado.choices = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada'), ('cancelada', 'Cancelada'), ('completada', 'Completada')]
+
+class ClienteFilterForm(FlaskForm):
+    segmento = SelectField('Segmento', choices=[
+        ('', 'Todos los segmentos'),
+        ('nuevo', 'Nuevos'),
+        ('ocasional', 'Ocasionales'),
+        ('recurrente', 'Recurrentes'),
+        ('vip', 'VIP'),
+        ('inactivo', 'Inactivos')
+    ], validators=[Optional()])
+    ordenar_por = SelectField('Ordenar por', choices=[
+        ('nombre', 'Nombre'),
+        ('visitas', 'Total de visitas'),
+        ('ultima_visita', 'Última visita')
+    ], validators=[Optional()])
+    submit = SubmitField('Filtrar')

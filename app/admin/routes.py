@@ -10,9 +10,9 @@ from app.models.barbero import Barbero, DisponibilidadBarbero
 from app.models.categoria import Categoria # Correctly import Categoria
 from app import db
 # Import forms
-from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm, DisponibilidadForm, CategoriaForm
+from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm, DisponibilidadForm, CategoriaForm, ClienteFilterForm
 from app.admin.utils import save_image # Assuming you have this utility
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import logging # For better logging, especially in edit_barbero
 
 # Configure logging for specific routes if needed
@@ -59,22 +59,117 @@ def dashboard():
     if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
         abort(403)
 
+    # Estadísticas básicas
     product_count = Producto.query.count()
     barber_count = Barbero.query.count()
     unread_messages_count = Mensaje.query.filter_by(leido=False).count()
     recent_messages = Mensaje.query.order_by(Mensaje.creado.desc()).limit(5).all()
-    # Add more stats as needed, e.g., upcoming appointments
-    upcoming_citas_count = Cita.query.filter(Cita.fecha >= datetime.utcnow(), Cita.estado != 'cancelada').count()
-
+    
+    # Estadísticas de clientes y segmentación
+    cliente_count = Cliente.query.count()
+    nuevos_clientes = Cliente.query.filter_by(segmento='nuevo').count()
+    clientes_recurrentes = Cliente.query.filter_by(segmento='recurrente').count()
+    clientes_vip = Cliente.query.filter_by(segmento='vip').count()
+    clientes_inactivos = Cliente.query.filter_by(segmento='inactivo').count()
+    
+    # Citas y ocupación
+    today = datetime.today().date()
+    tomorrow = today + timedelta(days=1)
+    this_month_start = today.replace(day=1)
+    next_month_start = (this_month_start + timedelta(days=32)).replace(day=1)
+    
+    # Citas próximas
+    proximas_citas = Cita.query.filter(
+        Cita.fecha >= datetime.now(),
+        Cita.fecha <= datetime.now() + timedelta(days=7),
+        Cita.estado != 'cancelada'
+    ).order_by(Cita.fecha).limit(10).all()
+    
+    # Citas de hoy
+    citas_hoy = Cita.query.filter(
+        Cita.fecha >= datetime.combine(today, time.min),
+        Cita.fecha < datetime.combine(tomorrow, time.min)
+    ).count()
+    
+    # Citas del mes
+    citas_mes = Cita.query.filter(
+        Cita.fecha >= datetime.combine(this_month_start, time.min),
+        Cita.fecha < datetime.combine(next_month_start, time.min)
+    ).count()
+    
+    # Estadísticas por barbero
+    barberos = Barbero.query.all()
+    stats_barberos = []
+    
+    for barbero in barberos:
+        # Citas asignadas a este barbero este mes
+        citas_barbero = Cita.query.filter(
+            Cita.barbero_id == barbero.id,
+            Cita.fecha >= datetime.combine(this_month_start, time.min),
+            Cita.fecha < datetime.combine(next_month_start, time.min)
+        ).count()
+        
+        # Calculando tasa de ocupación basada en disponibilidad
+        disponibilidad = DisponibilidadBarbero.query.filter_by(barbero_id=barbero.id, activo=True).all()
+        horas_disponibles = 0
+        for disp in disponibilidad:
+            # Calculamos horas disponibles por semana
+            inicio = disp.hora_inicio
+            fin = disp.hora_fin
+            delta = (datetime.combine(today, fin) - datetime.combine(today, inicio))
+            horas_disponibles += delta.total_seconds() / 3600  # horas por día
+        
+        # La tasa sería un estimado (mejorable con datos reales de duración de citas)
+        tasa_ocupacion = round((citas_barbero / (horas_disponibles * 4)) * 100) if horas_disponibles > 0 else 0
+        
+        stats_barberos.append({
+            'id': barbero.id,
+            'nombre': barbero.nombre,
+            'citas': citas_barbero,
+            'ocupacion': min(tasa_ocupacion, 100)  # Limitar a 100% máximo
+        })
+    
+    # Servicios más solicitados
+    top_servicios = db.session.query(
+        Servicio.nombre, 
+        db.func.count(Cita.id).label('total')
+    ).join(Cita, Servicio.id == Cita.servicio_id)\
+     .group_by(Servicio.nombre)\
+     .order_by(db.desc('total'))\
+     .limit(5).all()
+      # Productos con bajo stock
+    productos_bajo_stock = Producto.query.filter(Producto.cantidad <= 5).order_by(Producto.cantidad).all()
+    
+    # Datos para gráfico de segmentación de clientes
+    segmentos_data = {
+        'labels': ['Nuevos', 'Ocasionales', 'Recurrentes', 'VIP', 'Inactivos'],
+        'data': [
+            nuevos_clientes,
+            Cliente.query.filter_by(segmento='ocasional').count(),
+            clientes_recurrentes,
+            clientes_vip,
+            clientes_inactivos
+        ]
+    }
 
     return render_template(
         'admin/dashboard.html', 
         title='Dashboard Admin',
         product_count=product_count,
         barber_count=barber_count,
+        cliente_count=cliente_count,
+        nuevos_clientes=nuevos_clientes,
+        clientes_recurrentes=clientes_recurrentes,
+        clientes_vip=clientes_vip,
+        segmentos_data=segmentos_data,
         unread_messages_count=unread_messages_count,
         recent_messages=recent_messages,
-        upcoming_citas_count=upcoming_citas_count
+        proximas_citas=proximas_citas,
+        citas_hoy=citas_hoy,
+        citas_mes=citas_mes,
+        stats_barberos=stats_barberos,
+        top_servicios=top_servicios,
+        productos_bajo_stock=productos_bajo_stock
     )
 
 # --- Gestión de Productos (CRUD) ---
@@ -744,3 +839,111 @@ def debug_images():
         app_path=app_path,
         upload_folder=upload_folder # Pass the actual upload folder path
     )
+
+# --- Gestión de Clientes y Segmentación ---
+@bp.route('/clientes', methods=['GET', 'POST'])
+@login_required
+def gestionar_clientes():
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    form = ClienteFilterForm()
+    
+    # Si se envía el formulario, redirigir con los filtros como parámetros de URL
+    if form.validate_on_submit():
+        return redirect(url_for('admin.gestionar_clientes', 
+                              segmento=form.segmento.data, 
+                              ordenar_por=form.ordenar_por.data))
+    
+    # Obtener filtros de la URL
+    segmento_filtro = request.args.get('segmento', '')
+    ordenar_por = request.args.get('ordenar_por', 'nombre')
+    
+    # Preseleccionar los valores del formulario
+    form.segmento.data = segmento_filtro
+    form.ordenar_por.data = ordenar_por
+    
+    # Configurar la consulta base
+    query = Cliente.query
+    
+    # Aplicar filtros si existen
+    if segmento_filtro:
+        query = query.filter_by(segmento=segmento_filtro)
+    
+    # Aplicar ordenamiento
+    if ordenar_por == 'visitas':
+        query = query.order_by(Cliente.total_visitas.desc())
+    elif ordenar_por == 'ultima_visita':
+        query = query.order_by(Cliente.ultima_visita.desc())
+    else:  # Por defecto, ordenar por nombre
+        query = query.order_by(Cliente.nombre)
+    
+    # Ejecutar consulta
+    clientes = query.all()
+    
+    # Estadísticas de segmentación
+    stats = {
+        'total': Cliente.query.count(),
+        'nuevos': Cliente.query.filter_by(segmento='nuevo').count(),
+        'ocasionales': Cliente.query.filter_by(segmento='ocasional').count(),
+        'recurrentes': Cliente.query.filter_by(segmento='recurrente').count(),
+        'vip': Cliente.query.filter_by(segmento='vip').count(),
+        'inactivos': Cliente.query.filter_by(segmento='inactivo').count(),
+    }
+    
+    return render_template(
+        'admin/clientes.html',
+        title='Gestionar Clientes',
+        clientes=clientes,
+        stats=stats,
+        segmento_actual=segmento_filtro,
+        ordenar_por=ordenar_por,
+        form=form
+    )
+
+@bp.route('/clientes/<int:id>')
+@login_required
+def detalle_cliente(id):
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+        
+    cliente = Cliente.query.get_or_404(id)
+    
+    # Obtener historial de citas
+    citas = Cita.query.filter_by(cliente_id=cliente.id).order_by(Cita.fecha.desc()).all()
+    
+    # Calcular métricas
+    total_gastado = sum(cita.servicio_rel.precio for cita in citas if cita.servicio_rel and cita.estado == 'completada')
+    promedio_gasto = total_gastado / len(citas) if citas else 0
+    
+    return render_template(
+        'admin/detalle_cliente.html',
+        title=f'Cliente: {cliente.nombre}',
+        cliente=cliente,
+        citas=citas,
+        total_gastado=total_gastado,
+        promedio_gasto=promedio_gasto
+    )
+
+@bp.route('/clientes/actualizar-segmentos', methods=['POST'])
+@login_required
+def actualizar_segmentos():
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+        
+    # Obtener todos los clientes
+    clientes = Cliente.query.all()
+    count = 0
+    
+    try:
+        for cliente in clientes:
+            if cliente.clasificar_segmento() != cliente.segmento:
+                count += 1
+        
+        db.session.commit()
+        flash(f'Segmentación actualizada para {count} clientes.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al actualizar segmentación: {str(e)}', 'danger')
+        
+    return redirect(url_for('admin.gestionar_clientes'))

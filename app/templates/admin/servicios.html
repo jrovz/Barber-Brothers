@@ -64,8 +64,8 @@
 </section>
 
 <!-- Tabla de servicios existentes -->
-<section>
-    <h2 class="form-title">Servicios Existentes</h2>
+<section class="data-table-container">
+    <h2 class="section-title">Servicios Existentes</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -86,17 +86,16 @@
                 <td>{{ servicio.duracion_estimada or 'N/A' }}</td>
                 <td>
                     {% if servicio.activo %}
-                        <span class="badge badge-primary" style="background-color: var(--color-success);">Activo</span>
+                        <span class="badge badge-success">Activo</span>
                     {% else %}
-                        <span class="badge" style="background-color: var(--color-text-muted); color: var(--color-bg-dark);">Inactivo</span>
+                        <span class="badge badge-danger">Inactivo</span>
                     {% endif %}
-                </td>
-                <td class="actions">
+                </td>                <td class="actions">
                     <a href="{{ url_for('admin.editar_servicio', id=servicio.id) }}" class="btn btn-small btn-edit">Editar</a>
                     {# Formulario para eliminar #}
-                    <form action="{{ url_for('admin.eliminar_servicio', id=servicio.id) }}" method="POST" style="display: inline;">
+                    <form action="{{ url_for('admin.eliminar_servicio', id=servicio.id) }}" method="POST" class="inline-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-small btn-delete" data-confirm-message="¿Estás seguro de que deseas eliminar este servicio?">Eliminar</button>
+                        <button type="submit" class="btn btn-small btn-delete" onclick="return confirm('¿Estás seguro de eliminar este servicio?');">Eliminar</button>
                     </form>
                 </td>
             </tr>

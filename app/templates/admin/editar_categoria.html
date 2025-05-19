@@ -24,8 +24,8 @@
             {{ form.nombre.label(class="form-label") }}
             {{ form.nombre(class="form-input", value=categoria.nombre) }} {# Pre-llenar el valor #}
             {% for error in form.nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
-        </div>
-        {{ form.submit(class="btn") }}
+        </div>        {{ form.submit(class="btn") }}
+        <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn btn-outline" style="margin-left: 1rem;">Cancelar</a>
     </form>
 </section>
 {% endblock %}

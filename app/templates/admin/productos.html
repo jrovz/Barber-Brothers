@@ -1,10 +1,9 @@
 <!-- filepath: app/templates/admin/productos.html -->
 {% extends "admin/admin_base.html" %}
 {% block content %}
-<div class="panel-header">
-    <h1 class="panel-title">{{ title }}</h1>
+<div class="panel-header">    <h1 class="panel-title">{{ title }}</h1>
     
-    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn">Gestionar Categorías</a>
+    <a href="{{ url_for('admin.gestionar_categorias') }}" class="btn btn-secondary">Gestionar Categorías</a>
 </div>
 
 
@@ -72,8 +71,8 @@
 </section>
 
 <!-- Tabla de productos existentes -->
-<section>
-    <h2 class="form-title">Productos Existentes</h2>
+<section class="data-table-container">
+    <h2 class="section-title">Productos Existentes</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -91,17 +90,20 @@
             <tr>
                 <td>{{ producto.id }}</td>
                 <td>
-                    <img src="{{ producto.imagen_url if producto.imagen_url else url_for('static', filename='images/placeholder_product.png') }}" alt="{{ producto.nombre }}" style="width: 50px; height: 50px; object-fit: cover;"> {# Añadido placeholder si no hay imagen #}
+                    {% if producto.imagen_url %}
+                        <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" class="table-image">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/placeholder_product.png') }}" alt="{{ producto.nombre }}" class="table-image">
+                    {% endif %}
                 </td>
                 <td>{{ producto.nombre }}</td>
                 <td>{{ producto.precio|cop_format }}</td>
-                <td>{{ producto.categoria_rel.nombre if producto.categoria_rel else 'Sin Categoría' }}</td> {# MODIFICADO: para mostrar el nombre de la categoría desde la relación #}
-                <td>{{ producto.cantidad }}</td> <!-- Mostrar la cantidad -->
-                <td class="actions">
+                <td>{{ producto.categoria_rel.nombre if producto.categoria_rel else 'Sin Categoría' }}</td>
+                <td>{{ producto.cantidad }}</td>                <td class="actions">
                     <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-small btn-edit">Editar</a>
-                    <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST" style="display: inline;">
+                    <form action="{{ url_for('admin.eliminar_producto', id=producto.id) }}" method="POST" class="inline-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
+                        <button type="submit" class="btn btn-small btn-delete" onclick="return confirm('¿Estás seguro de eliminar este producto?');">Eliminar</button>
                     </form>
                 </td>
             </tr>

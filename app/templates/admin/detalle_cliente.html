@@ -1,0 +1,175 @@
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_clientes') }}" class="btn btn-sm btn-outline">← Volver a la lista de clientes</a>
+</div>
+
+{# Mostrar mensajes flash #}
+{% include 'admin/_flash_messages.html' %}
+
+<!-- Información del cliente -->
+<section class="dashboard-section cliente-profile">
+    <div class="cliente-header">
+        <div class="cliente-info">
+            <h2>{{ cliente.nombre }}</h2>
+            <p class="cliente-meta">
+                <span class="badge 
+                    {% if cliente.segmento == 'nuevo' %}badge-info
+                    {% elif cliente.segmento == 'ocasional' %}badge-primary
+                    {% elif cliente.segmento == 'recurrente' %}badge-success
+                    {% elif cliente.segmento == 'vip' %}badge-warning
+                    {% elif cliente.segmento == 'inactivo' %}badge-danger
+                    {% endif %}">
+                    {{ cliente.segmento|capitalize }}
+                </span>
+                <span class="date">Cliente desde {{ cliente.creado.strftime('%d/%m/%Y') }}</span>
+            </p>
+        </div>
+        
+        <div class="cliente-contact">
+            <p><strong>Email:</strong> {{ cliente.email }}</p>
+            <p><strong>Teléfono:</strong> {{ cliente.telefono or 'No proporcionado' }}</p>
+        </div>
+    </div>
+    
+    <hr class="divider">
+    
+    <div class="cliente-stats">
+        <div class="stat-item">
+            <span class="stat-label">Total visitas</span>
+            <span class="stat-value">{{ cliente.total_visitas }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Última visita</span>
+            <span class="stat-value">{{ cliente.ultima_visita.strftime('%d/%m/%Y') if cliente.ultima_visita else 'Nunca' }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Total gastado</span>
+            <span class="stat-value">${{ "%.2f"|format(total_gastado) }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Promedio por visita</span>
+            <span class="stat-value">${{ "%.2f"|format(promedio_gasto) }}</span>
+        </div>
+    </div>
+</section>
+
+<!-- Historial de citas -->
+<div class="data-table-container">
+    <h2 class="section-title">Historial de Citas</h2>
+    
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Barbero</th>
+                <th>Servicio</th>
+                <th>Precio</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cita in citas %}
+            <tr>
+                <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td>{{ cita.barbero_rel.nombre }}</td>
+                <td>{{ cita.servicio_rel.nombre }}</td>
+                <td>${{ "%.2f"|format(cita.servicio_rel.precio) }}</td>
+                <td>
+                    <span class="badge 
+                        {% if cita.estado == 'completada' %}badge-success
+                        {% elif cita.estado == 'pendiente' or cita.estado == 'pendiente_confirmacion' %}badge-warning
+                        {% elif cita.estado == 'cancelada' %}badge-danger
+                        {% else %}badge-info{% endif %}">
+                        {{ cita.estado|replace('_', ' ')|capitalize }}
+                    </span>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Este cliente no tiene citas registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Gráfico de actividad -->
+<div class="dashboard-section chart-section">
+    <h2 class="section-title">Actividad del Cliente</h2>
+    <div class="chart-container">
+        <canvas id="clienteActivityChart"></canvas>
+        <script type="application/json" id="clienteActivityData">
+            {
+                "labels": [{% for cita in citas|reverse %}
+                            {% if loop.index <= 12 %}
+                                "{{ cita.fecha.strftime('%b %Y') }}"{% if not loop.last %},{% endif %}
+                            {% endif %}
+                          {% endfor %}],
+                "data": [{% for cita in citas|reverse %}
+                          {% if loop.index <= 12 %}
+                              {{ cita.servicio_rel.precio if cita.estado == 'completada' else 0 }}{% if not loop.last %},{% endif %}
+                          {% endif %}
+                         {% endfor %}]
+            }
+        </script>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar el gráfico de actividad del cliente
+    const clienteCtx = document.getElementById('clienteActivityChart').getContext('2d');
+    const clienteData = JSON.parse(document.getElementById('clienteActivityData').textContent);
+    
+    new Chart(clienteCtx, {
+        type: 'line',
+        data: {
+            labels: clienteData.labels,
+            datasets: [{
+                label: 'Gastos',
+                data: clienteData.data,
+                backgroundColor: 'rgba(210, 184, 131, 0.2)',
+                borderColor: '#d2b883',
+                borderWidth: 2,
+                pointBackgroundColor: '#d2b883',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(200, 200, 200, 0.1)'
+                    },
+                    ticks: {
+                        color: '#e3d9c6'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(200, 200, 200, 0.1)'
+                    },
+                    ticks: {
+                        color: '#e3d9c6'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        color: '#f5f0e6'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

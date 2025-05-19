@@ -21,13 +21,103 @@
         <a href="{{ url_for('admin.gestionar_barberos') }}">Gestionar</a>
     </div>
     <div class="card">
+        <h3>Citas Hoy</h3>
+        <p class="count">{{ citas_hoy }}</p>
+        <a href="{{ url_for('admin.gestionar_citas') }}">Ver citas</a>
+    </div>
+    <div class="card">
+        <h3>Citas este Mes</h3>
+        <p class="count">{{ citas_mes }}</p>
+        <a href="{{ url_for('admin.gestionar_citas') }}">Ver todas</a>
+    </div>
+    <div class="card">
         <h3>Mensajes Nuevos</h3>
         <p class="count">{{ unread_messages_count }}</p>
-        {# Asume una futura ruta 'admin.gestionar_mensajes' #}
         <a href="#">Ver Mensajes</a> 
     </div>
-    {# Añade más tarjetas si tienes más estadísticas #}
 </section>
+
+<!-- Nuevas secciones para gráficos y métricas -->
+<div class="dashboard-charts-container">
+    <!-- Gráfico de segmentación de clientes -->
+    <div class="dashboard-section chart-section">
+        <h2 class="section-title">Segmentación de Clientes</h2>
+        <div class="chart-container">
+            <canvas id="clientSegmentationChart"></canvas>
+            <script type="application/json" id="clientSegmentationData">
+                {
+                    "labels": {{ segmentos_data.labels|tojson }},
+                    "data": {{ segmentos_data.data|tojson }}
+                }
+            </script>
+        </div>
+        <div class="chart-info">
+            <p>Total clientes: {{ cliente_count }}</p>
+            <p><a href="{{ url_for('admin.gestionar_clientes') }}" class="btn btn-sm">Gestionar Clientes</a></p>
+        </div>
+    </div>
+    
+    <div class="dashboard-section chart-section">
+        <h2 class="section-title">Rendimiento de Barberos</h2>
+        <div class="chart-container">
+            <canvas id="barberPerformanceChart"></canvas>
+            <script type="application/json" id="barberPerformanceData">
+                {
+                    "names": [{% for barbero in stats_barberos %}"{{ barbero.nombre }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+                    "appointments": [{% for barbero in stats_barberos %}{{ barbero.citas }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                    "occupation": [{% for barbero in stats_barberos %}{{ barbero.ocupacion }}{% if not loop.last %}, {% endif %}{% endfor %}]
+                }
+            </script>
+        </div>
+    </div>
+
+    <div class="dashboard-section chart-section">
+        <h2 class="section-title">Servicios Más Populares</h2>
+        <div class="chart-container">
+            <canvas id="servicePopularityChart"></canvas>
+            <script type="application/json" id="serviceData">
+                {
+                    "labels": [{% for servicio in top_servicios %}"{{ servicio.nombre }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+                    "data": [{% for servicio in top_servicios %}{{ servicio.total }}{% if not loop.last %}, {% endif %}{% endfor %}]
+                }
+            </script>
+        </div>
+    </div>
+</div>
+
+<!-- Alerta de productos con bajo stock -->
+{% if productos_bajo_stock %}
+<section class="dashboard-section alert-section">
+    <h2 class="section-title">Productos con Bajo Stock</h2>
+    <div class="alert alert-warning">
+        Hay {{ productos_bajo_stock|length }} productos con menos de 5 unidades en stock.
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock Actual</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos_bajo_stock %}
+            <tr>
+                <td>{{ producto.nombre }}</td>
+                <td>
+                    <span class="badge {% if producto.cantidad <= 2 %}badge-danger{% else %}badge-warning{% endif %}">
+                        {{ producto.cantidad }} unidades
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-sm">Actualizar stock</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
 
 <!-- B. Mensajes Recientes -->
 <section class="dashboard-section">

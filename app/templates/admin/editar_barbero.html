@@ -73,10 +73,9 @@
             {{ form.descripcion(class="form-input", rows=3) }}
             {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
         </div>
-        
-        {{ form.submit(class="btn", value="Actualizar Barbero") }}
-        <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-secondary" style="margin-left: 1rem; background-color: var(--color-text-muted); color: var(--color-bg-dark);">Cancelar</a>
-        <!-- NUEVO: Botón para ir a gestionar disponibilidad -->
+          {{ form.submit(class="btn", value="Actualizar Barbero") }}
+        <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-outline" style="margin-left: 1rem;">Cancelar</a>
+        <!-- Botón para ir a gestionar disponibilidad -->
         <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-secondary" style="margin-left: 1rem;">Gestionar Horarios</a>
     </form>
 </section>

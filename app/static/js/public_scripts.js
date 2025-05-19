@@ -263,8 +263,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
 
-    if (menuToggle && mobileMenu) {
-        console.log('Menú toggle y mobile menu encontrados'); // Debug
+    // Verificar si el menú está siendo manejado por menu.js
+    const menuHandledByMenuJS = window.menuHandledByMenuJS === true;
+    
+    // Solo ejecutar este código si no está siendo manejado por menu.js
+    if (menuToggle && mobileMenu && !menuHandledByMenuJS) {
+        console.log('Menú toggle y mobile menu encontrados - manejado por public_scripts.js'); // Debug
         
         // Asegurarse que el menú comienza cerrado
         mobileMenu.classList.remove('open');

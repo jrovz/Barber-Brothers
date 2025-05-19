@@ -120,9 +120,9 @@
             <button class="checkout-button">Finalizar Compra</button>
         </div>
     </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
-
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <div class="cart-overlay" id="cart-overlay"></div>    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
+    {% include 'public/includes/menu_conflict_fix.html' %}
     <!-- Añade esto antes de cerrar el body -->
     <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>

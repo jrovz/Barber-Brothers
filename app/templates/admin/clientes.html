@@ -1,0 +1,123 @@
+{% extends "admin/admin_base.html" %}
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{# Mostrar mensajes flash #}
+{% include 'admin/_flash_messages.html' %}
+
+<!-- Estadísticas de segmentación de clientes -->
+<section class="dashboard-stats">
+    <div class="card">
+        <h3>Total Clientes</h3>
+        <p class="count">{{ stats.total }}</p>
+        <a href="{{ url_for('admin.gestionar_clientes') }}">Ver todos</a>
+    </div>
+    <div class="card">
+        <h3>Nuevos</h3>
+        <p class="count">{{ stats.nuevos }}</p>
+        <a href="{{ url_for('admin.gestionar_clientes', segmento='nuevo') }}">Ver segmento</a>
+    </div>
+    <div class="card">
+        <h3>Recurrentes</h3>
+        <p class="count">{{ stats.recurrentes }}</p>
+        <a href="{{ url_for('admin.gestionar_clientes', segmento='recurrente') }}">Ver segmento</a>
+    </div>
+    <div class="card">
+        <h3>VIP</h3>
+        <p class="count">{{ stats.vip }}</p>
+        <a href="{{ url_for('admin.gestionar_clientes', segmento='vip') }}">Ver segmento</a>
+    </div>
+    <div class="card">
+        <h3>Inactivos</h3>
+        <p class="count">{{ stats.inactivos }}</p>
+        <a href="{{ url_for('admin.gestionar_clientes', segmento='inactivo') }}">Ver segmento</a>
+    </div>
+</section>
+
+<!-- Herramientas de gestión -->
+<div class="admin-tools">
+    <div class="tool-filters">
+        <form method="POST" action="{{ url_for('admin.gestionar_clientes') }}">
+            {{ form.hidden_tag() }}
+            <div class="filter-group">
+                <label class="filter-label">{{ form.segmento.label }}</label>
+                {{ form.segmento(class="form-select") }}
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">{{ form.ordenar_por.label }}</label>
+                {{ form.ordenar_por(class="form-select") }}
+            </div>
+            <div class="filter-group">
+                {{ form.submit(class="btn btn-sm") }}
+                {% if segmento_actual or ordenar_por != 'nombre' %}
+                    <a href="{{ url_for('admin.gestionar_clientes') }}" class="btn btn-sm btn-outline">Limpiar filtros</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    
+    <div class="tool-actions">
+        <form method="POST" action="{{ url_for('admin.actualizar_segmentos') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm">Recalcular segmentos</button>
+        </form>
+    </div>
+</div>
+
+<!-- Lista de clientes -->
+<div class="data-table-container">
+    <h2 class="section-title">
+        {% if segmento_actual %}
+            Clientes: {{ segmento_actual|capitalize }}
+        {% else %}
+            Todos los clientes
+        {% endif %}
+    </h2>
+    
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Segmento</th>
+                <th>Visitas</th>
+                <th>Última visita</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for cliente in clientes %}
+            <tr>
+                <td>{{ cliente.nombre }}</td>
+                <td>{{ cliente.email }}</td>
+                <td>{{ cliente.telefono or '-' }}</td>
+                <td>
+                    <span class="badge 
+                        {% if cliente.segmento == 'nuevo' %}badge-info
+                        {% elif cliente.segmento == 'ocasional' %}badge-primary
+                        {% elif cliente.segmento == 'recurrente' %}badge-success
+                        {% elif cliente.segmento == 'vip' %}badge-warning
+                        {% elif cliente.segmento == 'inactivo' %}badge-danger
+                        {% endif %}">
+                        {{ cliente.segmento|capitalize }}
+                    </span>
+                </td>
+                <td>{{ cliente.total_visitas }}</td>
+                <td>{{ cliente.ultima_visita.strftime('%d/%m/%Y') if cliente.ultima_visita else 'Nunca' }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('admin.detalle_cliente', id=cliente.id) }}" class="btn btn-sm">Ver detalles</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="text-center">No se encontraron clientes con los filtros actuales.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+<!-- Incluir este fragmento después de incluir public_scripts.js pero antes de menu.js -->
+<script>
+    // Esta pequeña función desactiva la manipulación del menú móvil en public_scripts.js
+    // para evitar conflictos con el nuevo menu.js especializado
+    document.addEventListener('DOMContentLoaded', function() {
+        window.menuHandledByMenuJS = true;
+    });
+</script>

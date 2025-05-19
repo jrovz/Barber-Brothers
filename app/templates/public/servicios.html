@@ -133,9 +133,10 @@
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
     <!-- End Cart Panel Structure -->
-    <!-- Añade esto antes de cerrar el body -->
-     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
+    <!-- Añade esto antes de cerrar el body -->     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
      <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+     <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
+     {% include 'public/includes/menu_conflict_fix.html' %}
+     <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>
 </html>

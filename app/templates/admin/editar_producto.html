@@ -78,8 +78,8 @@
             {{ form.descripcion(class="form-input", rows=3) }}
             {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
         </div>
-        
-        {{ form.submit(class="btn") }}
+          {{ form.submit(class="btn") }}
+        <a href="{{ url_for('admin.gestionar_productos') }}" class="btn btn-outline" style="margin-left: 1rem;">Cancelar</a>
     </form>
 </section>
 {% endblock %}

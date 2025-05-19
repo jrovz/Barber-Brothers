@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} | Barber Brothers Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <title>{{ title }} | Barber Brothers Admin</title>    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}"> 
     
-</head>
+    <!-- Chart.js para visualización de datos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    </head>
 <body>
     <div class="admin-container">
         <!-- Sidebar -->
@@ -23,11 +24,11 @@
                 <ul>
                     <!-- side bar lateral -->
                     <li class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-                    <li class="{{ 'active' if 'producto' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_productos') }}">Productos</a></li>
-                    <li class="{{ 'active' if 'barbero' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_barberos') }}">Barberos</a></li>
+                    <li class="{{ 'active' if 'producto' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_productos') }}">Productos</a></li>                    <li class="{{ 'active' if 'barbero' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_barberos') }}">Barberos</a></li>
                     {# <li class="{{ 'active' if 'categoria' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_categorias') }}">Categorías</a></li> #} {# ELIMINADO #}
                     <li class="{{ 'active' if 'servicio' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_servicios') }}">Servicios</a></li>
                     <li class="{{ 'active' if 'cita' in request.endpoint else '' }}"><a href="{{ url_for('admin.gestionar_citas') }}">Citas</a></li>
+                    
                     
 
                     <li><hr style="border-color: var(--color-border); margin: 1rem 0;"></li>
@@ -82,9 +83,12 @@
                 });
             });
         });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    </script>    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script> {# Opcional: para idioma español #}
     
-</body>
+    <!-- Script personalizado para Dashboard -->
+    {% if request.endpoint == 'admin.dashboard' %}
+    <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
+    {% endif %}
+    </body>
 </html>

@@ -7,13 +7,7 @@
 
 {# Mostrar mensajes flash #}
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category or 'info' }}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    {% endif %}
+    {% include 'admin/_flash_messages.html' %}
 {% endwith %}
 
 <!-- Formulario para añadir barberos (usando WTForms) -->
@@ -65,8 +59,8 @@
 </section>
 
 <!-- Tabla de barberos existentes -->
-<section>
-    <h2 class="form-title">Barberos Existentes</h2>
+<section class="data-table-container">
+    <h2 class="section-title">Barberos Existentes</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -84,29 +78,26 @@
                 <td>{{ barbero.id }}</td>
                 <td>
                     {% if barbero.imagen_url %}
-                <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" 
-                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+                <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" class="table-image rounded">
                 {% else %}
-                <span style="color: var(--color-text-muted); font-style: italic;">Sin imagen</span>
+                <span class="no-image-text">Sin imagen</span>
                 {% endif %}
                 </td>
                 <td>{{ barbero.nombre }}</td>
-                <td>{{ barbero.especialidad or 'N/A' }}</td>
-                <td>
+                <td>{{ barbero.especialidad or 'N/A' }}</td>                <td>
                     {% if barbero.activo %}
-                        <span class="badge badge-success">Activo</span> {# Use class badge-success #}
+                        <span class="badge badge-success">Activo</span>
                     {% else %}
-                        <span class="badge">Inactivo</span> {# Use default badge class #}
+                        <span class="badge badge-danger">Inactivo</span>
                     {% endif %}
                 </td>
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_barbero', id=barbero.id) }}" class="btn btn-small btn-edit">Editar</a>
-                    <!-- NUEVO: Botón para gestionar disponibilidad -->
-                    <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-small btn-secondary" style="margin-left: 5px;">Horarios</a>
-                    {# Formulario para eliminar #}
-                    <form action="{{ url_for('admin.eliminar_barbero', id=barbero.id) }}" method="POST" style="display: inline; margin-left: 5px;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> {# Si tienes CSRF global #}
-                        <button type="submit" class="btn btn-small btn-delete">Eliminar</button>
+                    <!-- Botón para gestionar disponibilidad -->
+                    <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-small btn-secondary">Horarios</a>
+                    {# Formulario para eliminar #}                    <form action="{{ url_for('admin.eliminar_barbero', id=barbero.id) }}" method="POST" class="inline-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-small btn-delete" onclick="return confirm('¿Estás seguro de eliminar este barbero?');">Eliminar</button>
                     </form>
                 </td>
             </tr>

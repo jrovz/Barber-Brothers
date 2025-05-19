@@ -1,9 +1,8 @@
 {% extends "admin/admin_base.html" %}
 
 {% block content %}
-<div class="panel-header">
-    <h1 class="panel-title">{{ title }}</h1>
-    <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Volver a Citas</a>
+<div class="panel-header">    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_citas') }}" class="btn btn-secondary">Volver a Citas</a>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}

@@ -4,6 +4,7 @@ from flask import current_app
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from app.models.barbero import Barbero
 from app.models.servicio import Servicio # Importar Servicio
+from sqlalchemy import event
 
 class Cliente(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -11,11 +12,45 @@ class Cliente(db.Model):
     email = db.Column(db.String(120), nullable=False, index=True)
     telefono = db.Column(db.String(20))
     creado = db.Column(db.DateTime, default=datetime.utcnow)
+    ultima_visita = db.Column(db.DateTime, nullable=True)
+    total_visitas = db.Column(db.Integer, default=0)
+    segmento = db.Column(db.String(50), default='nuevo')  # nuevo, ocasional, recurrente, vip
+    fuente_captacion = db.Column(db.String(50), nullable=True)  # web, redes_sociales, recomendacion, walk_in
     citas = db.relationship('Cita', backref='cliente', lazy='dynamic')
     mensajes = db.relationship('Mensaje', backref='cliente', lazy='dynamic')
     
     def __repr__(self):
         return f'<Cliente {self.nombre}>'
+    
+    def clasificar_segmento(self):
+        """Clasifica al cliente según su patrón de visitas"""
+        today = datetime.utcnow()
+        
+        # Sin visitas anteriores
+        if not self.ultima_visita:
+            self.segmento = 'nuevo'
+            return self.segmento
+            
+        # Calcula días desde última visita
+        dias_desde_ultima = (today - self.ultima_visita).days
+        
+        # Clasificación por frecuencia y total de visitas
+        if self.total_visitas >= 10:
+            self.segmento = 'vip'
+        elif self.total_visitas >= 5:
+            if dias_desde_ultima <= 45:
+                self.segmento = 'recurrente'
+            else:
+                self.segmento = 'inactivo'
+        elif self.total_visitas >= 2:
+            if dias_desde_ultima <= 60:
+                self.segmento = 'ocasional'
+            else:
+                self.segmento = 'inactivo'
+        else:
+            self.segmento = 'nuevo'
+            
+        return self.segmento
 
 class Mensaje(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,12 +74,35 @@ class Cita(db.Model):
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     duracion = db.Column(db.Integer, default=30)
     notas = db.Column(db.Text, nullable=True)
-    confirmed_at = db.Column(db.DateTime, nullable=True) # Hora de confirmación
-
-    # Relaciones
+    confirmed_at = db.Column(db.DateTime, nullable=True) # Hora de confirmación    # Relaciones
     # cliente_rel ya está en Cliente model via backref='cliente'
     barbero_rel = db.relationship('Barbero', backref='citas_agendadas', foreign_keys=[barbero_id]) # CAMBIADO AQUÍ
     servicio_rel = db.relationship('Servicio', backref='citas_servicio', foreign_keys=[servicio_id]) # Cambiado backref para evitar conflicto si Servicio tiene otras citas
+    
+    def actualizar_segmentacion_cliente(self):
+        """Actualiza la segmentación del cliente cuando se completa una cita"""
+        if self.estado == 'completada' and self.cliente:
+            # Actualizar última visita si es más reciente
+            if not self.cliente.ultima_visita or self.fecha > self.cliente.ultima_visita:
+                self.cliente.ultima_visita = self.fecha
+                
+            # Incrementar contador de visitas si no se había contado antes
+            self.cliente.total_visitas += 1
+            
+            # Recalcular segmento
+            self.cliente.clasificar_segmento()
+            
+    @classmethod
+    def __commit_insert_listener__(cls, mapper, connection, target):
+        """Escucha eventos de inserción"""
+        if target.estado == 'completada':
+            target.actualizar_segmentacion_cliente()
+    
+    @classmethod
+    def __commit_update_listener__(cls, mapper, connection, target):
+        """Escucha eventos de actualización"""
+        if target.estado == 'completada':
+            target.actualizar_segmentacion_cliente()
 
     def generate_confirmation_token(self):
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
@@ -79,3 +137,7 @@ class Cita(db.Model):
     # @staticmethod
     # def crear_cita(cliente_id, barbero_id, fecha, servicio_id, duracion=30):
     #     ...
+
+# Registrar los listeners de eventos para actualizar la segmentación de clientes
+event.listen(Cita, 'after_insert', Cita.__commit_insert_listener__)
+event.listen(Cita, 'after_update', Cita.__commit_update_listener__)
