@@ -30,10 +30,26 @@ class DevelopmentConfig(Config):
     
 class ProductionConfig(Config):
     DEBUG = False
-    # Production debería SIEMPRE usar DATABASE_URL
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if SQLALCHEMY_DATABASE_URI is None:
-        raise ValueError("No DATABASE_URL set for production")
+    # En GCP, usaremos Cloud SQL Connector o DATABASE_URL como fallback
+    try:
+        # Si estamos en GCP, intentamos importar el conector de Cloud SQL
+        if os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
+            from app.utils.cloud_connection import init_connection_engine
+            engine = init_connection_engine()
+            SQLALCHEMY_ENGINE = engine
+            # Cloud SQL Connector no necesita SQLALCHEMY_DATABASE_URI
+            SQLALCHEMY_DATABASE_URI = None
+        else:
+            # Si no estamos en GCP, usamos DATABASE_URL normal
+            SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+            if SQLALCHEMY_DATABASE_URI is None:
+                raise ValueError("No DATABASE_URL set for production")
+    except (ImportError, Exception) as e:
+        print(f"Error en configuración de producción: {e}")
+        # Fallback a la configuración estándar
+        SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+        if SQLALCHEMY_DATABASE_URI is None:
+            raise ValueError("No DATABASE_URL set for production")
 
 class TestingConfig(Config):
     TESTING = True

@@ -192,3 +192,6 @@ pgdata/
 *.pem
 *.key
 config.py
+gcp_credentials.json
+*.env
+gcp_setup_commands.md

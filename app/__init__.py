@@ -6,6 +6,7 @@ from flask_wtf.csrf import CSRFProtect
 import os
 from app.utils import format_cop
 from flask_mail import Mail
+import logging
 
 # Definir extensiones
 db = SQLAlchemy()
@@ -50,12 +51,37 @@ def create_app(config_name='default'):
     # Crear carpeta de uploads si no existe
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
+    # Configurar logging para GCP o entorno local
+    try:
+        from app.utils.cloud_logging import setup_logging
+        logger = setup_logging(app)
+        app.logger.info("Aplicación inicializada con configuración de logging")
+    except ImportError:
+        # Fallback si no se puede importar cloud_logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[logging.StreamHandler()]
+        )
+        app.logger.info("Aplicación inicializada con configuración de logging básica")
+    
     # Resto del código...
     
     # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])
     mail.init_app(app)
+    
+    # Verificar si estamos en entorno GCP y configurar Storage
+    if os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
+        app.logger.info("Detectado entorno GCP. Configurando Cloud Storage...")
+        try:
+            # Asegurarse de que el bucket esté configurado
+            if not os.environ.get('GCS_BUCKET_NAME'):
+                app.logger.warning("GCS_BUCKET_NAME no está configurado. El almacenamiento de archivos puede no funcionar correctamente.")
+        except Exception as e:
+            app.logger.error(f"Error configurando Cloud Storage: {e}")
+    
      # Verificar rutas después de cargar configuración completa
     @app.before_request
     def verify_upload_path():

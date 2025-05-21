@@ -1,0 +1,65 @@
+# Cloud Build configuration file for CI/CD
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/barberia-app:$COMMIT_SHA', '.']
+  
+  # Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/barberia-app:$COMMIT_SHA']
+  
+  # Deploy image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'barberia-app'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/barberia-app:$COMMIT_SHA'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'FLASK_ENV=production'
+      - '--set-env-vars'
+      - 'INSTANCE_CONNECTION_NAME=$PROJECT_ID:us-central1:barberia-db'
+      - '--set-env-vars'
+      - 'GCS_BUCKET_NAME=barberia-uploads'
+      - '--add-cloudsql-instances'
+      - '$PROJECT_ID:us-central1:barberia-db'
+      - '--set-secrets'
+      - 'SECRET_KEY=secret_key:latest'
+      - '--set-secrets'
+      - 'MAIL_SERVER=mail_server:latest'
+      - '--set-secrets'
+      - 'MAIL_PORT=mail_port:latest'
+      - '--set-secrets'
+      - 'MAIL_USE_TLS=mail_use_tls:latest'
+      - '--set-secrets'
+      - 'MAIL_USERNAME=mail_username:latest'
+      - '--set-secrets'
+      - 'MAIL_PASSWORD=mail_password:latest'
+      - '--set-secrets'
+      - 'MAIL_DEFAULT_SENDER=mail_sender:latest'
+  
+  # Run database migrations
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'jobs'
+      - 'execute'
+      - 'barberia-migrations'
+      - '--region'
+      - 'us-central1'
+      - '--wait'
+      
+# Images to be stored in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/barberia-app:$COMMIT_SHA'
+
+# Timeout for the entire build process
+timeout: '1800s'
