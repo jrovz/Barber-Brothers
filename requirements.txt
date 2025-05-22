@@ -15,3 +15,5 @@ requests==2.31.0
 google-cloud-storage==2.13.0
 google-cloud-logging==3.8.0
 google-cloud-secret-manager==2.16.4
+cloud-sql-python-connector[pg8000]==1.2.3
+SQLAlchemy==2.0.20
