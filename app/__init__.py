@@ -94,11 +94,19 @@ def create_app(config_name='default'):
         # Tu código existente...
         return response
     
-    
-    # Inicializar extensiones con la app
+      # Inicializar extensiones con la app
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    
+    # Initialize the database if needed (run migrations and import initial data)
+    with app.app_context():
+        try:
+            from app.utils.db_init_handler import init_database_if_needed
+            init_database_if_needed()
+            app.logger.info("Database initialization check completed.")
+        except Exception as e:
+            app.logger.error(f"Error during database initialization check: {e}")
     csrf.init_app(app)
     
     # Registrar blueprints

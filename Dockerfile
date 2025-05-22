@@ -21,8 +21,20 @@ ENV FLASK_APP=wsgi.py
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
 
+# Create a startup script
+RUN echo '#!/bin/bash\n\
+echo "Starting Barberia App service..."\n\
+echo "Database initialization starting..."\n\
+python setup_db.py\n\
+echo "Database initialization completed."\n\
+exec gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 wsgi:app\n\
+' > /app/startup.sh
+
+# Make startup script executable
+RUN chmod +x /app/startup.sh
+
 # Expose the port the app will run on
 EXPOSE 8080
 
 # Command to run the application with Gunicorn
-CMD exec gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 wsgi:app
+CMD ["/app/startup.sh"]

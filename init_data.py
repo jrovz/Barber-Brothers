@@ -1,12 +1,14 @@
-from app import create_app, db
-# 1. Importar TODOS los modelos necesarios
-from app.models import Producto, Barbero, User 
-
-app = create_app()
+"""
+Módulo para la importación de datos iniciales a la base de datos.
+Este módulo está diseñado para ser ejecutado dentro de un contexto de aplicación Flask.
+"""
+from app.models import Producto, Barbero, User
+from flask import current_app
+import logging
 
 # --- Datos de Muestra ---
 
-# 2. Datos de muestra para Barberos
+# Datos de muestra para Barberos
 barberos_data = [
     {
         'nombre': 'Carlos "El Navaja" Pérez',
@@ -25,7 +27,7 @@ barberos_data = [
     }
 ]
 
-# Datos de muestra para Productos (ya existente)
+# Datos de muestra para Productos
 productos_data = [
     # Productos para Peinar
     {
@@ -139,3 +141,41 @@ with app.app_context():
     except Exception as e:
         db.session.rollback() # Deshacer cambios si hay un error
         print(f"\nError al guardar datos: {e}")
+
+def import_initial_data():
+    """
+    Importa los datos iniciales a la base de datos.
+    Esta función se puede llamar desde otros scripts.
+    """
+    with app.app_context():
+        print("Importando barberos...")
+        for barbero_info in barberos_data:
+            barbero = Barbero.query.filter_by(nombre=barbero_info['nombre']).first()
+            if not barbero:
+                barbero = Barbero(
+                    nombre=barbero_info['nombre'],
+                    especialidad=barbero_info['especialidad'],
+                    imagen_url=barbero_info['imagen_url']
+                )
+                db.session.add(barbero)
+        
+        print("Importando productos...")
+        for producto_info in productos_data:
+            producto = Producto.query.filter_by(nombre=producto_info['nombre']).first()
+            if not producto:
+                producto = Producto(
+                    nombre=producto_info['nombre'],
+                    descripcion=producto_info['descripcion'],
+                    precio=producto_info['precio'],
+                    imagen_url=producto_info['imagen_url'],
+                    categoria=producto_info['categoria']
+                )
+                db.session.add(producto)
+        
+        db.session.commit()
+        print("Datos iniciales importados correctamente.")
+
+# Si se ejecuta este script directamente
+if __name__ == "__main__":
+    with app.app_context():
+        import_initial_data()
