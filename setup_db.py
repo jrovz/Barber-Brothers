@@ -10,6 +10,7 @@ import sys
 import time
 import logging
 import traceback
+from sqlalchemy import text
 from flask_migrate import Migrate, upgrade
 from app import create_app, db
 
@@ -30,7 +31,12 @@ def wait_for_database(app, max_retries=5, initial_delay=2):
         try:
             with app.app_context():
                 logger.info(f"Intento {retry_count + 1}/{max_retries} de conexión a la base de datos...")
-                db.session.execute('SELECT 1')
+                # Usar consulta específica para PostgreSQL para evitar problemas de sintaxis
+                db_engine = os.environ.get('DB_ENGINE', 'sqlite').lower()
+                if 'postgres' in db_engine:
+                    db.session.execute(text('SELECT 1'))
+                else:
+                    db.session.execute('SELECT 1')
                 db.session.commit()
                 logger.info("Conexión a la base de datos exitosa")
                 return True
@@ -58,12 +64,15 @@ def setup_database():
         
         with app.app_context():
             # Wait a bit for database connection to be ready
-            time.sleep(2)
-              # Verificar si podemos conectar a la base de datos
+            time.sleep(2)            # Verificar si podemos conectar a la base de datos
             try:
                 # Ejecutar una consulta simple para verificar la conexión
                 logger.info("Verificando conexión a la base de datos...")
-                db.session.execute('SELECT 1')
+                db_engine = os.environ.get('DB_ENGINE', 'sqlite').lower()
+                if 'postgres' in db_engine:
+                    db.session.execute(text('SELECT 1'))
+                else:
+                    db.session.execute('SELECT 1')
                 db.session.commit()  # Añadir commit explícito para PostgreSQL
                 logger.info("Conexión a la base de datos exitosa")
             except Exception as e:

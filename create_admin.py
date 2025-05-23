@@ -3,6 +3,7 @@ Script para crear un usuario administrador en la base de datos
 
 Este script crea un usuario con rol de administrador si no existe.
 Se puede ejecutar para asegurar que siempre haya un usuario admin disponible.
+Compatible con SQLite (desarrollo) y PostgreSQL (producción).
 """
 import os
 import sys
@@ -27,23 +28,38 @@ def create_admin_user(username="admin", email="admin@barberbrothers.com", passwo
     try:
         print(f"Iniciando creación de usuario administrador: {username}")
         
-        # Verificamos primero que la base de datos SQLite exista
-        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
-        if not os.path.exists(db_path):
-            print(f"ERROR: No se encontró la base de datos en {db_path}")
-            print("Ejecuta primero 'python setup_local_db.py' para configurar la base de datos")
-            return False
-            
-        print(f"Base de datos encontrada: {db_path} ({os.path.getsize(db_path)} bytes)")
+        # Determinar el entorno (producción o desarrollo)
+        env = os.environ.get('FLASK_ENV', 'development')
+        print(f"Entorno detectado: {env}")
         
-        # Configurar explícitamente DATABASE_URL para SQLite
-        os.environ['DATABASE_URL'] = f'sqlite:///{db_path}'
+        if env == 'development' and 'DATABASE_URL' not in os.environ:
+            # Verificamos si la base de datos SQLite existe para desarrollo
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
+            if not os.path.exists(db_path):
+                print(f"ERROR: No se encontró la base de datos en {db_path}")
+                print("Ejecuta primero 'python setup_local_db.py' para configurar la base de datos")
+                return False
+                
+            print(f"Base de datos encontrada: {db_path} ({os.path.getsize(db_path)} bytes)")
+            # Configurar explícitamente DATABASE_URL para SQLite
+            os.environ['DATABASE_URL'] = f'sqlite:///{db_path}'
+        else:
+            # En producción o si DATABASE_URL ya está configurado
+            if 'DATABASE_URL' in os.environ:
+                db_url = os.environ.get('DATABASE_URL')
+                if 'postgresql' in db_url:
+                    print(f"Usando PostgreSQL configurado en DATABASE_URL")
+                else:
+                    print(f"Usando base de datos configurada en DATABASE_URL")
+            else:
+                print("ADVERTENCIA: No se encontró DATABASE_URL. Usando configuración predeterminada.")
         
-        # Usar la app existente con todos los modelos
+          # Usar la app existente con todos los modelos
         from app import create_app, db
         from app.models.admin import User
         
-        app = create_app('development')
+        app_env = 'production' if env == 'production' else 'development'
+        app = create_app(app_env)
         
         with app.app_context():
             # Verificar si el usuario ya existe
