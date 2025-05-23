@@ -147,18 +147,16 @@ def import_initial_data():
         for servicio_data in servicios:
             servicio = Servicio(**servicio_data)
             db.session.add(servicio)
-        
-        # Añadimos barberos solo si no existen
+          # Añadimos barberos solo si no existen
         if num_barberos == 0:
-    
-    # 4. Cargar Barberos
-    print(f"Cargando {len(barberos_data)} barberos...")
-    for b_data in barberos_data:
-        barbero = Barbero(
-            nombre=b_data['nombre'],
-            especialidad=b_data['especialidad'],
-            imagen_url=b_data['imagen_url']
-            # 'activo' es True por defecto
+            # 4. Cargar Barberos
+            print(f"Cargando {len(barberos_data)} barberos...")
+            for b_data in barberos_data:
+                barbero = Barbero(
+                    nombre=b_data['nombre'],
+                    especialidad=b_data['especialidad'],
+                    imagen_url=b_data['imagen_url']
+                    # 'activo' es True por defecto
         )
         db.session.add(barbero)
 
