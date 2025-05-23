@@ -59,18 +59,37 @@ def dashboard():
     if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
         abort(403)
 
-    # Estadísticas básicas
-    product_count = Producto.query.count()
-    barber_count = Barbero.query.count()
-    unread_messages_count = Mensaje.query.filter_by(leido=False).count()
-    recent_messages = Mensaje.query.order_by(Mensaje.creado.desc()).limit(5).all()
+    try:
+        # Verificar conexión a la base de datos primero
+        from sqlalchemy.sql import text
+        from app import db
+        db.session.execute(text("SELECT 1"))
+        print("Admin dashboard: Conexión a la base de datos verificada correctamente")
+        
+        # Estadísticas básicas
+        product_count = Producto.query.count()
+        barber_count = Barbero.query.count()
+        unread_messages_count = Mensaje.query.filter_by(leido=False).count()
+        recent_messages = Mensaje.query.order_by(Mensaje.creado.desc()).limit(5).all()
     
-    # Estadísticas de clientes y segmentación
-    cliente_count = Cliente.query.count()
-    nuevos_clientes = Cliente.query.filter_by(segmento='nuevo').count()
-    clientes_recurrentes = Cliente.query.filter_by(segmento='recurrente').count()
-    clientes_vip = Cliente.query.filter_by(segmento='vip').count()
-    clientes_inactivos = Cliente.query.filter_by(segmento='inactivo').count()
+        # Estadísticas de clientes y segmentación
+        cliente_count = Cliente.query.count()
+        nuevos_clientes = Cliente.query.filter_by(segmento='nuevo').count()
+        clientes_recurrentes = Cliente.query.filter_by(segmento='recurrente').count()
+        clientes_vip = Cliente.query.filter_by(segmento='vip').count()
+        clientes_inactivos = Cliente.query.filter_by(segmento='inactivo').count()
+    except Exception as e:
+        print(f"Error al consultar datos para el dashboard: {str(e)}")
+        # Inicializar con valores predeterminados en caso de error
+        product_count = 0
+        barber_count = 0
+        unread_messages_count = 0
+        recent_messages = []
+        cliente_count = 0
+        nuevos_clientes = 0
+        clientes_recurrentes = 0
+        clientes_vip = 0
+        clientes_inactivos = 0
     
     # Citas y ocupación
     today = datetime.today().date()
@@ -536,35 +555,50 @@ def gestionar_servicios():
     if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
         abort(403)
     form = ServicioForm()
-    if form.validate_on_submit():
-        imagen_url = None
-        if form.imagen_file.data:
-            imagen_url = save_image(form.imagen_file.data, 'servicios')
-        elif form.imagen_url.data:
-            imagen_url = form.imagen_url.data
+    try:
+        if form.validate_on_submit():
+            imagen_url = None
+            if form.imagen_file.data:
+                imagen_url = save_image(form.imagen_file.data, 'servicios')
+            elif form.imagen_url.data:
+                imagen_url = form.imagen_url.data
 
-        nuevo_servicio = Servicio(
-            nombre=form.nombre.data,
-            descripcion=form.descripcion.data,
-            precio=form.precio.data,
-            duracion_estimada=form.duracion_estimada.data,
-            activo=form.activo.data,
-            imagen_url=imagen_url
-        )
-        db.session.add(nuevo_servicio)
-        try:
-            db.session.commit()
-            flash('Servicio añadido correctamente.', 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al añadir servicio: {str(e)}', 'danger')
-        return redirect(url_for('admin.gestionar_servicios'))
+            nuevo_servicio = Servicio(
+                nombre=form.nombre.data,
+                descripcion=form.descripcion.data,
+                precio=form.precio.data,
+                duracion_estimada=form.duracion_estimada.data,
+                activo=form.activo.data,
+                imagen_url=imagen_url
+            )
+            db.session.add(nuevo_servicio)
+            try:
+                db.session.commit()
+                flash('Servicio añadido correctamente.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error al añadir servicio: {str(e)}', 'danger')
+                print(f"Error al guardar servicio en la base de datos: {e}")
+                import traceback
+                traceback.print_exc()
+            return redirect(url_for('admin.gestionar_servicios'))
 
-    servicios_lista = Servicio.query.order_by(Servicio.nombre).all()
-    return render_template("admin/servicios.html", 
-                           title="Gestionar Servicios", 
-                           servicios=servicios_lista, 
-                           form=form)
+        # Obtener la lista de servicios
+        servicios_lista = Servicio.query.order_by(Servicio.nombre).all()
+        return render_template("admin/servicios.html", 
+                            title="Gestionar Servicios", 
+                            servicios=servicios_lista, 
+                            form=form)
+    except Exception as e:
+        print(f"Error en gestionar_servicios: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error al cargar servicios: {str(e)}', 'danger')
+        return render_template("admin/servicios.html", 
+                            title="Gestionar Servicios", 
+                            servicios=[], 
+                            form=form,
+                            error="No se pudieron cargar los servicios")
 
 @bp.route('/servicios/editar/<int:id>', methods=['GET', 'POST'])
 @login_required

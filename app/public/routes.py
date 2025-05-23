@@ -150,10 +150,30 @@ def checkout():
 
 @bp.route('/servicios')
 def servicios():
-    # Obtener solo los servicios marcados como activos
-    servicios_activos = Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()
-    return render_template("public/servicios.html", 
-                           servicios=servicios_activos)
+    try:
+        # Inicializar servicios con una lista vacía por si acaso falla
+        servicios_activos = []
+        
+        # Intentar verificar la conexión a la base de datos primero
+        from sqlalchemy.sql import text
+        from app import db
+        db.session.execute(text("SELECT 1"))
+        print("Conexión a la base de datos verificada correctamente")
+        
+        # Obtener solo los servicios marcados como activos
+        print("Consultando servicios activos...")
+        servicios_activos = Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()
+        print(f"Servicios encontrados: {len(servicios_activos)}")
+        
+        return render_template("public/servicios.html", 
+                            servicios=servicios_activos)
+    except Exception as e:
+        print(f"Error al consultar servicios: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Devolver una lista vacía en caso de error para no romper la página
+        return render_template("public/servicios.html", 
+                            servicios=[], error_msg=f"No se pudieron cargar los servicios: {str(e)}")
 
 # @bp.route('/barberos/<int:id>/disponibilidad', methods=['GET', 'POST'])
 # @login_required

@@ -4,6 +4,12 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements file
 COPY requirements.txt .
 
@@ -17,17 +23,18 @@ COPY . .
 RUN mkdir -p app/static/uploads
 
 # Set environment variables
-ENV FLASK_APP=wsgi.py
-ENV FLASK_ENV=production
-ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=wsgi.py \
+    FLASK_ENV=production \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
 
 # Create a startup script
 RUN echo '#!/bin/bash\n\
 echo "Starting Barberia App service..."\n\
 echo "Database initialization starting..."\n\
-python setup_db.py\n\
+python -u setup_db.py\n\
 echo "Database initialization completed."\n\
-exec gunicorn --bind :8080 --workers 1 --threads 8 --timeout 0 wsgi:app\n\
+exec gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 0 wsgi:app\n\
 ' > /app/startup.sh
 
 # Make startup script executable

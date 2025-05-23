@@ -30,26 +30,55 @@ class DevelopmentConfig(Config):
     
 class ProductionConfig(Config):
     DEBUG = False
-    # En GCP, usaremos Cloud SQL Connector o DATABASE_URL como fallback
+    # En GCP, usaremos Cloud SQL Connector o DATABASE_URL según corresponda
     try:
-        # Si estamos en GCP, intentamos importar el conector de Cloud SQL
+        # Si estamos en GCP
         if os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
+            # Método preferido: usar Cloud SQL Connector
             from app.utils.cloud_connection import init_connection_engine
+            
+            # El DATABASE_URL se usa dentro de init_connection_engine() 
+            # con el orden de prioridad correcto
+            print("Inicializando el motor de conexión para Cloud SQL...")
             engine = init_connection_engine()
+            
+            # Guardar el engine para su uso en SQLAlchemy
             SQLALCHEMY_ENGINE = engine
-            # Cloud SQL Connector no necesita SQLALCHEMY_DATABASE_URI
-            SQLALCHEMY_DATABASE_URI = None
+            
+            # Si estamos usando connection_string, podemos asignar DATABASE_URL
+            db_url = os.environ.get('DATABASE_URL')
+            if db_url and "unix_socket" in db_url:
+                print(f"Config: Usando DATABASE_URL con unix_socket: {db_url}")
+                SQLALCHEMY_DATABASE_URI = db_url
+            else:
+                # Si no hay DATABASE_URL o estamos usando connector directo,
+                # SQLAlchemy usará el engine directamente
+                SQLALCHEMY_DATABASE_URI = None
+                print("Config: Usando engine directo para la conexión a la base de datos")
         else:
-            # Si no estamos en GCP, usamos DATABASE_URL normal
+            # Si no estamos en GCP, usamos DATABASE_URL normal (entorno de desarrollo)
             SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
             if SQLALCHEMY_DATABASE_URI is None:
                 raise ValueError("No DATABASE_URL set for production")
-    except (ImportError, Exception) as e:
+    except Exception as e:
         print(f"Error en configuración de producción: {e}")
         # Fallback a la configuración estándar
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+        print(f"Usando fallback DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
         if SQLALCHEMY_DATABASE_URI is None:
-            raise ValueError("No DATABASE_URL set for production")
+            # Última opción, construir DATABASE_URL manualmente
+            try:
+                db_user = os.environ.get("DB_USER", "barberia_user")
+                db_pass = os.environ.get("DB_PASS", "BarberiaSecure123!")
+                db_name = os.environ.get("DB_NAME", "barberia_db")
+                project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "barber-brothers-460514")
+                instance = os.environ.get("INSTANCE_CONNECTION_NAME", f"{project_id}:us-central1:barberia-db")
+                
+                SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{db_user}:{db_pass}@/{db_name}?unix_socket=/cloudsql/{instance}"
+                print(f"Usando DATABASE_URL construido manualmente: {SQLALCHEMY_DATABASE_URI}")
+            except Exception as e2:
+                print(f"Error construyendo DATABASE_URL: {e2}")
+                raise ValueError("No DATABASE_URL set for production and could not build one")
 
 class TestingConfig(Config):
     TESTING = True

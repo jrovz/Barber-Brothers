@@ -25,12 +25,14 @@ def init_database_if_needed():
             # Try to query a table that should exist if the database is initialized
             # This will fail with ProgrammingError if the table doesn't exist
             with current_app.app_context():
-                db.session.execute('SELECT 1 FROM producto LIMIT 1')
+                # Usar text() para crear consultas SQL textuales
+                from sqlalchemy.sql import text
+                db.session.execute(text('SELECT 1 FROM producto LIMIT 1'))
                 logger.info("Database appears to be already initialized.")
                 return True
-        except ProgrammingError:
+        except ProgrammingError as e:
             # Table doesn't exist, need to run migrations
-            logger.info("Database tables don't exist. Running migrations...")
+            logger.info(f"Database tables don't exist ({str(e)}). Running migrations...")
             from flask_migrate import upgrade
             
             # Run migrations

@@ -80,19 +80,76 @@ productos_data = [
 
 # --- Lógica de Carga de Datos ---
 
-# Usa el contexto de aplicación para operaciones con la base de datos
-with app.app_context():
-    print("Iniciando carga de datos iniciales...")
+def import_initial_data():
+    """
+    Importa datos iniciales a la base de datos.
+    Debe ser ejecutada dentro de un contexto de aplicación Flask.
     
-    # 3. Limpiar datos existentes (opcional, pero recomendado para scripts de prueba)
-    # ¡CUIDADO! Esto borrará todos los datos de estas tablas.
-    print("Limpiando datos existentes (Productos, Barberos, Usuarios)...")
-    db.session.query(Producto).delete()
-    db.session.query(Barbero).delete()
-    # No borres todos los usuarios si quieres mantener otros, filtra por rol si es necesario
-    # db.session.query(User).delete() 
-    # O borra solo los no-admin si quieres mantener el admin entre ejecuciones
-    # db.session.query(User).filter(User.role != 'admin').delete()
+    Returns:
+        bool: True si la operación fue exitosa, False en caso contrario.
+    """
+    from app import db
+    from app.models.producto import Producto
+    from app.models.barbero import Barbero
+    from app.models.admin import User
+    from app.models.categoria import Categoria
+    from app.models.servicio import Servicio
+    
+    try:
+        # Verificar si ya hay datos
+        num_productos = Producto.query.count()
+        num_barberos = Barbero.query.count()
+        num_servicios = Servicio.query.count()
+        
+        print(f"Estado actual de la BD: {num_productos} productos, {num_barberos} barberos, {num_servicios} servicios")
+        
+        if num_productos > 0 and num_barberos > 0 and num_servicios > 0:
+            print("La base de datos ya contiene datos. Saltando importación.")
+            return True
+        
+        print("Iniciando carga de datos iniciales...")
+        
+        # Primero creamos categorías
+        categorias = {}
+        for cat_name in ['peinar', 'barba', 'accesorios']:
+            categoria = Categoria(nombre=cat_name)
+            db.session.add(categoria)
+            db.session.flush()  # Para obtener el ID
+            categorias[cat_name] = categoria.id
+            
+        print(f"Categorías creadas: {categorias}")
+        
+        # Ahora añadimos servicios básicos
+        servicios = [
+            {
+                'nombre': 'Corte de Cabello',
+                'descripcion': 'Corte básico de cabello con tijera y/o máquina',
+                'precio': 15000,
+                'duracion_estimada': '30 min',
+                'activo': True
+            },
+            {
+                'nombre': 'Afeitado Tradicional',
+                'descripcion': 'Afeitado con navaja y toalla caliente',
+                'precio': 12000,
+                'duracion_estimada': '20 min',
+                'activo': True
+            },
+            {
+                'nombre': 'Corte + Barba',
+                'descripcion': 'Combo de corte de cabello y arreglo de barba',
+                'precio': 25000,
+                'duracion_estimada': '45 min',
+                'activo': True
+            }
+        ]
+        
+        for servicio_data in servicios:
+            servicio = Servicio(**servicio_data)
+            db.session.add(servicio)
+        
+        # Añadimos barberos solo si no existen
+        if num_barberos == 0:
     
     # 4. Cargar Barberos
     print(f"Cargando {len(barberos_data)} barberos...")
