@@ -59,19 +59,18 @@ def setup_database():
         with app.app_context():
             # Wait a bit for database connection to be ready
             time.sleep(2)
-            
-            # Verificar si podemos conectar a la base de datos
+              # Verificar si podemos conectar a la base de datos
             try:
                 # Ejecutar una consulta simple para verificar la conexión
                 logger.info("Verificando conexión a la base de datos...")
                 db.session.execute('SELECT 1')
+                db.session.commit()  # Añadir commit explícito para PostgreSQL
                 logger.info("Conexión a la base de datos exitosa")
             except Exception as e:
                 logger.error(f"ERROR DE CONEXIÓN A LA BASE DE DATOS: {e}")
                 logger.info("Verificando configuración de variables de entorno...")
-                  # Mostrar variables de entorno relevantes (asegurarse de no mostrar contraseñas en logs)
-                import os
-                env_vars = ['INSTANCE_CONNECTION_NAME', 'GOOGLE_CLOUD_PROJECT', 'DATABASE_URL', 'DB_USER', 'DB_NAME']
+                  # Mostrar variables de entorno relevantes (asegurarse de no mostrar contraseñas en logs)                import os
+                env_vars = ['INSTANCE_CONNECTION_NAME', 'GOOGLE_CLOUD_PROJECT', 'DATABASE_URL', 'DB_USER', 'DB_NAME', 'DB_ENGINE']
                 for var in env_vars:
                     if var in os.environ:
                         value = os.environ[var]

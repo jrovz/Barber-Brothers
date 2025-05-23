@@ -59,8 +59,7 @@ class ProductionConfig(Config):
             # Si no estamos en GCP, usamos DATABASE_URL normal (entorno de desarrollo)
             SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
             if SQLALCHEMY_DATABASE_URI is None:
-                raise ValueError("No DATABASE_URL set for production")
-    except Exception as e:
+                raise ValueError("No DATABASE_URL set for production")    except Exception as e:
         print(f"Error en configuración de producción: {e}")
         # Fallback a la configuración estándar
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
