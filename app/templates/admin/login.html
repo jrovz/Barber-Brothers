@@ -14,20 +14,17 @@
             </div>
             {% endfor %}
         {% endif %}
-    {% endwith %}
-
-    <form method="POST" action="{{ url_for('admin.login') }}">
-        {{ form.hidden_tag() }} {# Importante para CSRF protection #}
-        <div class="form-group">
+    {% endwith %}    <form method="POST" action="{{ url_for('admin.login') }}" name="login-form" autocomplete="on">
+        {{ form.hidden_tag() }} {# Importante para CSRF protection #}<div class="form-group">
             {{ form.username.label(class="form-label") }}
-            {{ form.username(class="form-input", placeholder="Tu nombre de usuario") }}
+            {{ form.username(class="form-input", placeholder="Tu nombre de usuario", autocomplete="username") }}
             {% for error in form.username.errors %}
                 <span style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</span>
             {% endfor %}
         </div>
         <div class="form-group">
             {{ form.password.label(class="form-label") }}
-            {{ form.password(class="form-input", placeholder="Tu contraseña") }}
+            {{ form.password(class="form-input", placeholder="Tu contraseña", autocomplete="current-password") }}
              {% for error in form.password.errors %}
                 <span style="color: var(--color-danger); font-size: 0.8rem;">{{ error }}</span>
             {% endfor %}
