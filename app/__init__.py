@@ -66,11 +66,25 @@ def create_app(config_name='default'):
         app.logger.info("Aplicación inicializada con configuración de logging básica")
     
     # Resto del código...
-    
-    # Importar y aplicar configuraciones
+      # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])
     mail.init_app(app)
+    
+    # Integrar el manejador de errores personalizado
+    try:
+        from app.utils.error_handler import setup_error_handlers
+        setup_error_handlers(app)
+        app.logger.info("Manejador de errores personalizado configurado correctamente")
+    except Exception as e:
+        app.logger.error(f"Error al configurar manejador de errores: {str(e)}", exc_info=True)
+    
+    # Habilitar modo debug y mostrar errores detallados en Cloud Run
+    if os.environ.get('FLASK_DEBUG_GCP', 'False').lower() in ['true', '1', 't']:
+        app.logger.info("Modo de depuración habilitado en GCP")
+        app.config['DEBUG'] = True
+        app.config['PROPAGATE_EXCEPTIONS'] = True
+        app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = True
     
     # Verificar si estamos en entorno GCP y configurar Storage
     if os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
