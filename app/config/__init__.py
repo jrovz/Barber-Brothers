@@ -65,14 +65,13 @@ class ProductionConfig(Config):
         # Fallback a la configuración estándar
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
         print(f"Usando fallback DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
-        if SQLALCHEMY_DATABASE_URI is None:
-            # Última opción, construir DATABASE_URL manualmente
+        if SQLALCHEMY_DATABASE_URI is None:            # Última opción, construir DATABASE_URL manualmente
             try:
                 db_user = os.environ.get("DB_USER", "barberia_user")
                 db_pass = os.environ.get("DB_PASS", "BarberiaSecure123!")
                 db_name = os.environ.get("DB_NAME", "barberia_db")
                 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "barber-brothers-460514")
-                instance = os.environ.get("INSTANCE_CONNECTION_NAME", f"{project_id}:us-central1:barberia-db")
+                instance = os.environ.get("INSTANCE_CONNECTION_NAME", f"{project_id}:us-east1:barberia-db")
                 
                 # URI para PostgreSQL (cambiado de MySQL)
                 SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg2://{db_user}:{db_pass}@/{db_name}?host=/cloudsql/{instance}"

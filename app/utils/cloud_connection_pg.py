@@ -74,14 +74,12 @@ def init_connection_pool():
             db_user = get_secret("db_user") or os.environ.get("DB_USER", "barberia_user")
             db_pass = get_secret("db_pass") or os.environ.get("DB_PASS")
             db_name = os.environ.get("DB_NAME", "barberia_db")
-            
-            # Nombre de la instancia de Cloud SQL
+              # Nombre de la instancia de Cloud SQL
             instance_connection_name = os.environ.get("INSTANCE_CONNECTION_NAME")
-            
             if not instance_connection_name:
                 print("INSTANCE_CONNECTION_NAME no está configurada, construyéndola")
                 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "barber-brothers-460514")
-                instance_connection_name = f"{project_id}:us-central1:barberia-db"
+                instance_connection_name = f"{project_id}:us-east1:barberia-db"
                 print(f"INSTANCE_CONNECTION_NAME construida: {instance_connection_name}")
             
             print(f"Información de conexión: usuario={db_user}, db={db_name}, instancia={instance_connection_name}")

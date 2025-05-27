@@ -31,9 +31,17 @@ ENV FLASK_APP=wsgi.py \
 # Create a startup script
 RUN echo '#!/bin/bash\n\
 echo "Starting Barberia App service..."\n\
+echo "Environment variables:"\n\
+echo "- INSTANCE_CONNECTION_NAME: $INSTANCE_CONNECTION_NAME"\n\
+echo "- DB_USER: $DB_USER"\n\
+echo "- DB_NAME: $DB_NAME"\n\
+echo "- GOOGLE_CLOUD_PROJECT: $GOOGLE_CLOUD_PROJECT"\n\
+echo "- FLASK_ENV: $FLASK_ENV"\n\
+echo "- REGION: $REGION"\n\
 echo "Database initialization starting..."\n\
-python -u setup_db.py\n\
+python -u setup_db.py || echo "Database setup exited with code $?. Continuing anyway..."\n\
 echo "Database initialization completed."\n\
+echo "Starting Gunicorn server..."\n\
 exec gunicorn --bind :$PORT --workers 2 --threads 8 --timeout 0 wsgi:app\n\
 ' > /app/startup.sh
 
