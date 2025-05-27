@@ -39,21 +39,33 @@ jobs:
         # Crear deployment package
         echo "Creating deployment package..."
         zip -r deploy.zip . -x "*.git*" -x "*.github*" -x "*__pycache__*" -x "*.pyc" -x "instance/*" -x "migrations/versions/*" -x "logs/*" -x "*.md" -x "cloud-sql-proxy.exe" -x "debug_images.py" -x "add_categories.py"
-    
-    # Login to Azure
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    
-    # Deploy to Azure App Service
-    - name: Deploy to Azure Web App
-      id: deploy-to-webapp
+      # OPCIÓN 1: Usar AZURE_WEBAPP_PUBLISH_PROFILE (método recomendado)
+    - name: Deploy to Azure Web App con Publish Profile
+      id: deploy-to-webapp-profile
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'barberia-app'
         slot-name: 'production'
         package: ./deploy.zip
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      
+    # OPCIÓN 2: Usar AZURE_CREDENTIALS con SERVICE_PRINCIPAL (alternativa)
+    # Descomenta esta sección y comenta la sección anterior si prefieres este método
+    # - name: Login to Azure
+    #   uses: azure/login@v1
+    #   with:
+    #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
+    #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+    #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    #     client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+    #
+    # - name: Deploy to Azure Web App
+    #   id: deploy-to-webapp
+    #   uses: azure/webapps-deploy@v2
+    #   with:
+    #     app-name: 'barberia-app'
+    #     slot-name: 'production'
+    #     package: ./deploy.zip
         
     # Run initial setup if needed
     - name: Run post-deployment script
