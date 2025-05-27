@@ -3,29 +3,31 @@ Script para verificar usuario administrador en PostgreSQL en GCP
 
 Este script se conecta a la base de datos PostgreSQL en Cloud SQL
 y verifica si existe el usuario administrador.
+Utiliza el módulo centralizado de configuración para acceder a las credenciales.
 """
 import os
 import sys
 import traceback
 from sqlalchemy import create_engine, text
 from google.cloud.sql.connector import Connector
+# Importar módulo de configuración centralizada
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.utils.config_manager import get_project_id, get_gcp_region, get_instance_name, get_secret, get_db_credentials, get_instance_connection_name
 
 def init_connection_engine():
     """
     Inicializa la conexión a Cloud SQL PostgreSQL
     """
     try:
-        # Usar el conector de Cloud SQL para conectarse a PostgreSQL
-        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "barber-brothers-460514")
-        region = os.environ.get("CLOUD_SQL_REGION", "us-central1")
-        instance_name = os.environ.get("CLOUD_SQL_INSTANCE", "barberia-db")
-        
-        instance_connection_name = f"{project_id}:{region}:{instance_name}"
+        # Obtener configuración desde el módulo centralizado
+        instance_connection_name = get_instance_connection_name()
         print(f"Intentando conexión a: {instance_connection_name}")
         
-        db_user = os.environ.get("DB_USER", "barberia_user")
-        db_pass = os.environ.get("DB_PASS", "")
-        db_name = os.environ.get("DB_NAME", "barberia_db")
+        # Obtener credenciales de BD desde config_manager
+        db_credentials = get_db_credentials()
+        db_user = db_credentials["user"]
+        db_pass = db_credentials["password"]
+        db_name = db_credentials["database"]
         
         connector = Connector()
         

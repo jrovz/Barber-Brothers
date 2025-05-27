@@ -3,6 +3,7 @@ Script para configurar la cuenta de administrador en GCP PostgreSQL
 
 Este script es una versión modificada del fix_admin_auth.py, enfocada en
 configurar correctamente la cuenta de administrador en la base de datos PostgreSQL en GCP.
+Utiliza el módulo centralizado de configuración para acceder a las credenciales.
 """
 import os
 import sys
@@ -11,6 +12,10 @@ import logging
 from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
 import traceback
+
+# Añadir el directorio padre al path para importar módulos de la aplicación
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.utils.config_manager import get_project_id, get_gcp_region, get_instance_name, get_db_credentials, build_database_url, get_instance_connection_name
 
 # Configurar logging
 logging.basicConfig(
@@ -23,26 +28,25 @@ logger = logging.getLogger("setup_admin_gcp")
 def get_pg_connection_url():
     """
     Construye la URL de conexión para PostgreSQL en GCP
+    utilizando el módulo centralizado de configuración
     """
-    # Obtener variables de entorno para la conexión
-    db_user = os.environ.get("DB_USER", "barberia_user")
-    db_pass = os.environ.get("DB_PASS", "")
-    db_name = os.environ.get("DB_NAME", "barberia_db")
-    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "barber-brothers-460514")
+    # Obtener credenciales desde el módulo de configuración centralizado
+    db_credentials = get_db_credentials()
+    db_user = db_credentials["user"]
+    db_pass = db_credentials["password"]
+    db_name = db_credentials["database"]
     
-    # Formato recomendado para conexión con Cloud SQL Proxy
-    region = os.environ.get("CLOUD_SQL_REGION", "us-central1")
-    instance = os.environ.get("CLOUD_SQL_INSTANCE", "barberia-db")
-    instance_connection_name = f"{project_id}:{region}:{instance}"
+    # Obtener nombre de conexión de instancia desde el módulo centralizado
+    instance_connection_name = get_instance_connection_name()
     
     # Comprobar si las variables obligatorias están definidas
     if not db_pass:
-        logger.error("DB_PASS no está definido. Establece esta variable de entorno.")
+        logger.error("No se pudo obtener la contraseña de la base de datos. Verifica Secret Manager o las variables de entorno.")
         return None
     
-    # Crear URL de conexión para PostgreSQL con Cloud SQL Proxy
-    connection_url = f"postgresql://{db_user}:{db_pass}@localhost:5432/{db_name}"
-    logger.info(f"URL de conexión: {connection_url} para instancia {instance_connection_name}")
+    # Crear URL de conexión para PostgreSQL usando la función del módulo centralizado
+    connection_url = build_database_url(db_credentials, use_proxy=True)
+    logger.info(f"URL de conexión: {connection_url.replace(db_pass, '***')} para instancia {instance_connection_name}")
     
     return connection_url, instance_connection_name
 

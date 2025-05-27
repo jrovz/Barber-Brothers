@@ -2,13 +2,21 @@
 Verify the database structure
 
 This script will check if the database has the required tables.
+Uses the centralized configuration to handle different database types.
 """
 import os
 import sys
 import sqlite3
+from app.utils.config_manager import is_production, get_db_credentials
 
 def verify_db():
     """Check if the database has the required tables"""
+    # Check if running in production environment
+    if is_production():
+        print("Running in production environment, please use a different script for PostgreSQL database verification")
+        print("Try using: python scripts/verify_admin_gcp.py")
+        return False
+    
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
     
     print(f"Checking SQLite database at: {db_path}")

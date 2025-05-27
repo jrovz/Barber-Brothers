@@ -3,6 +3,7 @@ Database connection tester script for Barber Brothers application.
 
 This script tests the database connection logic in isolation to make sure
 it works properly before deploying to Cloud Run.
+Uses the centralized configuration module to access settings and credentials.
 """
 import os
 import sys
@@ -11,6 +12,10 @@ import time
 import argparse
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+
+# Add parent directory to path to import app modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.utils.config_manager import get_project_id, get_gcp_region, get_instance_name, get_db_credentials, get_instance_connection_name
 
 # Configure logging
 logging.basicConfig(
@@ -22,10 +27,15 @@ logger = logging.getLogger("db_tester")
 def parse_args():
     parser = argparse.ArgumentParser(description='Test database connection for Barber Brothers application')
     parser.add_argument('--socket-dir', default='/cloudsql', help='Socket directory for Cloud SQL')
-    parser.add_argument('--user', default='postgres', help='Database user')
-    parser.add_argument('--password', default='y3WhoYFS', help='Database password')
-    parser.add_argument('--name', default='barberia-db', help='Database name')
-    parser.add_argument('--instance', default='barber-brothers-460514:us-central1:barberia-db', 
+    
+    # Obtener valores predeterminados desde config_manager
+    db_credentials = get_db_credentials()
+    instance_connection = get_instance_connection_name()
+    
+    parser.add_argument('--user', default=db_credentials['user'], help='Database user')
+    parser.add_argument('--password', default=db_credentials['password'], help='Database password')
+    parser.add_argument('--name', default=db_credentials['database'], help='Database name')
+    parser.add_argument('--instance', default=instance_connection, 
                         help='Cloud SQL instance connection name')
     return parser.parse_args()
 
