@@ -19,6 +19,11 @@ login_manager.login_view = 'admin.login'
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
 
+# Detectar entorno Azure
+def is_azure():
+    """Detecta si estamos en Azure App Service"""
+    return os.environ.get('WEBSITE_SITE_NAME') is not None
+
 # Función para cargar usuario (requerida por Flask-Login)
 @login_manager.user_loader
 def load_user(user_id):
@@ -79,15 +84,23 @@ def create_app(config_name='default'):
     except Exception as e:
         app.logger.error(f"Error al configurar manejador de errores: {str(e)}", exc_info=True)
     
-    # Habilitar modo debug y mostrar errores detallados en Cloud Run
-    if os.environ.get('FLASK_DEBUG_GCP', 'False').lower() in ['true', '1', 't']:
-        app.logger.info("Modo de depuración habilitado en GCP")
+    # Habilitar modo debug en entornos específicos
+    if os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']:
+        app.logger.info("Modo de depuración habilitado")
         app.config['DEBUG'] = True
         app.config['PROPAGATE_EXCEPTIONS'] = True
         app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = True
     
-    # Verificar si estamos en entorno GCP y configurar Storage
-    if os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
+    # Configurar almacenamiento según el entorno
+    if is_azure():
+        app.logger.info("Detectado entorno Azure. Configurando Azure Storage...")
+        try:
+            # Asegurarse de que la configuración de Azure Storage esté presente
+            if not os.environ.get('AZURE_STORAGE_CONNECTION_STRING'):
+                app.logger.warning("AZURE_STORAGE_CONNECTION_STRING no está configurado. El almacenamiento de archivos puede no funcionar correctamente.")
+        except Exception as e:
+            app.logger.error(f"Error configurando Azure Storage: {e}")
+    elif os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
         app.logger.info("Detectado entorno GCP. Configurando Cloud Storage...")
         try:
             # Asegurarse de que el bucket esté configurado
@@ -107,7 +120,6 @@ def create_app(config_name='default'):
     def add_security_and_charset_headers(response):
         # Tu código existente...
         return response
-    
       # Inicializar extensiones con la app
     db.init_app(app)
     migrate.init_app(app, db)
@@ -116,6 +128,15 @@ def create_app(config_name='default'):
     # Initialize the database if needed (run migrations and import initial data)
     with app.app_context():
         try:
+            # Seleccionar el módulo de conexión a base de datos según el entorno
+            if is_azure():
+                app.logger.info("Usando módulo de conexión de Azure para PostgreSQL")
+                from app.utils.azure_connection_pg import init_connection_engine
+            else:
+                app.logger.info("Usando módulo de conexión estándar")
+                from app.utils.cloud_connection_pg import init_connection_engine
+                
+            # Inicializar la base de datos
             from app.utils.db_init_handler import init_database_if_needed
             init_database_if_needed()
             app.logger.info("Database initialization check completed.")
