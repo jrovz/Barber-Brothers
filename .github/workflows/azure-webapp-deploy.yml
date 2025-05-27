@@ -1,4 +1,4 @@
-name: Deploy to Azure App Service
+name: Deploy to Azure App Service (F1 - Economic)
 
 on:
   push:
@@ -23,21 +23,43 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements-minimal.txt  # Usar versión mínima para reducir tamaño
         
-    - name: Create deployment package
+    - name: Prepare for deployment
       run: |
-        echo "Creating deployment package..."
-        zip -r deploy.zip . -x "*.git*" -x "*.github*" -x "*__pycache__*" -x "*.pyc" -x "instance/*" -x "logs/*"
+        # Asegurar que los scripts tengan permisos de ejecución
+        chmod +x startup-azure.sh
+        chmod +x setup_db_azure.py
+        chmod +x build.sh
         
-    - name: Deploy to Azure App Service
+        # Crear estructura de directorios necesaria
+        mkdir -p app/static/uploads
+        mkdir -p logs
+        
+        # Crear deployment package
+        echo "Creating deployment package..."
+        zip -r deploy.zip . -x "*.git*" -x "*.github*" -x "*__pycache__*" -x "*.pyc" -x "instance/*" -x "migrations/versions/*" -x "logs/*" -x "*.md" -x "cloud-sql-proxy.exe" -x "debug_images.py" -x "add_categories.py"
+    
+    # Login to Azure
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    # Deploy to Azure App Service
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'barberia-app'  # Reemplaza con el nombre de tu App Service
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        app-name: 'barberia-app'
+        slot-name: 'production'
         package: ./deploy.zip
         
-    - name: Post-deployment setup
+    # Run initial setup if needed
+    - name: Run post-deployment script
       run: |
-        echo "Running database setup and migrations..."
-        curl -X POST "https://barberia-app.azurewebsites.net/api/health" || echo "Health check may have failed, but continuing..."
+        echo "Esperando a que la aplicación se inicie..."
+        sleep 30
+        
+        # Intentar ejecutar un health check
+        curl -s "https://barberia-app.azurewebsites.net/api/health" || echo "Health check no disponible, pero continuando..."
