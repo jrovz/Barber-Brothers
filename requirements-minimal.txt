@@ -13,12 +13,9 @@ Werkzeug==2.3.0
 urllib3==1.26.15
 requests==2.31.0
 Flask-Caching==2.0.2
-Pillow==9.5.0
-
-# Azure specific
 azure-storage-blob==12.18.2
 SQLAlchemy==2.0.20
 
-# Dependencias opcionales para optimización
-whitenoise==6.4.0  # Para servir archivos estáticos eficientemente
-brotli==1.0.9  # Para compresión mejorada
+# Comentar cualquier dependencia no esencial para tu aplicación
+# Si no usas optimización de imágenes, puedes omitir Pillow
+# Pillow==9.5.0

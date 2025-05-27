@@ -1,0 +1,28 @@
+# Este archivo ya no se utiliza - Sustituido por azure-webapp-deploy.yml
+# Se mantiene para referencia histórica
+
+name: Azure Static Web Apps CI/CD (DISABLED)
+
+on:
+  push:
+    branches:
+      - disabled  # Cambiado para desactivar el flujo de trabajo
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - disabled  # Cambiado para desactivar el flujo de trabajo
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    permissions:
+       id-token: write
+       contents: read
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+      # Resto del archivo quedó igual...

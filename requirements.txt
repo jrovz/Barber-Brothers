@@ -12,9 +12,11 @@ Flask-Mail==0.9.1
 Werkzeug==2.3.0
 urllib3==1.26.15
 requests==2.31.0
-# GCP specific
-google-cloud-storage==2.13.0
-google-cloud-logging==3.8.0
-google-cloud-secret-manager==2.16.4
-cloud-sql-python-connector[pg8000]==1.2.3
+Flask-Caching==2.0.2
+Pillow==9.5.0
+
+# Azure specific
+azure-storage-blob==12.18.2
+
+# Common dependencies
 SQLAlchemy==2.0.20
