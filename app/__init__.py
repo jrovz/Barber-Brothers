@@ -19,10 +19,10 @@ login_manager.login_view = 'admin.login'
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
 
-# Detectar entorno Azure
+# Detectar entorno Azure - (Desactivado para entorno local)
 def is_azure():
     """Detecta si estamos en Azure App Service"""
-    return os.environ.get('WEBSITE_SITE_NAME') is not None
+    return False  # Forzar siempre entorno local
 
 # Función para cargar usuario (requerida por Flask-Login)
 @login_manager.user_loader
@@ -90,24 +90,10 @@ def create_app(config_name='default'):
         app.config['DEBUG'] = True
         app.config['PROPAGATE_EXCEPTIONS'] = True
         app.config['PRESERVE_CONTEXT_ON_EXCEPTION'] = True
-    
-    # Configurar almacenamiento según el entorno
-    if is_azure():
-        app.logger.info("Detectado entorno Azure. Configurando Azure Storage...")
-        try:
-            # Asegurarse de que la configuración de Azure Storage esté presente
-            if not os.environ.get('AZURE_STORAGE_CONNECTION_STRING'):
-                app.logger.warning("AZURE_STORAGE_CONNECTION_STRING no está configurado. El almacenamiento de archivos puede no funcionar correctamente.")
-        except Exception as e:
-            app.logger.error(f"Error configurando Azure Storage: {e}")
-    elif os.environ.get("GAE_ENV") == "standard" or os.environ.get("K_SERVICE"):
-        app.logger.info("Detectado entorno GCP. Configurando Cloud Storage...")
-        try:
-            # Asegurarse de que el bucket esté configurado
-            if not os.environ.get('GCS_BUCKET_NAME'):
-                app.logger.warning("GCS_BUCKET_NAME no está configurado. El almacenamiento de archivos puede no funcionar correctamente.")
-        except Exception as e:
-            app.logger.error(f"Error configurando Cloud Storage: {e}")
+      # Configurar almacenamiento para entorno local
+    app.logger.info("Configurando almacenamiento local...")
+    # No se requiere configuración especial para almacenamiento local
+    # Los archivos se guardarán en el directorio UPLOAD_FOLDER configurado anteriormente
     
      # Verificar rutas después de cargar configuración completa
     @app.before_request
@@ -124,17 +110,12 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    
-    # Initialize the database if needed (run migrations and import initial data)
+      # Initialize the database if needed (run migrations and import initial data)
     with app.app_context():
         try:
-            # Seleccionar el módulo de conexión a base de datos según el entorno
-            if is_azure():
-                app.logger.info("Usando módulo de conexión de Azure para PostgreSQL")
-                from app.utils.azure_connection_pg import init_connection_engine
-            else:
-                app.logger.info("Usando módulo de conexión estándar")
-                from app.utils.cloud_connection_pg import init_connection_engine
+            # Usar módulo de conexión local
+            app.logger.info("Usando módulo de conexión local para la base de datos")
+            from app.utils.local_connection_pg import init_connection_engine
                 
             # Inicializar la base de datos
             from app.utils.db_init_handler import init_database_if_needed
