@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Migraciones y base de datos local
+instance/app.db
+pgdata/
+
+# Archivos específicos del proyecto que no deberían estar en Docker
+*.pem
+*.key
+gcp_credentials.json
+gcp_setup_commands.md
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Archivos de entorno
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Archivos de documentación y otros
+*.md
+!README.md
+website.png
+
+# Uploads - mejor montarlo como volumen
+app/static/uploads/*
