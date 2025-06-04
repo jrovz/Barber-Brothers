@@ -8,8 +8,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'desarrollo-clave-segura'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Configuraciones para carga de archivos
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads')
+    # Configuraciones para carga de archivos    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB límite de tamaño
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
@@ -18,7 +17,7 @@ class Config:
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     # Forma recomendada de configurar MAIL_DEFAULT_SENDER
-    MAIL_DEFAULT_SENDER_NAME = os.environ.get('MAIL_DEFAULT_SENDER_NAME', 'Barber Brothers')
+    MAIL_DEFAULT_SENDER_NAME = os.environ.get('MAIL_DEFAULT_SENDER', 'Barber Brothers')
     MAIL_DEFAULT_SENDER = (MAIL_DEFAULT_SENDER_NAME, os.environ.get('MAIL_USERNAME'))
 
     
@@ -61,11 +60,11 @@ class ProductionConfig(Config):
             if SQLALCHEMY_DATABASE_URI is None:
                 raise ValueError("No DATABASE_URL set for production")
     except Exception as e:
-        print(f"Error en configuración de producción: {e}")
-        # Fallback a la configuración estándar
+        print(f"Error en configuración de producción: {e}")        # Fallback a la configuración estándar
         SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
         print(f"Usando fallback DATABASE_URL: {SQLALCHEMY_DATABASE_URI}")
-        if SQLALCHEMY_DATABASE_URI is None:            # Última opción, construir DATABASE_URL manualmente
+        if SQLALCHEMY_DATABASE_URI is None:
+            # Última opción, construir DATABASE_URL manualmente
             try:
                 db_user = os.environ.get("DB_USER", "barberia_user")
                 db_pass = os.environ.get("DB_PASS", "BarberiaSecure123!")

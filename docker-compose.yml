@@ -1,12 +1,9 @@
-version: '3.8'
-
 services:
   web:
     build: .
     restart: always
     ports:
-      - "5000:5000"
-    environment:
+      - "5000:5000"    environment:
       - DATABASE_URL=postgresql://postgres:y3WhoYFS@db/barberia_db
       - SECRET_KEY=y3WhoYFS
       - MAIL_SERVER=smtp.gmail.com
@@ -14,7 +11,8 @@ services:
       - MAIL_USE_TLS=True
       - MAIL_USERNAME=pipevale2011@gmail.com
       - MAIL_PASSWORD=kotu kfnc eakg ypqt
-      - MAIL_DEFAULT_SENDER_NAME=Barber Brothers
+      - MAIL_DEFAULT_SENDER=Barber Brothers
+      - POSTGRES_HOST=db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=y3WhoYFS
       - POSTGRES_DB=barberia_db

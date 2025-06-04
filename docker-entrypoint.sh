@@ -8,6 +8,13 @@ echo "Configuración de PostgreSQL:"
 echo "Host: db"
 echo "Usuario: $POSTGRES_USER"
 echo "Base de datos: $POSTGRES_DB"
+echo "Password length: ${#POSTGRES_PASSWORD}"
+
+echo "DEBUG: Environment variables:"
+echo "POSTGRES_DB=$POSTGRES_DB"
+echo "POSTGRES_USER=$POSTGRES_USER" 
+echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD"
+echo "POSTGRES_HOST=$POSTGRES_HOST"
 
 # Esperar a que PostgreSQL esté disponible
 echo "Esperando a que PostgreSQL esté disponible..."

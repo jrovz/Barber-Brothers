@@ -18,5 +18,8 @@ Pillow==9.5.0
 # Azure specific
 azure-storage-blob==12.18.2
 
+# Google Cloud specific
+cloud-sql-python-connector==1.4.3
+
 # Common dependencies
 SQLAlchemy==2.0.20
