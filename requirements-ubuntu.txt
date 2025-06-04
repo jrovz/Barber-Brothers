@@ -1,0 +1,35 @@
+# Requirements optimized for Ubuntu Server Production
+# Flask core
+Flask==2.2.3
+Flask-SQLAlchemy==3.0.3
+Flask-Migrate==4.0.4
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Flask-Mail==0.9.1
+Flask-Caching==2.0.2
+
+# Database
+psycopg2-binary==2.9.5
+SQLAlchemy==2.0.20
+
+# Production server
+gunicorn==21.2.0
+
+# Security and validation
+python-dotenv==1.0.0
+email-validator==2.2.0
+Werkzeug==2.3.0
+
+# Image processing (simplified)
+Pillow==9.5.0
+
+# HTTP utilities
+urllib3==1.26.15
+requests==2.31.0
+
+# Additional utilities
+WTForms==3.0.1
+itsdangerous==2.1.2
+Jinja2==3.1.2
+MarkupSafe==2.1.2
+click==8.1.3
