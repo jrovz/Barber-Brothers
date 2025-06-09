@@ -51,7 +51,7 @@ class BarberoForm(FlaskForm):
     imagen_file = FileField('Imagen', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Solo imágenes: jpg, png, jpeg')])
     activo = BooleanField('Activo', default=True)
     submit = SubmitField('Guardar')
-
+    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional(), URL(message="URL no válida")])
 class ServicioForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(max=100)])
     descripcion = TextAreaField('Descripción', validators=[Optional(), Length(max=500)])

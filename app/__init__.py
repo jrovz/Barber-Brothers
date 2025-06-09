@@ -27,7 +27,7 @@ def is_azure():
 # Función para cargar usuario (requerida por Flask-Login)
 @login_manager.user_loader
 def load_user(user_id):
-    from app.models import User
+    from app.models.admin import User
     return User.query.get(int(user_id))
 
 def create_app(config_name='default'):
