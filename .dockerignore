@@ -34,8 +34,7 @@ pgdata/
 # Archivos específicos del proyecto que no deberían estar en Docker
 *.pem
 *.key
-gcp_credentials.json
-gcp_setup_commands.md
+
 .ruff_cache/
 .mypy_cache/
 .pytest_cache/

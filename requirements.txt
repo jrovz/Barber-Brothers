@@ -4,7 +4,7 @@ Flask-Migrate==4.0.4
 Flask-Login==0.6.3
 Flask-WTF==1.2.2
 psycopg2-binary==2.9.5
-pg8000==1.29.4
+
 python-dotenv==1.0.0
 email-validator==2.2.0
 gunicorn==21.2.0
@@ -15,11 +15,7 @@ requests==2.31.0
 Flask-Caching==2.0.2
 Pillow==9.5.0
 
-# Azure specific
-azure-storage-blob==12.18.2
 
-# Google Cloud specific
-cloud-sql-python-connector==1.4.3
 
 # Common dependencies
 SQLAlchemy==2.0.20

@@ -70,9 +70,9 @@ docker-compose down -v
 - Las credenciales están incorporadas en el `docker-compose.yml` para desarrollo
 - Para producción, se recomienda usar variables de entorno o Docker Secrets
 
-## Despliegue en Azure
+## Despliegue en Producción
 
-Para desplegar esta aplicación en Azure Container Instances o Azure App Service:
+Para desplegar esta aplicación en un servidor de producción:
 
 1. Construir la imagen:
 
@@ -80,19 +80,9 @@ Para desplegar esta aplicación en Azure Container Instances o Azure App Service
 docker build -t barberbrothers:latest .
 ```
 
-2. Etiquetar la imagen para el registro de Azure:
+2. Configurar variables de entorno apropiadas para producción
 
-```bash
-docker tag barberbrothers:latest [your-registry].azurecr.io/barberbrothers:latest
-```
-
-3. Enviar la imagen al registro:
-
-```bash
-docker push [your-registry].azurecr.io/barberbrothers:latest
-```
-
-4. Desplegar utilizando Azure CLI o desde el portal de Azure.
+3. Usar Docker Compose con configuración de producción o desplegar en servicios de contenedores.
 
 ## Resolución de Problemas
 

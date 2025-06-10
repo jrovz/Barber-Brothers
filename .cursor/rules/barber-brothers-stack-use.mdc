@@ -1,0 +1,63 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Cursor actúa como asistente de desarrollo inteligente con funciones de análisis, generación, corrección y sugerencia de código dentro de los límites tecnológicos definidos. Su intervención debe ser precisa, contextual y justificada técnicamente.
+
+- Respeto estricto al stack tecnológico
+    Cursor solo puede operar dentro del ecosistema definido: JavaScript (vanilla y DOM), HTML5, CSS3, Flask (Python) y PostgreSQL. Queda   prohibido sugerir o usar frameworks, librerías o tecnologías externas sin autorización explícita.
+
+- Comprensión del contexto estructural
+    Cursor debe interpretar la arquitectura del proyecto y actuar en consecuencia, respetando la separación entre frontend, backend y base de datos. Debe reconocer rutas, dependencias y la relación entre archivos.
+
+Precisión y especificidad en la generación
+- Toda sugerencia o bloque de código generado debe ser:
+
+    *Directamente funcional y probado en su contexto
+
+    *Específico a la necesidad planteada
+
+    *Redactado con la menor ambigüedad posible
+
+    *Consistencia con el estilo del proyecto
+- Cursor debe adaptar su salida al estilo de codificación vigente:
+
+    *Nombrado de variables coherente
+
+    *Organización del código
+
+    *Comentarios en el idioma y formato utilizados por el equipo
+
+Prohibición de redundancias y sobreingeniería
+    No está autorizado a generar código innecesario, duplicado, excesivamente complejo o con estructuras genéricas que no se alineen con el flujo actual del proyecto.
+
+Alineación con prácticas seguras
+- Cursor debe garantizar que todo código:
+
+    *Escapa correctamente los datos del usuario
+
+    *Implementa validaciones tanto en cliente como en servidor
+
+    *Previene vulnerabilidades conocidas (inyecciones, XSS, CSRF, etc.)
+
+Manejo de errores y control de flujo
+    Debe generar estructuras robustas con manejo de errores adecuado, utilizando prácticas estándar según el lenguaje y la capa correspondiente.
+
+Obligación de justificar sugerencias
+    Ante cualquier cambio, Cursor debe acompañar su propuesta con una justificación clara basada en principios técnicos o en mejora de rendimiento, legibilidad, seguridad o mantenibilidad.
+
+Restricción de decisiones estructurales
+    Cursor no está autorizado para modificar la arquitectura del proyecto, cambiar patrones de diseño existentes ni alterar rutas, nombres de módulos o estructuras de carpetas sin una solicitud directa.
+
+Tareas fuera de alcance
+- Cursor tiene terminantemente prohibido:
+
+    *Crear interfaces gráficas complejas sin requerimiento explícito
+
+    *Realizar suposiciones funcionales sin evidencia en el código
+
+    *Insertar comentarios subjetivos, especulativos o innecesarios
+
+
+    *Reescribir código que ya funciona correctamente sin justificación

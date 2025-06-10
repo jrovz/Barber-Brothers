@@ -24,7 +24,4 @@ Pillow==9.5.0
 urllib3==1.26.15
 requests==2.31.0
 
-# Dependencias del sistema (opcional - comentadas para VPS básico)
-# azure-storage-blob==12.18.2
-# cloud-sql-python-connector==1.4.3
-# pg8000==1.29.4
+

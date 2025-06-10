@@ -19,10 +19,7 @@ login_manager.login_view = 'admin.login'
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
 
-# Detectar entorno Azure - (Desactivado para entorno local)
-def is_azure():
-    """Detecta si estamos en Azure App Service"""
-    return False  # Forzar siempre entorno local
+
 
 # Función para cargar usuario (requerida por Flask-Login)
 @login_manager.user_loader
@@ -56,19 +53,13 @@ def create_app(config_name='default'):
     # Crear carpeta de uploads si no existe
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
-    # Configurar logging para GCP o entorno local
-    try:
-        from app.utils.cloud_logging import setup_logging
-        logger = setup_logging(app)
-        app.logger.info("Aplicación inicializada con configuración de logging")
-    except ImportError:
-        # Fallback si no se puede importar cloud_logging
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[logging.StreamHandler()]
-        )
-        app.logger.info("Aplicación inicializada con configuración de logging básica")
+    # Configurar logging básico
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler()]
+    )
+    app.logger.info("Aplicación inicializada con configuración de logging básica")
     
     # Resto del código...
       # Importar y aplicar configuraciones
