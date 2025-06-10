@@ -12,6 +12,7 @@
 ## 🖼️ Vista Previa
 
 ![Página de inicio](website.png)
+![Página de administracíon](admin.png)
 
 ## ⚡ Stack Tecnológico
 
