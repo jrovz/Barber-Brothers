@@ -666,7 +666,7 @@ def editar_servicio(id):
         form.nombre.data = servicio.nombre
         form.descripcion.data = servicio.descripcion
         form.precio.data = servicio.precio
-        form.duracion_estimada.data = form.duracion_estimada
+        form.duracion_estimada.data = servicio.duracion_estimada
         form.activo.data = servicio.activo
         form.imagen_url.data = servicio.imagen_url
 
