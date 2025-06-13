@@ -2,7 +2,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, FloatField, TextAreaField, URLField, SelectField, DecimalField, DateTimeField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, URL, ValidationError # Añadir ValidationError
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileField, FileAllowed, MultipleFileField
 from app.models.categoria import Categoria # Importar el modelo Categoria
 
 class LoginForm(FlaskForm):
@@ -62,8 +62,14 @@ class ServicioForm(FlaskForm):
     # Mantener campo URL para compatibilidad hacia atrás
     imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()])
     
-    # Agregar campo para subir imagen
-    imagen_file = FileField('Subir Imagen', validators=[
+    # Campo para subir múltiples imágenes
+    imagenes_files = MultipleFileField('Subir Imágenes', validators=[
+        Optional(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Solo archivos de imagen!')
+    ])
+    
+    # Mantener campo individual para compatibilidad
+    imagen_file = FileField('Subir Imagen Individual', validators=[
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Solo archivos de imagen!')
     ])

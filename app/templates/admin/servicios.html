@@ -11,7 +11,7 @@
 <!-- Formulario para añadir servicios -->
 <section class="admin-form">
     <h2 class="form-title">Añadir Nuevo Servicio</h2>
-    <form action="{{ url_for('admin.gestionar_servicios') }}" method="POST">
+    <form action="{{ url_for('admin.gestionar_servicios') }}" method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         {# Renderizar campos del formulario ServicioForm #}
         <div class="form-grid">
@@ -49,9 +49,18 @@
             </div>
             
             <div class="form-group">
+                {{ form.imagenes_files.label(class="form-label") }}
+                {{ form.imagenes_files(class="form-input", multiple=true, accept="image/*") }}
+                {% for error in form.imagenes_files.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small class="form-text text-muted">Puedes seleccionar múltiples imágenes manteniendo presionado Ctrl</small>
+                <div id="imagenes_preview" style="display: none; margin-top: 10px;"></div>
+            </div>
+            
+            <div class="form-group">
                 {{ form.imagen_file.label(class="form-label") }}
                 {{ form.imagen_file(class="form-input") }}
                 {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small class="form-text text-muted">Imagen individual (compatibilidad)</small>
             </div>
         </div>
         
@@ -110,7 +119,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Función para mostrar vista previa de imagen
+        // Función para mostrar vista previa de imagen individual
         function setupImagePreview(inputId, previewId) {
             const input = document.getElementById(inputId);
             const preview = document.getElementById(previewId);
@@ -138,16 +147,61 @@
             });
         }
         
+        // Función para mostrar vista previa de múltiples imágenes
+        function setupMultipleImagePreview(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            
+            if (!input || !preview) return;
+            
+            input.addEventListener('change', function(event) {
+                preview.innerHTML = '';
+                
+                if (input.files && input.files.length > 0) {
+                    preview.style.display = 'block';
+                    
+                    for (let i = 0; i < input.files.length; i++) {
+                        const file = input.files[i];
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(e) {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.style.display = 'inline-block';
+                            imgContainer.style.margin = '5px';
+                            imgContainer.style.position = 'relative';
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.style.maxWidth = '80px';
+                            img.style.maxHeight = '80px';
+                            img.style.border = '2px solid #ddd';
+                            img.style.borderRadius = '4px';
+                            
+                            const label = document.createElement('small');
+                            label.textContent = file.name;
+                            label.style.display = 'block';
+                            label.style.textAlign = 'center';
+                            label.style.marginTop = '5px';
+                            label.style.fontSize = '10px';
+                            label.style.color = '#666';
+                            
+                            imgContainer.appendChild(img);
+                            imgContainer.appendChild(label);
+                            preview.appendChild(imgContainer);
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    }
+                } else {
+                    preview.style.display = 'none';
+                }
+            });
+        }
+        
         // Inicializar las vistas previas
         setupImagePreview('imagen_file', 'imagen_preview');
+        setupMultipleImagePreview('imagenes_files', 'imagenes_preview');
     });
     </script>
-    
-    <!-- Añadir un div para la vista previa después del campo de carga de imagen -->
-    <div class="form-group">
-        {{ form.imagen_file.label(class="form-label") }}
-        {{ form.imagen_file(class="form-input", id="imagen_file") }}
-        {% for error in form.imagen_file.errors %}<span class="error">{{ error }}</span>{% endfor %}
-        <div id="imagen_preview" style="display: none;"></div>
-    </div>
+
 {% endblock %}

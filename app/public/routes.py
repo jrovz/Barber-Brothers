@@ -175,6 +175,44 @@ def servicios():
         return render_template("public/servicios.html", 
                             servicios=[], error_msg=f"No se pudieron cargar los servicios: {str(e)}")
 
+@bp.route('/api/servicio/<int:servicio_id>')
+def get_servicio_data(servicio_id):
+    """API endpoint para obtener datos de un servicio específico"""
+    try:
+        servicio = Servicio.query.filter_by(id=servicio_id, activo=True).first()
+        if not servicio:
+            return jsonify({'error': 'Servicio no encontrado'}), 404
+        
+        # Formatear el precio usando la función format_cop
+        from app.utils import format_cop
+        
+        # Obtener todas las imágenes del servicio
+        imagenes_galeria = servicio.get_imagenes_activas()
+        imagenes_urls = [img.ruta_imagen for img in imagenes_galeria] if imagenes_galeria else []
+        
+        # Si no hay imágenes en la galería, usar imagen_url como fallback
+        if not imagenes_urls and servicio.imagen_url:
+            imagenes_urls = [servicio.imagen_url]
+        
+        servicio_data = {
+            'id': servicio.id,
+            'nombre': servicio.nombre,
+            'descripcion': servicio.descripcion or 'Sin descripción disponible',
+            'precio_formateado': format_cop(servicio.precio),
+            'precio_valor': float(servicio.precio),
+            'duracion_estimada': servicio.duracion_estimada,
+            'imagen_url': servicio.get_imagen_principal(),  # Imagen principal para compatibilidad
+            'imagenes': imagenes_urls,  # Array de todas las imágenes
+            'total_imagenes': len(imagenes_urls),
+            'activo': servicio.activo
+        }
+        
+        return jsonify(servicio_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al obtener datos del servicio {servicio_id}: {e}")
+        return jsonify({'error': 'Error interno del servidor'}), 500
+
 # @bp.route('/barberos/<int:id>/disponibilidad', methods=['GET', 'POST'])
 # @login_required
 # def gestionar_disponibilidad(id):

@@ -75,8 +75,31 @@
                     {% if servicios %}
                         <!-- Loop through the services passed from the route -->
                         {% for servicio in servicios %}
-                        <div class="service-item">
-                            <!-- Optional Icon: <div class="service-icon">✂️</div> -->
+                        <div class="service-item" data-service-id="{{ servicio.id }}" onclick="openServiceModal({{ servicio.id }})">
+                            <!-- Imagen del servicio -->
+                            {% set imagen_principal = servicio.get_imagen_principal() %}
+                            {% if imagen_principal %}
+                            <div class="service-image">
+                                <img src="{{ imagen_principal }}" alt="{{ servicio.nombre }}" loading="lazy">
+                                <div class="service-overlay">
+                                    {% set total_imagenes = servicio.get_imagenes_activas()|length %}
+                                    {% if total_imagenes > 1 %}
+                                        <span class="view-gallery">Ver Galería ({{ total_imagenes }} fotos)</span>
+                                    {% else %}
+                                        <span class="view-gallery">Ver Detalles</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="service-image service-no-image">
+                                <div class="service-placeholder">
+                                    <span class="service-icon">✂️</span>
+                                </div>
+                                <div class="service-overlay">
+                                    <span class="view-gallery">Ver Detalles</span>
+                                </div>
+                            </div>
+                            {% endif %}
                             
                             <!-- Display service name from database -->
                             <h3 class="service-name">{{ servicio.nombre }}</h3> 
@@ -85,7 +108,14 @@
                             <p class="service-description">{{ servicio.descripcion }}</p>
                             
                             <!-- Display service price from database (format as needed) -->
-                            <div class="service-price">{{ servicio.precio |cop_format }}</div> 
+                            <div class="service-price">{{ servicio.precio |cop_format }}</div>
+                            
+                            {% if servicio.duracion_estimada %}
+                            <div class="service-duration">
+                                <span class="duration-icon">⏱️</span>
+                                {{ servicio.duracion_estimada }}
+                            </div>
+                            {% endif %}
                             
                         </div>
                         {% endfor %}
@@ -134,10 +164,60 @@
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
     <!-- End Cart Panel Structure -->
-    <!-- Añade esto antes de cerrar el body -->     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
-     <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-     <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
-     {% include 'public/includes/menu_conflict_fix.html' %}
-     <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+    
+    <!-- Modal de Galería de Servicios -->
+    <div class="service-modal" id="service-modal">
+        <div class="modal-overlay" onclick="closeServiceModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-service-title">Nombre del Servicio</h2>
+                <button class="modal-close" onclick="closeServiceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-image-container">
+                    <img id="modal-service-image" src="" alt="" />
+                    <div class="image-placeholder" id="modal-image-placeholder" style="display: none;">
+                        <span class="placeholder-icon">✂️</span>
+                        <p>Imagen no disponible</p>
+                    </div>
+                </div>
+                <div class="modal-info">
+                    <div class="service-details">
+                        <h3>Descripción</h3>
+                        <p id="modal-service-description">Descripción del servicio</p>
+                    </div>
+                    <div class="service-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">💰</span>
+                            <div class="meta-content">
+                                <span class="meta-label">Precio</span>
+                                <span id="modal-service-price" class="meta-value">$0</span>
+                            </div>
+                        </div>
+                        <div class="meta-item" id="modal-duration-container" style="display: none;">
+                            <span class="meta-icon">⏱️</span>
+                            <div class="meta-content">
+                                <span class="meta-label">Duración</span>
+                                <span id="modal-service-duration" class="meta-value">30 min</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <a href="{{ url_for('public.home') }}#availability" class="btn book-service-btn">Agendar Cita</a>
+                        <button class="btn btn-secondary" onclick="closeServiceModal()">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Fin Modal de Galería de Servicios -->
+    
+    <!-- Scripts adicionales -->
+    <script src="{{ url_for('static', filename='js/service-gallery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
+    {% include 'public/includes/menu_conflict_fix.html' %}
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>
 </html>

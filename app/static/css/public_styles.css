@@ -1691,13 +1691,14 @@ footer p {
 
 .service-item {
     background-color: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    padding: 2rem;
-    border-radius: 3px;
+    border-radius: 8px;
+    padding: 0; /* Reset padding para manejar la imagen */
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
     box-shadow: var(--shadow-soft);
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 .service-item:hover {
@@ -1705,40 +1706,341 @@ footer p {
     box-shadow: var(--shadow-medium);
 }
 
-.service-icon {
-    font-size: 2.5rem;
+/* Contenedor de imagen del servicio */
+.service-image {
+    width: 100%;
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-bg-dark);
+}
+
+.service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.service-item:hover .service-image img {
+    transform: scale(1.1);
+}
+
+/* Servicio sin imagen */
+.service-no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-bg-medium), var(--color-bg-dark));
+}
+
+.service-placeholder {
+    text-align: center;
+    color: var(--color-text-muted);
+}
+
+.service-placeholder .service-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+}
+
+/* Overlay para "Ver Galería" */
+.service-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.service-item:hover .service-overlay {
+    opacity: 1;
+}
+
+.view-gallery {
     color: var(--color-accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--color-accent);
+    border-radius: 4px;
+    background: rgba(179, 150, 86, 0.1);
+    backdrop-filter: blur(5px);
+}
+
+/* Contenido del servicio */
+.service-item .service-name,
+.service-item .service-description,
+.service-item .service-price,
+.service-item .service-duration {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.service-item .service-name {
+    padding-top: 1.5rem;
     margin-bottom: 1rem;
-    text-align: center;
 }
 
-.service-name {
-    font-family: 'Playfair Display', serif;
-    color: var(--color-text-accent);
-    font-size: 1.5rem;
-    margin-bottom: 0.8rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid var(--color-border);
-    text-align: center;
+.service-item .service-price {
+    margin-bottom: 1rem;
 }
 
-.service-description {
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.7;
+.service-duration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     margin-bottom: 1.5rem;
-    flex-grow: 1;
-    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
 }
 
-.service-price {
-    font-size: 1.4rem;
+.duration-icon {
+    opacity: 0.7;
+}
+
+/* --- Modal de Galería --- */
+.service-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    box-sizing: border-box;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--color-bg-card);
+    border-radius: 12px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--color-border);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.modal-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
     color: var(--color-text-primary);
-    font-weight: 500;
-    text-align: center;
-    margin-top: auto;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-border);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: var(--color-bg-dark);
+    color: var(--color-accent);
+}
+
+.modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.modal-image-container {
+    position: relative;
+}
+
+.modal-image-container img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: var(--shadow-soft);
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, var(--color-bg-medium), var(--color-bg-dark));
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    border: 2px dashed var(--color-border);
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.image-placeholder p {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+.modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.service-details h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--color-accent);
+    margin-bottom: 0.8rem;
+}
+
+.service-details p {
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+}
+
+.service-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--color-bg-dark);
+    border-radius: 6px;
+    border-left: 3px solid var(--color-accent);
+}
+
+.meta-icon {
+    font-size: 1.5rem;
+    opacity: 0.8;
+}
+
+.meta-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-label {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent);
+}
+
+.book-service-btn {
+    flex: 1;
+}
+
+/* Responsive para el modal */
+@media (max-width: 768px) {
+    .service-modal {
+        padding: 1rem;
+    }
+    
+    .modal-content {
+        max-height: 95vh;
+    }
+    
+    .modal-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .modal-body {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .modal-image-container img,
+    .image-placeholder {
+        height: 250px;
+    }
+    
+    .modal-actions {
+        flex-direction: column;
+    }
+    
+    .service-image {
+        height: 180px;
+    }
 }
 
 /* --- Media Queries --- */

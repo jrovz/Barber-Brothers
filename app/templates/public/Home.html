@@ -120,27 +120,6 @@
         </div>
     </section>
     
-    <section class="services">
-        {% if servicios %} {# MODIFICADO: de servicios_home a servicios #}
-            {% for servicio_item in servicios %} {# MODIFICADO: de servicios_home a servicios #}
-            <div class="service">
-                <h3>{{ servicio_item.nombre }}</h3>
-                {% if servicio_item.descripcion %}
-                <p>{{ servicio_item.descripcion | truncate(100, True) }}</p> {# Trunca la descripción si es muy larga #}
-                {% else %}
-                <p>Descripción no disponible.</p>
-                {% endif %}
-                {# Puedes añadir más detalles si lo deseas, como el precio #}
-                {# <p class="service-price">${{ "{:,.0f}".format(servicio_item.precio).replace(',', '.') }} COP</p> #}
-            </div>
-            {% endfor %}
-        {% else %}
-        <div class="service">
-            <p>Actualmente no tenemos servicios para mostrar. Vuelve pronto.</p>
-        </div>
-        {% endif %}
-    </section>
-    
     <section class="availability">
     <h2>Agenda tu Cita</h2>
     

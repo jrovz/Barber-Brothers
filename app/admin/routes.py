@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
 # Import models
 from app.models.producto import Producto
-from app.models.admin import User # Assuming User model is in admin.py as per your context
+from app.models.admin import User # Assuming User model is in admin.py
 from app.models.cliente import Mensaje, Cliente, Cita # Assuming Mensaje, Cliente, Cita are in cliente.py
 from app.models.servicio import Servicio
 from app.models.barbero import Barbero, DisponibilidadBarbero
@@ -604,7 +604,25 @@ def gestionar_servicios():
                 imagen_url=imagen_url
             )
             db.session.add(nuevo_servicio)
+            
             try:
+                db.session.flush()  # Para obtener el ID del servicio antes de commit
+                
+                # Procesar múltiples imágenes
+                if form.imagenes_files.data:
+                    from app.models.servicio_imagen import ServicioImagen
+                    for i, file in enumerate(form.imagenes_files.data):
+                        if file and file.filename:  # Verificar que el archivo sea válido
+                            ruta_imagen = save_image(file, 'servicios')
+                            if ruta_imagen:
+                                imagen_servicio = ServicioImagen(
+                                    servicio_id=nuevo_servicio.id,
+                                    ruta_imagen=ruta_imagen,
+                                    orden=i,
+                                    activa=True
+                                )
+                                db.session.add(imagen_servicio)
+                
                 db.session.commit()
                 flash('Servicio añadido correctamente.', 'success')
             except Exception as e:
@@ -655,6 +673,26 @@ def editar_servicio(id):
             servicio.imagen_url = form.imagen_url.data
         
         try:
+            # Procesar múltiples imágenes nuevas
+            if form.imagenes_files.data:
+                from app.models.servicio_imagen import ServicioImagen
+                # Obtener el orden máximo actual para continuar la secuencia
+                max_orden = db.session.query(db.func.max(ServicioImagen.orden)).filter_by(
+                    servicio_id=servicio.id, activa=True
+                ).scalar() or -1
+                
+                for i, file in enumerate(form.imagenes_files.data):
+                    if file and file.filename:  # Verificar que el archivo sea válido
+                        ruta_imagen = save_image(file, 'servicios')
+                        if ruta_imagen:
+                            imagen_servicio = ServicioImagen(
+                                servicio_id=servicio.id,
+                                ruta_imagen=ruta_imagen,
+                                orden=max_orden + i + 1,
+                                activa=True
+                            )
+                            db.session.add(imagen_servicio)
+            
             db.session.commit()
             flash('Servicio actualizado correctamente.', 'success')
         except Exception as e:
@@ -674,6 +712,26 @@ def editar_servicio(id):
                            title="Editar Servicio", 
                            form=form, 
                            servicio=servicio)
+
+@bp.route('/servicios/imagen/<int:imagen_id>/eliminar', methods=['POST'])
+@login_required
+def eliminar_imagen_servicio(imagen_id):
+    """Eliminar una imagen específica de un servicio"""
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        return jsonify({'success': False, 'message': 'No autorizado'}), 403
+    
+    try:
+        from app.models.servicio_imagen import ServicioImagen
+        imagen = ServicioImagen.query.get_or_404(imagen_id)
+        
+        # Marcar como inactiva en lugar de eliminar (soft delete)
+        imagen.activa = False
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Imagen eliminada correctamente'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @bp.route('/servicios/eliminar/<int:id>', methods=['POST'])
 @login_required
