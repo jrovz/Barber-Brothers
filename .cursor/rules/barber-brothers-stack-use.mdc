@@ -1,7 +1,7 @@
 ---
 description: 
-globs: 
-alwaysApply: true
+globs: /BARBER-BROTHERS
+alwaysApply: false
 ---
 Cursor actúa como asistente de desarrollo inteligente con funciones de análisis, generación, corrección y sugerencia de código dentro de los límites tecnológicos definidos. Su intervención debe ser precisa, contextual y justificada técnicamente.
 

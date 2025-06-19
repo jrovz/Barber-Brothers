@@ -25,7 +25,19 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     from app.models.admin import User
-    return User.query.get(int(user_id))
+    from app.models.barbero import Barbero
+    
+    # Primero intentar cargar como User admin
+    user = User.query.get(int(user_id))
+    if user:
+        return user
+    
+    # Si no es admin, intentar cargar como Barbero
+    barbero = Barbero.query.get(int(user_id))
+    if barbero and barbero.tiene_acceso_web:
+        return barbero
+    
+    return None
 
 def create_app(config_name='default'):
     # Crear instancia de Flask
@@ -125,6 +137,9 @@ def create_app(config_name='default'):
     
     from app.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    
+    from app.barbero import bp as barbero_bp
+    app.register_blueprint(barbero_bp, url_prefix='/barbero')
     
     return app
 

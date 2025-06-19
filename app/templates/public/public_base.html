@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Barbería - Barber Brothers{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Header Común -->
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="/static/logo.png" alt="Barbería Clásica">
+            </div>
+
+            <!-- Navegación Desktop -->
+            <nav class="desktop-menu">
+                <ul>
+                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
+                    <li class="cart-icon"> 
+                        <a href="#" id="cart-button">
+                            <i class="cart-symbol">🛒</i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Botón Hamburguesa (Solo para móvil) -->
+            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+                <span class="menu-toggle-icon"></span>
+            </button>
+
+            <!-- Menú Móvil (Separado) -->
+            <div class="mobile-menu" id="mobile-menu">
+                <ul>
+                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
+                    <li class="cart-icon"> 
+                        <a href="#" id="cart-button-mobile">
+                            <i class="cart-symbol">🛒</i>
+                            <span class="cart-count">0</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main>
+        {% block content %}
+        {# El contenido específico de cada página irá aquí #}
+        {% endblock %}
+    </main>
+
+    <!-- Footer Común -->
+    <footer>
+        <p>Barber Brothers &copy; 2025</p>
+        <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
+    </footer>
+
+    <!-- Botón flotante de WhatsApp -->
+    <a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
+        <i class="whatsapp-icon">💬</i>
+    </a>
+
+    <!-- Panel del Carrito -->
+    <div class="cart-panel" id="cart-panel">
+        <div class="cart-header">
+            <h3>Tu Carrito</h3>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Los productos se añadirán aquí dinámicamente -->
+            <div class="empty-cart">Tu carrito está vacío</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total">COP 0</span>
+            </div>
+            <button class="checkout-button" onclick="goToCheckout()">Finalizar Compra</button>
+        </div>
+    </div>
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <!-- Scripts Comunes -->
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
+    {% include 'public/includes/menu_conflict_fix.html' %}
+    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+    
+    <!-- Script para checkout -->
+    <script>
+        function goToCheckout() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                alert('Tu carrito está vacío');
+                return;
+            }
+            window.location.href = "{{ url_for('public.checkout') }}";
+        }
+    </script>
+    
+    <!-- Script para header con scroll -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('header');
+            let lastScrollTop = 0;
+            let isScrolling = false;
+            
+            function handleScroll() {
+                if (!isScrolling) {
+                    window.requestAnimationFrame(function() {
+                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                        
+                        // Agregar clase 'scrolled' cuando se hace scroll hacia abajo
+                        if (scrollTop > 50) {
+                            header.classList.add('scrolled');
+                        } else {
+                            header.classList.remove('scrolled');
+                        }
+                        
+                        lastScrollTop = scrollTop;
+                        isScrolling = false;
+                    });
+                }
+                isScrolling = true;
+            }
+            
+            // Escuchar evento de scroll con throttling
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            
+            // Ejecutar una vez al cargar para estado inicial
+            handleScroll();
+        });
+    </script>
+    
+    <!-- Bloque para scripts específicos de cada página -->
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html> 

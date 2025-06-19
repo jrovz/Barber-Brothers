@@ -1,62 +1,12 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbería - Inicio</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+{% extends "public/public_base.html" %}
+
+{% block title %}Barbería - Inicio{% endblock %}
+
+{% block extra_head %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-</head>
-<body>
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="/static/logo.png" alt="Barbería Clásica">
-            </div>
+{% endblock %}
 
-            <!-- Navegación Desktop (NUEVA) -->
-            <nav class="desktop-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Botón Hamburguesa (Solo para móvil) -->
-            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
-                <span class="menu-toggle-icon"></span>
-            </button>
-
-            <!-- Menú Móvil (Separado) -->
-            <div class="mobile-menu" id="mobile-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button-mobile">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </header>
-    
+{% block content %}
     <section class="hero-slider">
         <div class="slider-container">
             <!-- Slide 1: Imagen estática foto1.jpg -->
@@ -71,11 +21,8 @@
             </div>
 
             <!-- Slide 2: Publicación de Instagram 1 (AHORA CON EMBED) -->
-            <div class="slide instagram-embed-slide"> {# CLASE AÑADIDA #}
-                {# REEMPLAZA ESTE BLOQUE ENTERO CON EL CÓDIGO DE INCRUSTACIÓN REAL DE TU PUBLICACIÓN #}
-                {# Ejemplo de cómo se vería con un embed. USA TU PROPIO CÓDIGO OBTENIDO DE INSTAGRAM #}
+            <div class="slide instagram-embed-slide">
                 <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DI60xjYvVHL/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"><div style="padding:16px;"> <a href="https://www.instagram.com/p/DI60xjYvVHL/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">Ver esta publicación en Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/p/DI60xjYvVHL/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">Una publicación compartida por La Barber Brothers (@la_barberbrothers)</a></p></div></blockquote>
-
             </div>
             
             <!-- Slide 3: imagen 2 -->
@@ -90,7 +37,7 @@
             </div>
 
             <!-- Slide 4: Publicación de Instagram 2 (CON EMBED Y CLASE) -->
-            <div class="slide instagram-embed-slide"> {# CLASE AÑADIDA/VERIFICADA #}
+            <div class="slide instagram-embed-slide">
                 <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/DJVE7dbvX9a/?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style=" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);"><div style="padding:16px;"> <a href="https://www.instagram.com/p/DJVE7dbvX9a/?utm_source=ig_embed&amp;utm_campaign=loading" style=" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;" target="_blank"> <div style=" display: flex; flex-direction: row; align-items: center;"> <div style="background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;"></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;"></div></div></div><div style="padding: 19% 0;"></div> <div style="display:block; height:50px; margin:0 auto 12px; width:50px;"><svg width="50px" height="50px" viewBox="0 0 60 60" version="1.1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink"><g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"><g transform="translate(-511.000000, -20.000000)" fill="#000000"><g><path d="M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631"></path></g></g></g></svg></div><div style="padding-top: 8px;"> <div style=" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;">Ver esta publicación en Instagram</div></div><div style="padding: 12.5% 0;"></div> <div style="display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;"><div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);"></div> <div style="background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;"></div> <div style="background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);"></div></div><div style="margin-left: 8px;"> <div style=" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;"></div> <div style=" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)"></div></div><div style="margin-left: auto;"> <div style=" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);"></div> <div style=" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);"></div> <div style=" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);"></div></div></div> <div style="display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;"> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;"></div> <div style=" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;"></div></div></a><p style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;"><a href="https://www.instagram.com/p/DJVE7dbvX9a/?utm_source=ig_embed&amp;utm_campaign=loading" style=" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;" target="_blank">Una publicación compartida por La Barber Brothers (@la_barberbrothers)</a></p></div></blockquote>
             </div>
             
@@ -109,7 +56,7 @@
             <button class="slider-arrow prev-arrow" aria-label="Anterior">&lt;</button>
             <button class="slider-arrow next-arrow" aria-label="Siguiente">&gt;</button>
             
-            <!-- Indicadores de posición (ajustados a 4 slides) -->
+            <!-- Indicadores de posición (ajustados a 5 slides) -->
             <div class="slider-dots">
                 <span class="dot active" data-slide="0"></span>
                 <span class="dot" data-slide="1"></span>
@@ -121,457 +68,257 @@
     </section>
     
     <section class="availability">
-    <h2>Agenda tu Cita</h2>
-    
-    <!-- Selector de barbero y servicio -->
-    <div class="booking-form">
-        <div class="form-group">
-            <label for="barbero-select">Selecciona un Barbero:</label>
-            <select id="barbero-select" class="select-barbero">
-                <option value="">-- Selecciona un barbero --</option>
-                {% if barberos %}
-                    {% for barbero in barberos %}
-                    <option value="{{ barbero.id }}">{{ barbero.nombre }}</option>
-                    {% endfor %}
-                {% else %}
-                    <option value="" disabled>No hay barberos disponibles</option>
-                {% endif %}
-            </select>
-        </div>
+        <h2>Agenda tu Cita</h2>
         
-        <div class="form-group">
-            <label for="servicio-select">Selecciona un Servicio:</label>
-            <select id="servicio-select" class="select-servicio">
-                <option value="">-- Selecciona un servicio --</option>
-                {% if servicios %}
-                    {% for servicio in servicios %}
-                    <option value="{{ servicio.id }}" data-duracion="{{ servicio.duracion_estimada }}">
-                        {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP
-                    </option>
-                    {% endfor %}
-                {% else %}
-                    <option value="" disabled>No hay servicios disponibles</option>
-                {% endif %}
-            </select>
-        </div>
-    </div>
-    
-    <!-- Calendario y selección de horarios -->
-    <div class="calendar-container">
-        <h3>Selecciona un día:</h3>
-        <div class="date-selector">
-            {% for fecha in fechas_disponibles %}
-            <div class="date-option" data-fecha="{{ fecha.strftime('%Y-%m-%d') }}">
-                <div class="day-name">{{ fecha.strftime('%a') }}</div>
-                <div class="day-number">{{ fecha.day }}</div>
-                <div class="month-name">{{ fecha.strftime('%b') }}</div>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <div id="horarios-container" class="time-slots-container">
-            <p class="instruction-message">Selecciona un barbero y servicio para ver los horarios disponibles.</p>
-        </div>
-    </div>
-    
-    <!-- Panel de confirmación (oculto inicialmente) -->
-    <div class="booking-confirmation" id="booking-confirmation" style="display: none;">
-        <h3>Confirma tu Cita</h3>
-        <div class="booking-details" id="booking-details">
-            <!-- Detalles de la cita se llenarán aquí -->
-            <p><strong>Barbero:</strong> <span id="confirm-barbero"></span></p>
-            <p><strong>Servicio:</strong> <span id="confirm-servicio"></span></p>
-            <p><strong>Fecha:</strong> <span id="confirm-fecha"></span></p>
-            <p><strong>Hora:</strong> <span id="confirm-hora"></span></p>
-        </div>
-
-        <!-- Formulario de Información del Cliente (NUEVO) -->
-        <div class="client-info" id="client-info-form" style="margin-top: 1.5rem;">
-            <h4>Tus Datos</h4>
+        <!-- Selector de barbero y servicio -->
+        <div class="booking-form">
             <div class="form-group">
-                <label for="client-name" class="form-label">Nombre Completo:</label>
-                <input type="text" id="client-name" name="client_name" class="form-input" required>
+                <label for="barbero-select">Selecciona un Barbero:</label>
+                <select id="barbero-select" class="select-barbero">
+                    <option value="">-- Selecciona un barbero --</option>
+                    {% if barberos %}
+                        {% for barbero in barberos %}
+                        <option value="{{ barbero.id }}">{{ barbero.nombre }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="" disabled>No hay barberos disponibles</option>
+                    {% endif %}
+                </select>
             </div>
+            
             <div class="form-group">
-                <label for="client-email" class="form-label">Correo Electrónico:</label>
-                <input type="email" id="client-email" name="client_email" class="form-input" required>
+                <label for="servicio-select">Selecciona un Servicio:</label>
+                <select id="servicio-select" class="select-servicio">
+                    <option value="">-- Selecciona un servicio --</option>
+                    {% if servicios %}
+                        {% for servicio in servicios %}
+                        <option value="{{ servicio.id }}" data-duracion="{{ servicio.duracion_estimada }}">
+                            {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP
+                        </option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="" disabled>No hay servicios disponibles</option>
+                    {% endif %}
+                </select>
             </div>
-            <div class="form-group">
-                <label for="client-phone" class="form-label">Teléfono:</label>
-                <input type="tel" id="client-phone" name="client_phone" class="form-input" required>
-            </div>
-             <!-- Hidden fields para pasar IDs si es necesario, aunque JS lo manejará -->
-             <input type="hidden" id="selected-barbero-id" name="barbero_id">
-             <input type="hidden" id="selected-servicio-id" name="servicio_id">
-             <input type="hidden" id="selected-date" name="fecha">
-             <input type="hidden" id="selected-time" name="hora">
-        </div>
-        <!-- Fin Formulario de Información del Cliente -->
-
-        <button id="confirm-booking" class="book-button">Confirmar Cita</button>
-        <!-- Opcional: Botón para cancelar/volver atrás -->
-        <button type="button" class="cancel-button" onclick="hideConfirmationPanel()">Cancelar</button>
-    </div>
-</section>
-   
-    
-<!-- Sección Acerca de Nosotros -->
-<section id="about-section" class="about-section">
-    <div class="about-container">
-        <div class="section-title">
-            <h2>Acerca de Nosotros</h2>
-            <p>Tradición y excelencia en cada corte</p>
         </div>
         
-        <div class="about-content">
-            <h3>La historia de La Barber Brothers: un viaje de pasión y dedicación</h3>
-            <p>En el año 2017, dos hermanos apasionados por el arte de la barbería decidimos unirnos para crear un espacio donde los hombres pudieran sentirse orgullosos de su apariencia y relajados en un ambiente acogedor. Así nació La Barber Brothers, un lugar donde la tradición y la innovación se unen para ofrecer experiencias únicas.</p>
-            <p>Desde nuestros inicios, nos hemos esforzado por brindar servicios de alta calidad, desde cortes de pelo precisos hasta afeitados suaves y relajantes. Nuestros barberos han sido entrenados para entender las necesidades de cada cliente y ofrecer soluciones personalizadas.</p>
-            <p>A lo largo de los años, hemos visto a hombres de todas las edades y estilos pasar por nuestras puertas, cada uno con su propia historia y necesidades. Hemos sido testigos de momentos importantes, como bodas y graduaciones, y hemos ayudado a nuestros clientes a sentirse seguros y confiados en su apariencia.</p>
-            <p>La Barber Brothers no es solo un lugar para cortarse el pelo o afeitarse; es un espacio donde los hombres pueden relajarse, socializar y sentirse parte de una comunidad. Hemos creado un ambiente acogedor y masculino, donde se puede disfrutar de una buena conversación y un servicio de alta calidad.</p>
-            <p>Hoy en día, La Barber Brothers es un lugar emblemático en la comunidad, conocido por su atención al detalle y su compromiso con la excelencia. Estamos orgullosos de haber podido crecer y evolucionar junto con nuestros clientes, y estamos emocionados de ver lo que el futuro nos depara.</p>
-            <p>Gracias a todos nuestros clientes por haber sido parte de esta historia. Estamos comprometidos con seguir ofreciendo servicios de alta calidad y hacer que cada visita a La Barber Brothers sea una experiencia inolvidable.</p>
-            <p><em>"¡Visítanos y descubre por qué somos la mejor barbería de la ciudad!"</em></p>
-        </div>
-        
-        <div class="team-section">
-            <h3>Nuestro Equipo</h3>
-            <div class="team-members">
-                {% for barbero in barberos %}
-                <div class="team-member">
-                    <div class="member-img">
-                        {% if barbero.imagen_url %}
-                        <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}">
-                        {% else %}
-                        <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850" alt="{{ barbero.nombre }}">
-                        {% endif %}
-                    </div>
-                    <h4>{{ barbero.nombre }}</h4>
-                    <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
-                    <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
+        <!-- Calendario y selección de horarios -->
+        <div class="calendar-container">
+            <h3>Selecciona un día:</h3>
+            <div class="date-selector">
+                {% for fecha in fechas_disponibles %}
+                <div class="date-option" data-fecha="{{ fecha.strftime('%Y-%m-%d') }}">
+                    <div class="day-name">{{ fecha.strftime('%a') }}</div>
+                    <div class="day-number">{{ fecha.day }}</div>
+                    <div class="month-name">{{ fecha.strftime('%b') }}</div>
                 </div>
                 {% endfor %}
             </div>
+            
+            <div id="horarios-container" class="time-slots-container">
+                <p class="instruction-message">Selecciona un barbero y servicio para ver los horarios disponibles.</p>
+            </div>
         </div>
         
-        <div class="values-section">
-            <h3>Nuestros Valores</h3>
-            <div class="values-container">
-                <div class="value">
-                    <h4>Excelencia</h4>
-                    <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
+        <!-- Panel de confirmación (oculto inicialmente) -->
+        <div class="booking-confirmation" id="booking-confirmation" style="display: none;">
+            <h3>Confirma tu Cita</h3>
+            <div class="booking-details" id="booking-details">
+                <p><strong>Barbero:</strong> <span id="confirm-barbero"></span></p>
+                <p><strong>Servicio:</strong> <span id="confirm-servicio"></span></p>
+                <p><strong>Fecha:</strong> <span id="confirm-fecha"></span></p>
+                <p><strong>Hora:</strong> <span id="confirm-hora"></span></p>
+            </div>
+
+            <!-- Formulario de Información del Cliente -->
+            <div class="client-info" id="client-info-form" style="margin-top: 1.5rem;">
+                <h4>Tus Datos</h4>
+                <div class="form-group">
+                    <label for="client-name" class="form-label">Nombre Completo:</label>
+                    <input type="text" id="client-name" name="client_name" class="form-input" required>
                 </div>
-                <div class="value">
-                    <h4>Tradición</h4>
-                    <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
+                <div class="form-group">
+                    <label for="client-email" class="form-label">Correo Electrónico:</label>
+                    <input type="email" id="client-email" name="client_email" class="form-input" required>
                 </div>
-                <div class="value">
-                    <h4>Innovación</h4>
-                    <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
+                <div class="form-group">
+                    <label for="client-phone" class="form-label">Teléfono:</label>
+                    <input type="tel" id="client-phone" name="client_phone" class="form-input" required>
+                </div>
+                <!-- Hidden fields para pasar IDs -->
+                <input type="hidden" id="selected-barbero-id" name="barbero_id">
+                <input type="hidden" id="selected-servicio-id" name="servicio_id">
+                <input type="hidden" id="selected-date" name="fecha">
+                <input type="hidden" id="selected-time" name="hora">
+            </div>
+
+            <button id="confirm-booking" class="book-button">Confirmar Cita</button>
+            <button type="button" class="cancel-button" onclick="hideConfirmationPanel()">Cancelar</button>
+        </div>
+    </section>
+
+    <!-- Sección Acerca de Nosotros -->
+    <section id="about-section" class="about-section">
+        <div class="about-container">
+            <div class="section-title">
+                <h2>Acerca de Nosotros</h2>
+                <p>Tradición y excelencia en cada corte</p>
+            </div>
+            
+            <div class="about-content">
+                <h3>La historia de La Barber Brothers: un viaje de pasión y dedicación</h3>
+                <p>En el año 2017, dos hermanos apasionados por el arte de la barbería decidimos unirnos para crear un espacio donde los hombres pudieran sentirse orgullosos de su apariencia y relajados en un ambiente acogedor. Así nació La Barber Brothers, un lugar donde la tradición y la innovación se unen para ofrecer experiencias únicas.</p>
+                <p>Desde nuestros inicios, nos hemos esforzado por brindar servicios de alta calidad, desde cortes de pelo precisos hasta afeitados suaves y relajantes. Nuestros barberos han sido entrenados para entender las necesidades de cada cliente y ofrecer soluciones personalizadas.</p>
+                <p>A lo largo de los años, hemos visto a hombres de todas las edades y estilos pasar por nuestras puertas, cada uno con su propia historia y necesidades. Hemos sido testigos de momentos importantes, como bodas y graduaciones, y hemos ayudado a nuestros clientes a sentirse seguros y confiados en su apariencia.</p>
+                <p>La Barber Brothers no es solo un lugar para cortarse el pelo o afeitarse; es un espacio donde los hombres pueden relajarse, socializar y sentirse parte de una comunidad. Hemos creado un ambiente acogedor y masculino, donde se puede disfrutar de una buena conversación y un servicio de alta calidad.</p>
+                <p>Hoy en día, La Barber Brothers es un lugar emblemático en la comunidad, conocido por su atención al detalle y su compromiso con la excelencia. Estamos orgullosos de haber podido crecer y evolucionar junto con nuestros clientes, y estamos emocionados de ver lo que el futuro nos depara.</p>
+                <p>Gracias a todos nuestros clientes por haber sido parte de esta historia. Estamos comprometidos con seguir ofreciendo servicios de alta calidad y hacer que cada visita a La Barber Brothers sea una experiencia inolvidable.</p>
+                <p><em>"¡Visítanos y descubre por qué somos la mejor barbería de la ciudad!"</em></p>
+            </div>
+            
+            <div class="team-section">
+                <h3>Nuestro Equipo</h3>
+                <div class="team-members">
+                    {% for barbero in barberos %}
+                    <div class="team-member">
+                        <div class="member-img">
+                            {% if barbero.imagen_url %}
+                            <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}">
+                            {% else %}
+                            <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850" alt="{{ barbero.nombre }}">
+                            {% endif %}
+                        </div>
+                        <h4>{{ barbero.nombre }}</h4>
+                        <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
+                        <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="values-section">
+                <h3>Nuestros Valores</h3>
+                <div class="values-container">
+                    <div class="value">
+                        <h4>Excelencia</h4>
+                        <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
+                    </div>
+                    <div class="value">
+                        <h4>Tradición</h4>
+                        <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
+                    </div>
+                    <div class="value">
+                        <h4>Innovación</h4>
+                        <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+{% endblock %}
 
-<footer>
-    <p>Barber Brothers & copy; 2025</p>
-    <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
-</footer>
-
-<!-- Botón flotante de WhatsApp -->
-<a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
-    <i class="whatsapp-icon">💬</i>
-</a>
-
-<!-- Panel del Carrito -->
-<div class="cart-panel" id="cart-panel">
-    <div class="cart-header">
-        <h3>Tu Carrito</h3>
-        <button class="close-cart" id="close-cart">&times;</button>
-    </div>
-    <div class="cart-items" id="cart-items">
-        <!-- Los productos se añadirán aquí dinámicamente -->
-        <div class="empty-cart">Tu carrito está vacío</div>
-    </div>
-    <div class="cart-footer">
-        <div class="cart-total">
-            <span>Total:</span>
-            <span id="cart-total">€0.00</span>
-        </div>
-        <button class="checkout-button">Finalizar Compra</button>
-    </div>
-</div>
-<div class="cart-overlay" id="cart-overlay"></div>
-<script async src="//www.instagram.com/embed.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot');
-        const prevArrow = document.querySelector('.prev-arrow');
-        const nextArrow = document.querySelector('.next-arrow');
-        let currentSlide = 0;
-        let slideInterval;
-        
-        // Función para mostrar un slide específico
-        function showSlide(index) {
-            // Ocultar todos los slides
-            slides.forEach(slide => slide.classList.remove('active'));
-            dots.forEach(dot => dot.classList.remove('active'));
+{% block extra_scripts %}
+    <!-- Script de Instagram -->
+    <script async src="//www.instagram.com/embed.js"></script>
+    
+    <!-- Scripts específicos del slider -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            const prevArrow = document.querySelector('.prev-arrow');
+            const nextArrow = document.querySelector('.next-arrow');
+            let currentSlide = 0;
+            let slideInterval;
             
-            // Mostrar el slide actual
-            slides[index].classList.add('active');
-            dots[index].classList.add('active');
-            currentSlide = index;
-        }
-        
-        // Función para ir al siguiente slide
-        function nextSlide() {
-            const newIndex = (currentSlide + 1) % slides.length;
-            showSlide(newIndex);
-        }
-        
-        // Función para ir al slide anterior
-        function prevSlide() {
-            const newIndex = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(newIndex);
-        }
-        
-        // Iniciar slider automático
-        function startSlideInterval() {
-            slideInterval = setInterval(nextSlide, 8000);
-        }
-        
-        // Detener slider automático
-        function stopSlideInterval() {
-            clearInterval(slideInterval);
-        }
-        
-        // Event listeners para controles
-        prevArrow.addEventListener('click', function() {
-            prevSlide();
-            stopSlideInterval();
-            startSlideInterval();
-        });
-        
-        nextArrow.addEventListener('click', function() {
-            nextSlide();
-            stopSlideInterval();
-            startSlideInterval();
-        });
-        
-        // Event listeners para puntos indicadores
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', function() {
-                showSlide(index);
+            function showSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                slides[index].classList.add('active');
+                dots[index].classList.add('active');
+                currentSlide = index;
+            }
+            
+            function nextSlide() {
+                const newIndex = (currentSlide + 1) % slides.length;
+                showSlide(newIndex);
+            }
+            
+            function prevSlide() {
+                const newIndex = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(newIndex);
+            }
+            
+            function startSlideInterval() {
+                slideInterval = setInterval(nextSlide, 8000);
+            }
+            
+            function stopSlideInterval() {
+                clearInterval(slideInterval);
+            }
+            
+            prevArrow.addEventListener('click', function() {
+                prevSlide();
                 stopSlideInterval();
                 startSlideInterval();
             });
-        });
-        
-        // Pausar slider al pasar el mouse
-        document.querySelector('.hero-slider').addEventListener('mouseenter', stopSlideInterval);
-        document.querySelector('.hero-slider').addEventListener('mouseleave', startSlideInterval);
-        
-        // Iniciar el slider
-        startSlideInterval();
-    });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Manejo de anclajes con scroll suave
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                const targetId = this.getAttribute('href').substring(1);
-                const targetElement = document.getElementById(targetId);
-                
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 100, // Offset para no quedar exactamente al borde
-                        behavior: 'smooth'
-                    });
-                }
+            
+            nextArrow.addEventListener('click', function() {
+                nextSlide();
+                stopSlideInterval();
+                startSlideInterval();
             });
-        });
-    });
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Elementos del DOM
-        const cartButton = document.getElementById('cart-button');
-        const cartPanel = document.getElementById('cart-panel');
-        const cartOverlay = document.getElementById('cart-overlay');
-        const closeCart = document.getElementById('close-cart');
-        const cartItems = document.getElementById('cart-items');
-        const cartCount = document.querySelector('.cart-count');
-        const cartTotal = document.getElementById('cart-total');
-        
-        // Carrito de compras
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
-        
-        // Actualizar contador del carrito
-        function updateCartCount() {
-            const count = cart.reduce((total, item) => total + item.quantity, 0);
-            cartCount.textContent = count;
-        }
-        
-        // Calcular total del carrito
-        function calculateTotal() {
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cartTotal.textContent = `€${total.toFixed(2)}`;
-        }
-        
-        // Renderizar los productos en el carrito
-        function renderCart() {
-            if (cart.length === 0) {
-                cartItems.innerHTML = '<div class="empty-cart">Tu carrito está vacío</div>';
-                return;
-            }
             
-            cartItems.innerHTML = cart.map(item => `
-                <div class="cart-item" data-id="${item.id}">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
-                    <div class="cart-item-details">
-                        <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">€${item.price.toFixed(2)}</div>
-                        <div class="cart-item-quantity">
-                            <button class="quantity-btn decrease">-</button>
-                            <input type="text" class="quantity-input" value="${item.quantity}" readonly>
-                            <button class="quantity-btn increase">+</button>
-                        </div>
-                    </div>
-                    <button class="remove-item">&times;</button>
-                </div>
-            `).join('');
-            
-            // Añadir event listeners para los botones de cantidad
-            document.querySelectorAll('.increase').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.closest('.cart-item').dataset.id;
-                    const item = cart.find(item => item.id === id);
-                    item.quantity++;
-                    updateCart();
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', function() {
+                    showSlide(index);
+                    stopSlideInterval();
+                    startSlideInterval();
                 });
             });
             
-            document.querySelectorAll('.decrease').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.closest('.cart-item').dataset.id;
-                    const item = cart.find(item => item.id === id);
-                    if (item.quantity > 1) {
-                        item.quantity--;
-                        updateCart();
+            document.querySelector('.hero-slider').addEventListener('mouseenter', stopSlideInterval);
+            document.querySelector('.hero-slider').addEventListener('mouseleave', startSlideInterval);
+            
+            startSlideInterval();
+        });
+    </script>
+    
+    <!-- Scripts para scroll suave -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
                     }
                 });
             });
-            
-            document.querySelectorAll('.remove-item').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.closest('.cart-item').dataset.id;
-                    cart = cart.filter(item => item.id !== id);
-                    updateCart();
-                });
-            });
-        }
-        
-        // Actualizar el carrito y localStorage
-        function updateCart() {
-            localStorage.setItem('cart', JSON.stringify(cart));
-            renderCart();
-            updateCartCount();
-            calculateTotal();
-        }
-        
-        // Abrir/cerrar panel del carrito
-        cartButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            cartPanel.classList.add('open');
-            cartOverlay.classList.add('open');
-            renderCart();
-            calculateTotal();
         });
-        
-        closeCart.addEventListener('click', function() {
-            cartPanel.classList.remove('open');
-            cartOverlay.classList.remove('open');
-        });
-        
-        cartOverlay.addEventListener('click', function() {
-            cartPanel.classList.remove('open');
-            cartOverlay.classList.remove('open');
-        });
-        
-        // Añadir productos al carrito
-        document.querySelectorAll('.add-to-cart').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.dataset.id;
-                const name = this.dataset.name;
-                const price = parseFloat(this.dataset.price);
-                const image = this.dataset.image;
-                
-                // Comprobar si el producto ya está en el carrito
-                const existingItem = cart.find(item => item.id === id);
-                
-                if (existingItem) {
-                    existingItem.quantity++;
-                } else {
-                    cart.push({
-                        id,
-                        name,
-                        price,
-                        image,
-                        quantity: 1
-                    });
-                }
-                
-                // Efecto visual de confirmación
-                const originalText = this.textContent;
-                this.textContent = '¡Añadido!';
-                this.classList.add('added');
-                
-                setTimeout(() => {
-                    this.textContent = originalText;
-                    this.classList.remove('added');
-                }, 1500);
-                
-                updateCart();
-            });
-        });
-        
-        // Inicializar contador del carrito al cargar la página
-        updateCartCount();
-    });
-</script>
-<script>
-    // ... existing script ...
-
-    // Función para ocultar el panel (si añades el botón cancelar)
-    function hideConfirmationPanel() {
-        const bookingConfirmation = document.getElementById('booking-confirmation');
-        if (bookingConfirmation) {
-            bookingConfirmation.style.display = 'none';
+    </script>
+    
+    <!-- Función para ocultar panel de confirmación -->
+    <script>
+        function hideConfirmationPanel() {
+            const bookingConfirmation = document.getElementById('booking-confirmation');
+            if (bookingConfirmation) {
+                bookingConfirmation.style.display = 'none';
+            }
+            const clientForm = document.getElementById('client-info-form');
+            if (clientForm) {
+                const inputs = clientForm.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"]');
+                inputs.forEach(input => input.value = '');
+            }
         }
-        // Opcional: resetear campos del formulario de cliente
-        const clientForm = document.getElementById('client-info-form');
-        if (clientForm) {
-            clientForm.reset(); // Si es un <form>, o limpiar inputs manualmente
-        }
-    }
-
-    // Asegúrate que tu función showConfirmation en booking.js
-    // haga visible el div 'booking-confirmation'
-    // Ejemplo (dentro de booking.js, en showConfirmation):
-    // bookingConfirmation.style.display = 'block';
-    // bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
-
-</script>
-<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
-<script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-<!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
-{% include 'public/includes/menu_conflict_fix.html' %}
-<!-- Añade esto antes de cerrar el body -->
-<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-</body>
-</html>
+    </script>
+    
+    <!-- Script de reservas -->
+    <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

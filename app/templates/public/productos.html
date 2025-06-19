@@ -1,60 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbería - Productos</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
-</head>
-<body>
-    <header>
-    <div class="header-container">
-        <div class="logo">
-            <img src="/static/logo.png" alt="Barbería Clásica">
-        </div>
+{% extends "public/public_base.html" %}
 
-        <!-- Navegación Desktop (NUEVA) -->
-        <nav class="desktop-menu">
-            <ul>
-                <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                <li class="cart-icon"> 
-                    <a href="#" id="cart-button">
-                        <i class="cart-symbol">🛒</i>
-                        <span class="cart-count">0</span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
+{% block title %}Barbería - Productos{% endblock %}
 
-        <!-- Botón Hamburguesa (Solo para móvil) -->
-        <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
-            <span class="menu-toggle-icon"></span>
-        </button>
-
-        <!-- Menú Móvil (Separado) -->
-        <div class="mobile-menu" id="mobile-menu">
-            <ul>
-                <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                <li class="cart-icon"> 
-                    <a href="#" id="cart-button-mobile">
-                        <i class="cart-symbol">🛒</i>
-                        <span class="cart-count">0</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</header>
+{% block content %}
     <div class="page-title">
         <h1>Nuestros Productos</h1>
         <p>La mejor selección para lucir impecable</p>
@@ -92,39 +40,4 @@
             <p>No hay productos disponibles en este momento. Por favor, vuelve a consultar más tarde.</p>
         </section>
     {% endif %}
-    
-    <footer>
-        <p>Barber Brothers & copy; 2025</p>
-        <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
-    </footer>
-    
-    <!-- Botón flotante de WhatsApp -->
-    <a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
-        <i class="whatsapp-icon">💬</i>
-    </a>
-
-    <!-- Panel del Carrito -->
-    <div class="cart-panel" id="cart-panel">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button class="close-cart" id="close-cart">&times;</button>
-        </div>
-        <div class="cart-items" id="cart-items">
-            <!-- Los productos se añadirán aquí dinámicamente -->
-            <div class="empty-cart">Tu carrito está vacío</div>
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total">COP 0</span>
-            </div>
-            <button class="checkout-button">Finalizar Compra</button>
-        </div>
-    </div>
-    <div class="cart-overlay" id="cart-overlay"></div>    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-    <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
-    {% include 'public/includes/menu_conflict_fix.html' %}
-    <!-- Añade esto antes de cerrar el body -->
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-</body>
-</html>
+{% endblock %}

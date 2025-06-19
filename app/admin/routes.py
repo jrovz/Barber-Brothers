@@ -405,8 +405,20 @@ def gestionar_barberos():
             especialidad=form.especialidad.data,
             descripcion=form.descripcion.data,
             activo=form.activo.data,
-            imagen_url=imagen_url
+            imagen_url=imagen_url,
+            tiene_acceso_web=form.tiene_acceso_web.data
         )
+        
+        # Configurar acceso web si está habilitado
+        if form.tiene_acceso_web.data:
+            if form.username.data:
+                nuevo_barbero.username = form.username.data
+            else:
+                nuevo_barbero.generate_username()
+            
+            if form.password.data:
+                nuevo_barbero.set_password(form.password.data)
+        
         db.session.add(nuevo_barbero)
         try:
             db.session.commit()
@@ -432,10 +444,29 @@ def editar_barbero(id):
     form = BarberoForm(obj=barbero if request.method == 'GET' else None)
     
     if form.validate_on_submit():
+        # Añadir barbero_id al form para validación de username
+        form.barbero_id = barbero.id
+        
         barbero.nombre = form.nombre.data
         barbero.especialidad = form.especialidad.data
         barbero.descripcion = form.descripcion.data
         barbero.activo = form.activo.data
+        barbero.tiene_acceso_web = form.tiene_acceso_web.data
+        
+        # Configurar acceso web
+        if form.tiene_acceso_web.data:
+            if form.username.data:
+                barbero.username = form.username.data
+            elif not barbero.username:
+                barbero.generate_username()
+            
+            if form.password.data:
+                barbero.set_password(form.password.data)
+        else:
+            # Si se desactiva el acceso web, limpiar credenciales
+            barbero.username = None
+            barbero.password_hash = None
+            barbero.tiene_acceso_web = False
         
         if form.imagen_file.data:
             imagen_url = save_image(form.imagen_file.data, 'barberos')
@@ -459,7 +490,9 @@ def editar_barbero(id):
         form.especialidad.data = barbero.especialidad
         form.descripcion.data = barbero.descripcion
         form.activo.data = barbero.activo
-        # form.imagen_url.data = barbero.imagen_url # If you have this field
+        form.tiene_acceso_web.data = barbero.tiene_acceso_web
+        form.username.data = barbero.username
+        # No precargar la contraseña por seguridad
 
     return render_template('admin/editar_barbero.html', 
                           title="Editar Barbero", 
@@ -555,12 +588,12 @@ def crear_disponibilidad_predeterminada(barbero_id):
         abort(403)
     barbero = Barbero.query.get_or_404(barbero_id)
     horario_estandar = {
-        0: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Lunes
-        1: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Martes
-        2: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Miércoles
-        3: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Jueves
-        4: [(time(9, 0), time(13, 0)), (time(14, 0), time(18, 0))], # Viernes
-        5: [(time(9, 0), time(14, 0))]                             # Sábado
+        0: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Lunes
+        1: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Martes
+        2: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Miércoles
+        3: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Jueves
+        4: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Viernes
+        5: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))] # Sábado
     }
     try:
         # Optional: Delete existing before adding defaults

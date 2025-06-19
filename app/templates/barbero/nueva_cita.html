@@ -1,0 +1,157 @@
+{% extends "barbero/barbero_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <p style="color: var(--color-text-muted);">Crear una nueva cita para {{ barbero.nombre }}</p>
+</div>
+
+{# Mostrar mensajes flash #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <form method="POST" action="{{ url_for('barbero.nueva_cita') }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-grid">
+            <!-- Información del cliente -->
+            <div class="form-group">
+                {{ form.cliente_nombre.label(class="form-label") }}
+                {{ form.cliente_nombre(class="form-input", placeholder="Nombre completo del cliente") }}
+                {% for error in form.cliente_nombre.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.cliente_email.label(class="form-label") }}
+                {{ form.cliente_email(class="form-input", placeholder="correo@ejemplo.com") }}
+                {% for error in form.cliente_email.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small class="form-text text-muted">Si el email ya existe, se usará el cliente existente</small>
+            </div>
+            
+            <!-- Información del servicio -->
+            <div class="form-group">
+                {{ form.servicio_id.label(class="form-label") }}
+                {{ form.servicio_id(class="form-input") }}
+                {% for error in form.servicio_id.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+            
+            <!-- Estado inicial -->
+            <div class="form-group">
+                {{ form.estado.label(class="form-label") }}
+                {{ form.estado(class="form-input") }}
+                {% for error in form.estado.errors %}<span class="error">{{ error }}</span>{% endfor %}
+            </div>
+        </div>
+        
+        <!-- Selección de fecha y hora -->
+        <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <h3 style="color: var(--color-text-accent); margin-bottom: 1rem;">📅 Fecha y Hora</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Seleccionar Fecha</label>
+                <input type="date" id="fecha_cita" class="form-input" required min="{{ fecha_hoy }}" style="max-width: 300px;">
+                <small class="form-text text-muted">Selecciona una fecha para ver los horarios disponibles</small>
+            </div>
+            
+            <div class="form-group" id="horarios_container" style="display: none;">
+                <label class="form-label">Horarios Disponibles</label>
+                <div id="time_slots" class="admin-time-slots">
+                    <div class="instruction-message">Selecciona una fecha para ver los horarios disponibles</div>
+                </div>
+                <input type="hidden" id="fecha_hora_seleccionada" name="fecha_hora" required>
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+            {{ form.submit(class="btn", id="submit_btn", disabled=True) }}
+            <a href="{{ url_for('barbero.mis_citas') }}" class="btn btn-outline">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInput = document.getElementById('fecha_cita');
+    const horariosContainer = document.getElementById('horarios_container');
+    const timeSlotsContainer = document.getElementById('time_slots');
+    const fechaHoraInput = document.getElementById('fecha_hora_seleccionada');
+    const submitBtn = document.getElementById('submit_btn');
+    
+    // Configurar fecha mínima (hoy)
+    const today = new Date();
+    const minDate = today.toISOString().split('T')[0];
+    fechaInput.min = minDate;
+    
+    // Cuando cambia la fecha
+    fechaInput.addEventListener('change', function() {
+        const selectedDate = this.value;
+        if (!selectedDate) {
+            horariosContainer.style.display = 'none';
+            return;
+        }
+        
+        // Mostrar loading
+        timeSlotsContainer.innerHTML = '<div class="instruction-message">Cargando horarios disponibles...</div>';
+        horariosContainer.style.display = 'block';
+        
+        // Hacer petición AJAX para obtener horarios
+        fetch(`/api/barbero/{{ barbero.id }}/horarios-disponibles?fecha=${selectedDate}`)
+            .then(response => response.json())
+            .then(data => {
+                timeSlotsContainer.innerHTML = '';
+                
+                if (data.success && data.horarios.length > 0) {
+                    data.horarios.forEach(horario => {
+                        const slot = document.createElement('div');
+                        slot.className = 'time-slot';
+                        slot.textContent = horario.hora;
+                        slot.dataset.datetime = horario.datetime;
+                        
+                        slot.addEventListener('click', function() {
+                            // Deseleccionar otros slots
+                            document.querySelectorAll('.time-slot.selected').forEach(s => {
+                                s.classList.remove('selected');
+                            });
+                            
+                            // Seleccionar este slot
+                            this.classList.add('selected');
+                            fechaHoraInput.value = this.dataset.datetime;
+                            submitBtn.disabled = false;
+                        });
+                        
+                        timeSlotsContainer.appendChild(slot);
+                    });
+                } else {
+                    timeSlotsContainer.innerHTML = '<div class="error-message">No hay horarios disponibles para esta fecha</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                timeSlotsContainer.innerHTML = '<div class="error-message">Error al cargar horarios. Inténtalo de nuevo.</div>';
+            });
+    });
+    
+    // Validación del formulario
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        if (!fechaHoraInput.value) {
+            e.preventDefault();
+            alert('Por favor selecciona una fecha y hora para la cita.');
+            return false;
+        }
+        
+        // Cambiar texto del botón
+        submitBtn.textContent = 'Creando cita...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %} 

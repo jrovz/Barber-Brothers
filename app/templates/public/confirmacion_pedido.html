@@ -1,0 +1,216 @@
+{% extends "public/public_base.html" %}
+
+{% block title %}Pedido Confirmado - Barber Brothers{% endblock %}
+
+{% block content %}
+<div class="confirmation-page">
+    <div class="confirmation-container">
+        <div class="confirmation-success">
+            <div class="success-icon">✓</div>
+            <h1 class="confirmation-title">¡Pedido Confirmado!</h1>
+            
+            <div class="appointment-details">
+                <h3 class="details-title">📋 Detalles del Pedido</h3>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Número de Pedido:</span>
+                    <span class="detail-value"><strong>{{ pedido.numero_pedido }}</strong></span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Cliente:</span>
+                    <span class="detail-value">{{ pedido.cliente_nombre }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{{ pedido.cliente_email }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Teléfono:</span>
+                    <span class="detail-value">{{ pedido.cliente_telefono }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Fecha del Pedido:</span>
+                    <span class="detail-value">{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</span>
+                </div>
+                
+                <div class="detail-item">
+                    <span class="detail-label">Total:</span>
+                    <span class="detail-value"><strong>{{ pedido.total|cop_format }}</strong></span>
+                </div>
+                
+                {% if pedido.notas %}
+                <div class="detail-item">
+                    <span class="detail-label">Notas:</span>
+                    <span class="detail-value">{{ pedido.notas }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="order-items">
+                <h4>📦 Productos Pedidos</h4>
+                {% for item in pedido.items %}
+                <div class="order-item">
+                    <div class="item-details">
+                        <span class="item-name">{{ item.producto_nombre }}</span>
+                        <span class="item-quantity">Cantidad: {{ item.cantidad }}</span>
+                    </div>
+                    <span class="item-price">{{ item.subtotal|cop_format }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="confirmation-message">
+                <h3>📍 Instrucciones de Recogida</h3>
+                <p><strong>Tu pedido estará listo para recoger en nuestra barbería:</strong></p>
+                <p>📍 <strong>Manzana A casa N•5 Arkambuco</strong></p>
+                <p>📞 <strong>3102160496</strong></p>
+                
+                <h4>⏰ Horarios de Atención</h4>
+                <p>• Lunes a Sábado: 8:00 AM - 6:00 PM</p>
+                <p>• Domingo: Cerrado</p>
+                
+                <h4>💰 Modalidad de Pago</h4>
+                <p><strong>El pago se realiza en efectivo al momento de recoger tu pedido.</strong></p>
+                
+                <div class="pickup-note">
+                    <h4>📝 Nota Importante</h4>
+                    <p>• Tu pedido estará listo en aproximadamente <strong>2-3 horas</strong> después de confirmado.</p>
+                    <p>• Te recomendamos llamar antes de venir para confirmar que esté listo.</p>
+                    <p>• Conserva el número de pedido <strong>{{ pedido.numero_pedido }}</strong> para referencia.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="confirmation-actions">
+            <a href="{{ url_for('public.productos') }}" class="btn btn-secondary">
+                🛒 Seguir Comprando
+            </a>
+            <a href="{{ url_for('public.home') }}" class="btn btn-primary">
+                🏠 Volver al Inicio
+            </a>
+            <a href="https://wa.me/573102160496?text=Hola,%20tengo%20el%20pedido%20{{ pedido.numero_pedido }}%20¿está%20listo%20para%20recoger?" 
+               class="btn btn-whatsapp" target="_blank">
+                💬 Contactar por WhatsApp
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.order-items {
+    background: var(--color-bg-dark);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    border: 1px solid var(--color-border);
+}
+
+.order-items h4 {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.3rem;
+}
+
+.item-quantity {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-price {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.pickup-note {
+    background: linear-gradient(135deg, var(--color-bg-medium), var(--color-bg-dark));
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--color-accent);
+    margin-top: 1.5rem;
+}
+
+.pickup-note h4 {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+}
+
+.pickup-note p {
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+}
+
+.btn-whatsapp {
+    background: #25D366;
+    color: white;
+    border: none;
+}
+
+.btn-whatsapp:hover {
+    background: #128C7E;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(37, 211, 102, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .confirmation-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .confirmation-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .item-price {
+        align-self: flex-end;
+    }
+}
+</style>
+
+<script>
+// Limpiar el carrito después de confirmar el pedido
+document.addEventListener('DOMContentLoaded', function() {
+    localStorage.removeItem('cart');
+    
+    // También actualizar el contador del carrito en la UI
+    const cartCounts = document.querySelectorAll('.cart-count');
+    cartCounts.forEach(count => count.textContent = '0');
+});
+</script>
+{% endblock %} 

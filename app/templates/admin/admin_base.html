@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ title }} | Barber Brothers Admin</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,9 +15,17 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     </head>
 <body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Abrir menú de navegación">
+        ☰
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+    
     <div class="admin-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="admin-sidebar">
             <div class="admin-logo">
                 <img src="{{ url_for('static', filename='logo.png') }}" alt="Barber Brothers Logo">
                 <h3 class="admin-title">Panel Admin</h3>
@@ -50,47 +59,388 @@
         </main>
     </div>
     <script>
-        // Aquí puedes añadir código JavaScript para mejorar la interactividad
-        // Por ejemplo, confirmación antes de eliminar, formulario de edición, etc.
+        // Event delegation para botones dinámicos (desktop y móvil)
         document.addEventListener('DOMContentLoaded', function() {
-            // Seleccionar todos los botones de eliminar DENTRO de las tablas de datos
-            // Es mejor ser más específico si tienes otros botones .btn-delete fuera de las tablas
-            const deleteButtons = document.querySelectorAll('.data-table .btn-delete'); 
-            
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function(event) {
-                    // Prevenir el envío INMEDIATO del formulario (si el botón es type="submit")
-                    event.preventDefault(); 
+                         // Usar event delegation para manejar clics en botones de eliminar
+             // Esto funciona tanto para elementos originales como para los generados dinámicamente
+             document.addEventListener('click', function(event) {
+                 // Debug: Log de todos los clics para verificar
+                 if (event.target.matches('.btn') || event.target.closest('.btn')) {
+                     console.log('Botón clickeado:', event.target, 'Clases:', event.target.className);
+                 }
+                 
+                 // Verificar si el elemento clickeado es un botón de eliminar
+                 if (event.target.matches('.btn-delete') || event.target.closest('.btn-delete')) {
+                    const button = event.target.matches('.btn-delete') ? event.target : event.target.closest('.btn-delete');
+                    
+                    // Prevenir el envío inmediato del formulario
+                    event.preventDefault();
+                    event.stopPropagation();
 
                     // Mostrar diálogo de confirmación
-                    // Puedes personalizar el mensaje si quieres, quizás usando data-attributes en el botón
                     const confirmationMessage = button.dataset.confirmMessage || '¿Estás seguro de que deseas eliminar este elemento?';
 
                     if (confirm(confirmationMessage)) {
-                        // Si el usuario confirma:
-                        // 1. Encontrar el formulario padre del botón que fue clickeado
-                        const form = event.target.closest('form'); 
+                        // Encontrar el formulario padre
+                        const form = button.closest('form');
                         
-                        // 2. Si se encontró el formulario, enviarlo
                         if (form) {
-                            console.log('Enviando formulario de eliminación...'); // Mensaje para depuración
-                            form.submit(); 
+                            console.log('Enviando formulario de eliminación...');
+                            form.submit();
                         } else {
                             console.error('No se encontró el formulario asociado al botón de eliminar.');
                         }
                     } else {
-                        // Si el usuario cancela, no hacer nada.
-                        console.log('Eliminación cancelada por el usuario.'); // Mensaje para depuración
+                        console.log('Eliminación cancelada por el usuario.');
+                    }
+                }
+                
+                // Manejar botones de editar (tanto en tablas como en cards móviles)
+                if (event.target.matches('.btn-edit') || event.target.closest('.btn-edit')) {
+                    const button = event.target.matches('.btn-edit') ? event.target : event.target.closest('.btn-edit');
+                    
+                    // Si es un enlace, permitir navegación normal
+                    if (button.tagName === 'A' && button.href) {
+                        // Permitir navegación normal
+                        return true;
+                    }
+                    
+                    // Si es un botón dentro de un formulario, enviarlo
+                    if (button.tagName === 'BUTTON') {
+                        const form = button.closest('form');
+                        if (form) {
+                            event.preventDefault();
+                            form.submit();
+                        }
+                    }
+                }
+            });
+            
+            // Event delegation para formularios de edición rápida (si los hay)
+            document.addEventListener('submit', function(event) {
+                const form = event.target;
+                
+                // Verificar si es un formulario de eliminación
+                if (form.querySelector('.btn-delete')) {
+                    // Ya manejado por el event listener de click
+                    return;
+                }
+                
+                // Aquí puedes añadir lógica adicional para otros tipos de formularios
+            });
+            
+            // Mejorar experiencia en móvil
+            if (window.innerWidth <= 768) {
+                // Añadir clase para identificar que estamos en móvil
+                document.body.classList.add('mobile-admin');
+                
+                // Mejorar feedback visual en móvil
+                document.addEventListener('touchstart', function(event) {
+                    if (event.target.matches('.btn') || event.target.closest('.btn')) {
+                        const button = event.target.matches('.btn') ? event.target : event.target.closest('.btn');
+                        button.classList.add('btn-pressed');
                     }
                 });
-            });
+                
+                document.addEventListener('touchend', function(event) {
+                    if (event.target.matches('.btn') || event.target.closest('.btn')) {
+                        const button = event.target.matches('.btn') ? event.target : event.target.closest('.btn');
+                        setTimeout(() => {
+                            button.classList.remove('btn-pressed');
+                        }, 150);
+                    }
+                });
+            }
         });
     </script>    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script> {# Opcional: para idioma español #}
+    
+    <!-- Mobile JavaScript for responsive features -->
+    <script>
+        // Admin Mobile JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            function isMobile() {
+                return window.innerWidth <= 768;
+            }
+            
+            function convertTablesToCards() {
+                if (!isMobile()) return;
+                
+                const tables = document.querySelectorAll('.data-table');
+                tables.forEach(table => {
+                    if (table.classList.contains('mobile-converted')) return;
+                    
+                    const container = table.closest('.data-table-container');
+                    if (!container) return;
+                    
+                    const cardsContainer = document.createElement('div');
+                    cardsContainer.className = 'mobile-cards-container';
+                    cardsContainer.style.display = 'none';
+                    
+                    const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+                    
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        
+                        const card = document.createElement('div');
+                        card.className = 'mobile-card';
+                        
+                        const cardHeader = document.createElement('div');
+                        cardHeader.className = 'mobile-card-header';
+                        
+                        const cardTitle = document.createElement('div');
+                        cardTitle.className = 'mobile-card-title';
+                        cardTitle.textContent = cells[0]?.textContent.trim() || 'Sin título';
+                        
+                                                 const actionsCell = cells[cells.length - 1];
+                         const cardActions = document.createElement('div');
+                         cardActions.className = 'mobile-card-actions';
+                         
+                         console.log('🔍 Procesando acciones para fila:', row);
+                         console.log('📍 Celda de acciones encontrada:', !!actionsCell);
+                         
+                         if (actionsCell) {
+                             console.log('📄 Contenido HTML de la celda:', actionsCell.innerHTML);
+                             
+                             // Estrategia simple: clonar todo el contenido de la celda de acciones
+                             cardActions.innerHTML = actionsCell.innerHTML;
+                             console.log('✅ Contenido clonado a cardActions');
+                             
+                             // Verificar si el contenido se clonó correctamente
+                             if (cardActions.innerHTML.trim() === '') {
+                                 console.log('⚠️ El contenido clonado está vacío, intentando enfoque alternativo');
+                                 
+                                 // Approach alternativo: clonar nodo por nodo
+                                 const children = actionsCell.children;
+                                 for (let i = 0; i < children.length; i++) {
+                                     const clone = children[i].cloneNode(true);
+                                     cardActions.appendChild(clone);
+                                     console.log(`📋 Clonado elemento ${i}:`, clone.outerHTML);
+                                 }
+                             }
+                         } else {
+                             console.log('❌ No se encontró celda de acciones');
+                         }
+                         
+                         // Verificar si cardActions tiene contenido útil
+                         const hasContent = cardActions.children.length > 0 || cardActions.innerHTML.trim() !== '';
+                         console.log('🎯 ¿Tiene contenido cardActions?', hasContent);
+                         
+                         if (!hasContent) {
+                             console.log('🔧 Creando botones por defecto...');
+                             
+                             // Buscar ID en la primera celda (común en tablas de admin)
+                             let id = null;
+                             if (cells[0]) {
+                                 const firstCellText = cells[0].textContent.trim();
+                                 if (/^\d+$/.test(firstCellText)) {
+                                     id = firstCellText;
+                                 }
+                             }
+                             
+                             if (id) {
+                                 const currentPath = window.location.pathname.replace(/\/$/, '');
+                                 console.log(`🆔 ID encontrado: ${id}, Ruta: ${currentPath}`);
+                                 
+                                 // Crear botón de editar (siempre visible)
+                                 const editBtn = document.createElement('a');
+                                 editBtn.href = `${currentPath}/editar/${id}`;
+                                 editBtn.className = 'btn btn-edit btn-small';
+                                 editBtn.innerHTML = '📝 Editar';
+                                 editBtn.style.cssText = 'display: inline-block !important; margin-right: 0.5rem;';
+                                 cardActions.appendChild(editBtn);
+                                 
+                                 // Crear botón de eliminar (siempre visible)
+                                 const deleteBtn = document.createElement('button');
+                                 deleteBtn.type = 'button';
+                                 deleteBtn.className = 'btn btn-delete btn-small';
+                                 deleteBtn.innerHTML = '🗑️ Eliminar';
+                                 deleteBtn.style.cssText = 'display: inline-block !important;';
+                                 deleteBtn.onclick = function() {
+                                     if (confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+                                         const form = document.createElement('form');
+                                         form.method = 'POST';
+                                         form.action = `${currentPath}/eliminar/${id}`;
+                                         
+                                         const csrfToken = document.querySelector('meta[name=csrf-token]');
+                                         if (csrfToken) {
+                                             const tokenInput = document.createElement('input');
+                                             tokenInput.type = 'hidden';
+                                             tokenInput.name = 'csrf_token';
+                                             tokenInput.value = csrfToken.getAttribute('content');
+                                             form.appendChild(tokenInput);
+                                         }
+                                         
+                                         document.body.appendChild(form);
+                                         form.submit();
+                                     }
+                                 };
+                                 cardActions.appendChild(deleteBtn);
+                                 
+                                 console.log('✅ Botones por defecto creados exitosamente');
+                             } else {
+                                 console.log('⚠️ No se pudo determinar el ID');
+                                 // Mostrar mensaje de debug visible
+                                 const debugMsg = document.createElement('div');
+                                 debugMsg.innerHTML = '<span style="color: red; font-weight: bold;">DEBUG: Sin acciones</span>';
+                                 cardActions.appendChild(debugMsg);
+                             }
+                         }
+                         
+                         // Forzar visibilidad final
+                         cardActions.style.cssText += 'display: flex !important; visibility: visible !important;';
+                         console.log('🎉 Finalizando procesamiento de acciones. Contenido final:', cardActions.innerHTML);
+                        
+                        cardHeader.appendChild(cardTitle);
+                        cardHeader.appendChild(cardActions);
+                        card.appendChild(cardHeader);
+                        
+                        const cardBody = document.createElement('div');
+                        cardBody.className = 'mobile-card-body';
+                        
+                        headers.forEach((header, index) => {
+                            if (index === 0 || index === headers.length - 1) return;
+                            
+                            const cell = cells[index];
+                            if (!cell) return;
+                            
+                            const field = document.createElement('div');
+                            field.className = 'mobile-card-field';
+                            
+                            const cellText = cell.textContent.trim();
+                            if (cellText.length > 50 || header.toLowerCase().includes('descripcion')) {
+                                field.classList.add('full-width');
+                            }
+                            
+                            const label = document.createElement('div');
+                            label.className = 'mobile-card-label';
+                            label.textContent = header;
+                            
+                            const value = document.createElement('div');
+                            value.className = 'mobile-card-value';
+                            
+                            if (cell.querySelector('img')) {
+                                const img = cell.querySelector('img').cloneNode(true);
+                                img.style.maxWidth = '60px';
+                                img.style.height = 'auto';
+                                value.appendChild(img);
+                            } else if (cell.querySelector('.badge')) {
+                                const badge = cell.querySelector('.badge').cloneNode(true);
+                                value.appendChild(badge);
+                            } else {
+                                value.textContent = cellText;
+                            }
+                            
+                            field.appendChild(label);
+                            field.appendChild(value);
+                            cardBody.appendChild(field);
+                        });
+                        
+                        card.appendChild(cardBody);
+                        console.log('📱 Card móvil completa creada:', card.outerHTML);
+                        cardsContainer.appendChild(card);
+                    });
+                    
+                    container.appendChild(cardsContainer);
+                    table.classList.add('mobile-converted');
+                    updateTableView();
+                });
+            }
+            
+            function updateTableView() {
+                const tables = document.querySelectorAll('.data-table');
+                const cardsContainers = document.querySelectorAll('.mobile-cards-container');
+                
+                if (isMobile()) {
+                    tables.forEach(table => {
+                        if (table.classList.contains('mobile-converted')) {
+                            table.style.display = 'none';
+                        }
+                    });
+                    cardsContainers.forEach(container => {
+                        container.style.display = 'block';
+                    });
+                } else {
+                    tables.forEach(table => table.style.display = 'table');
+                    cardsContainers.forEach(container => {
+                        container.style.display = 'none';
+                    });
+                }
+            }
+            
+            function initMobileFeatures() {
+                convertTablesToCards();
+                updateTableView();
+            }
+            
+            window.addEventListener('resize', function() {
+                setTimeout(updateTableView, 100);
+            });
+            
+            initMobileFeatures();
+        });
+    </script>
     
     <!-- Script personalizado para Dashboard -->
     {% if request.endpoint == 'admin.dashboard' %}
     <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
     {% endif %}
+    
+    <!-- Mobile Menu Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            function openMobileMenu() {
+                sidebar.classList.add('mobile-active');
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.classList.add('active'), 10);
+                mobileToggle.classList.add('open');
+                mobileToggle.innerHTML = '✕';
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeMobileMenu() {
+                sidebar.classList.remove('mobile-active');
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.style.display = 'none', 300);
+                mobileToggle.classList.remove('open');
+                mobileToggle.innerHTML = '☰';
+                document.body.style.overflow = '';
+            }
+            
+            // Toggle menu
+            mobileToggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('mobile-active')) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+            
+            // Close menu when clicking overlay
+            overlay.addEventListener('click', closeMobileMenu);
+            
+            // Close menu when clicking sidebar links (mobile)
+            const sidebarLinks = sidebar.querySelectorAll('a');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        closeMobileMenu();
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
     </body>
 </html>

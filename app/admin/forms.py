@@ -11,6 +11,12 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('Recuérdame')
     submit = SubmitField('Iniciar Sesión')
 
+class BarberoLoginForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired(), Length(min=3, max=80)])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    remember_me = BooleanField('Recuérdame')
+    submit = SubmitField('Acceder')
+
 class CategoriaForm(FlaskForm):
     nombre = StringField('Nombre de la Categoría', validators=[DataRequired(), Length(max=100)])
     submit = SubmitField('Guardar Categoría')
@@ -50,8 +56,38 @@ class BarberoForm(FlaskForm):
     descripcion = TextAreaField('Descripción')
     imagen_file = FileField('Imagen', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Solo imágenes: jpg, png, jpeg')])
     activo = BooleanField('Activo', default=True)
+    
+    # Campos de acceso web
+    tiene_acceso_web = BooleanField('Permitir acceso web', default=False)
+    username = StringField('Usuario (para acceso web)', validators=[Optional(), Length(min=3, max=80)])
+    password = PasswordField('Contraseña (para acceso web)', validators=[Optional(), Length(min=6, max=100)])
+    confirmar_password = PasswordField('Confirmar Contraseña', validators=[Optional()])
+    
     submit = SubmitField('Guardar')
     imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional(), URL(message="URL no válida")])
+    
+    def validate_username(self, username):
+        """Validar que el username sea único"""
+        if self.tiene_acceso_web.data and username.data:
+            from app.models.barbero import Barbero
+            barbero = Barbero.query.filter_by(username=username.data).first()
+            if barbero:
+                # Si estamos editando y el username pertenece al barbero actual, permitirlo
+                if hasattr(self, 'barbero_id') and barbero.id != self.barbero_id:
+                    raise ValidationError('Este nombre de usuario ya está en uso.')
+                elif not hasattr(self, 'barbero_id'):
+                    raise ValidationError('Este nombre de usuario ya está en uso.')
+    
+    def validate_password(self, password):
+        """Validar contraseña si se requiere acceso web"""
+        if self.tiene_acceso_web.data and not password.data:
+            raise ValidationError('La contraseña es obligatoria para el acceso web.')
+    
+    def validate_confirmar_password(self, confirmar_password):
+        """Validar que las contraseñas coincidan"""
+        if self.tiene_acceso_web.data and self.password.data and confirmar_password.data:
+            if self.password.data != confirmar_password.data:
+                raise ValidationError('Las contraseñas no coinciden.')
 class ServicioForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(max=100)])
     descripcion = TextAreaField('Descripción', validators=[Optional(), Length(max=500)])

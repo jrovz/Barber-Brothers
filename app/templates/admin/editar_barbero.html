@@ -68,6 +68,52 @@
             </div>
         </div>
         
+        <!-- Sección de Acceso Web -->
+        <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <h3 style="color: var(--color-text-accent); margin-bottom: 1rem;">🌐 Acceso Web</h3>
+            <div class="form-group" style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                {{ form.tiene_acceso_web(style="margin-right: 0.5rem;", id="toggle_acceso_web") }}
+                {{ form.tiene_acceso_web.label(class="form-label", style="margin-bottom: 0;") }}
+                {% for error in form.tiene_acceso_web.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small style="display: block; margin-top: 0.5rem; color: var(--color-text-muted);">
+                    Permitir que el barbero acceda a su panel web para gestionar sus citas
+                </small>
+            </div>
+            
+            <div id="campos_acceso_web" style="display: none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-input", placeholder="Usuario único para acceso") }}
+                        {% for error in form.username.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                        <small class="form-text text-muted">Si se deja vacío, se generará automáticamente</small>
+                    </div>
+                    <div class="form-group">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-input", placeholder="Nueva contraseña") }}
+                        {% for error in form.password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                        <small class="form-text text-muted">Dejar vacío para mantener la contraseña actual</small>
+                    </div>
+                    <div class="form-group">
+                        {{ form.confirmar_password.label(class="form-label") }}
+                        {{ form.confirmar_password(class="form-input", placeholder="Repetir contraseña") }}
+                        {% for error in form.confirmar_password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+                
+                <div class="alert alert-info" style="margin-top: 1rem;">
+                    <strong>💡 Información:</strong> Con acceso web habilitado, el barbero podrá:
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>Ver y gestionar sus citas asignadas</li>
+                        <li>Cambiar el estado de las citas (pendiente, confirmada, completada, cancelada)</li>
+                        <li>Crear nuevas citas para sus clientes</li>
+                        <li>Ver su horario y estadísticas</li>
+                    </ul>
+                    <strong>URL de acceso:</strong> <code>{{ url_for('barbero.login', _external=True) }}</code>
+                </div>
+            </div>
+        </div>
+        
         <div class="form-group">
             {{ form.descripcion.label(class="form-label") }}
             {{ form.descripcion(class="form-input", rows=3) }}
@@ -105,6 +151,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 preview.style.display = 'block';
             }
         });
+    }
+    
+    // Control de visibilidad de campos de acceso web
+    const toggleAccesoWeb = document.getElementById('toggle_acceso_web');
+    const camposAccesoWeb = document.getElementById('campos_acceso_web');
+    
+    function toggleCamposAcceso() {
+        if (toggleAccesoWeb.checked) {
+            camposAccesoWeb.style.display = 'block';
+        } else {
+            camposAccesoWeb.style.display = 'none';
+        }
+    }
+    
+    if (toggleAccesoWeb && camposAccesoWeb) {
+        // Mostrar campos si ya está marcado al cargar la página
+        toggleCamposAcceso();
+        
+        // Escuchar cambios en el checkbox
+        toggleAccesoWeb.addEventListener('change', toggleCamposAcceso);
     }
 });
 </script>

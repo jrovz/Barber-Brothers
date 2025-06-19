@@ -1,0 +1,380 @@
+{% extends "public/public_base.html" %}
+
+{% block title %}Finalizar Compra - Barber Brothers{% endblock %}
+
+{% block content %}
+<div class="page-title">
+    <h1>Finalizar Compra</h1>
+    <p>Completa tus datos para procesar el pedido</p>
+</div>
+
+<div class="checkout-container">
+    <!-- Información importante -->
+    <div class="checkout-info">
+        <div class="info-card">
+            <h3>📍 Recogida en Barbería</h3>
+            <p>Tu pedido estará listo para recoger en nuestro local:</p>
+            <p><strong>Manzana A casa N•5 Arkambuco</strong></p>
+            <p>📞 <strong>3102160496</strong></p>
+        </div>
+        
+        <div class="info-card">
+            <h4>⏰ Horarios de Atención</h4>
+            <p>Lunes a Sábado: 8:00 AM - 6:00 PM</p>
+            <p>Domingo: Cerrado</p>
+        </div>
+        
+        <div class="info-card payment-info">
+            <h4>💰 Pago en Efectivo</h4>
+            <p>El pago se realiza al momento de recoger el pedido en nuestra barbería.</p>
+            <p><em>¡Gracias por confiar en nosotros!</em></p>
+        </div>
+    </div>
+
+    <!-- Formulario y resumen -->
+    <div class="checkout-main">
+        <!-- Resumen del pedido -->
+        <div class="order-summary">
+            <h3>Resumen del Pedido</h3>
+            <div id="checkout-cart-items">
+                <!-- Se llena dinámicamente con JavaScript -->
+            </div>
+            <div class="order-total">
+                <strong>Total: <span id="checkout-total">COP 0</span></strong>
+            </div>
+        </div>
+
+        <!-- Formulario de datos del cliente -->
+        <div class="customer-form">
+            <h3>Datos del Cliente</h3>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" id="checkout-form">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-group">
+                    {{ form.nombre.label(class="form-label") }}
+                    {{ form.nombre(class="form-control") }}
+                    {% if form.nombre.errors %}
+                        <div class="error-messages">
+                            {% for error in form.nombre.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-control", type="email") }}
+                    {% if form.email.errors %}
+                        <div class="error-messages">
+                            {% for error in form.email.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.telefono.label(class="form-label") }}
+                    {{ form.telefono(class="form-control", type="tel") }}
+                    {% if form.telefono.errors %}
+                        <div class="error-messages">
+                            {% for error in form.telefono.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    {{ form.notas.label(class="form-label") }}
+                    {{ form.notas(class="form-control", rows="3", placeholder="Alguna nota especial para tu pedido...") }}
+                    {% if form.notas.errors %}
+                        <div class="error-messages">
+                            {% for error in form.notas.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Campo oculto para los datos del carrito -->
+                <input type="hidden" name="cart_data" id="cart_data">
+
+                <div class="form-actions">
+                    <a href="{{ url_for('public.productos') }}" class="btn btn-secondary">
+                        ← Seguir Comprando
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="place-order-btn">
+                        Confirmar Pedido 🛒
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.checkout-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.checkout-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: var(--color-bg-card);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-soft);
+}
+
+.info-card h3, .info-card h4 {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.payment-info {
+    background: linear-gradient(135deg, var(--color-bg-card), var(--color-bg-light));
+    border-left: 4px solid var(--color-accent);
+}
+
+.checkout-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.order-summary {
+    background: var(--color-bg-dark);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.order-summary h3 {
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.checkout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.checkout-item:last-child {
+    border-bottom: none;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.item-quantity {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.item-price {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+.order-total {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-accent);
+    text-align: right;
+    font-size: 1.2rem;
+    color: var(--color-text-primary);
+}
+
+.customer-form {
+    background: var(--color-bg-light);
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.customer-form h3 {
+    color: var(--color-accent);
+    margin-bottom: 1.5rem;
+    font-family: 'Playfair Display', serif;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    border-color: var(--color-accent);
+}
+
+.btn-primary {
+    background: var(--color-accent);
+    color: var(--color-bg-dark);
+    border: none;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: var(--color-accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(179, 150, 86, 0.4);
+}
+
+.alert {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: rgba(40, 167, 69, 0.1);
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.error-messages {
+    margin-top: 0.5rem;
+}
+
+.error-message {
+    display: block;
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .checkout-container {
+        grid-template-columns: 1fr;
+        margin: 1rem auto;
+        padding: 0 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const checkoutItemsContainer = document.getElementById('checkout-cart-items');
+    const checkoutTotalElement = document.getElementById('checkout-total');
+    const cartDataInput = document.getElementById('cart_data');
+    const placeOrderBtn = document.getElementById('place-order-btn');
+    
+    if (cart.length === 0) {
+        checkoutItemsContainer.innerHTML = '<p style="text-align: center; color: var(--color-text-muted);">Tu carrito está vacío</p>';
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.textContent = 'Carrito Vacío';
+        return;
+    }
+    
+    // Mostrar items del carrito
+    let total = 0;
+    checkoutItemsContainer.innerHTML = '';
+    
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        
+        const itemElement = document.createElement('div');
+        itemElement.className = 'checkout-item';
+        itemElement.innerHTML = `
+            <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                <div class="item-quantity">Cantidad: ${item.quantity}</div>
+            </div>
+            <div class="item-price">${formatCOP(itemTotal)}</div>
+        `;
+        checkoutItemsContainer.appendChild(itemElement);
+    });
+    
+    // Actualizar total
+    checkoutTotalElement.textContent = formatCOP(total);
+    
+    // Guardar datos del carrito para enviar con el formulario
+    cartDataInput.value = JSON.stringify(cart);
+    
+    // Manejar envío del formulario
+    document.getElementById('checkout-form').addEventListener('submit', function(e) {
+        if (cart.length === 0) {
+            e.preventDefault();
+            alert('Tu carrito está vacío');
+            return;
+        }
+        
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.textContent = 'Procesando...';
+    });
+});
+
+function formatCOP(amount) {
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
+</script>
+{% endblock %} 

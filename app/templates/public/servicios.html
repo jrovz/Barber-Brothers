@@ -1,170 +1,73 @@
 <!-- filepath: app/templates/public/servicios.html -->
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuestros Servicios - Barber Brothers</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
-</head>
+{% extends "public/public_base.html" %}
 
-<body>
-    <!-- CORREGIDO: Solo un header -->
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="/static/logo.png" alt="Barbería Clásica">
-            </div>
+{% block title %}Nuestros Servicios - Barber Brothers{% endblock %}
 
-            <!-- Navegación Desktop -->
-            <nav class="desktop-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Botón Hamburguesa -->
-            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú">
-                <span class="menu-toggle-icon"></span>
-            </button>
-
-            <!-- Menú Móvil -->
-            <div class="mobile-menu" id="mobile-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button-mobile">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </header>
-    
+{% block content %}
     <div class="page-title">
         <h1>Nuestros Servicios</h1>
         <p>Calidad y estilo en cada corte y afeitado.</p> 
     </div>
-    <main>
-        <section class="services-page-section">
-            <div class="services-container">
-                
-                
 
-                <div class="services-grid">
-                    
-                    <!-- Check if there are services to display -->
-                    {% if servicios %}
-                        <!-- Loop through the services passed from the route -->
-                        {% for servicio in servicios %}
-                        <div class="service-item" data-service-id="{{ servicio.id }}" onclick="openServiceModal({{ servicio.id }})">
-                            <!-- Imagen del servicio -->
-                            {% set imagen_principal = servicio.get_imagen_principal() %}
-                            {% if imagen_principal %}
-                            <div class="service-image">
-                                <img src="{{ imagen_principal }}" alt="{{ servicio.nombre }}" loading="lazy">
-                                <div class="service-overlay">
-                                    {% set total_imagenes = servicio.get_imagenes_activas()|length %}
-                                    {% if total_imagenes > 1 %}
-                                        <span class="view-gallery">Ver Galería ({{ total_imagenes }} fotos)</span>
-                                    {% else %}
-                                        <span class="view-gallery">Ver Detalles</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% else %}
-                            <div class="service-image service-no-image">
-                                <div class="service-placeholder">
-                                    <span class="service-icon">✂️</span>
-                                </div>
-                                <div class="service-overlay">
+    <section class="services-page-section">
+        <div class="services-container">
+            <div class="services-grid">
+                <!-- Check if there are services to display -->
+                {% if servicios %}
+                    <!-- Loop through the services passed from the route -->
+                    {% for servicio in servicios %}
+                    <div class="service-item" data-service-id="{{ servicio.id }}" onclick="openServiceModal({{ servicio.id }})">
+                        <!-- Imagen del servicio -->
+                        {% set imagen_principal = servicio.get_imagen_principal() %}
+                        {% if imagen_principal %}
+                        <div class="service-image">
+                            <img src="{{ imagen_principal }}" alt="{{ servicio.nombre }}" loading="lazy">
+                            <div class="service-overlay">
+                                {% set total_imagenes = servicio.get_imagenes_activas()|length %}
+                                {% if total_imagenes > 1 %}
+                                    <span class="view-gallery">Ver Galería ({{ total_imagenes }} fotos)</span>
+                                {% else %}
                                     <span class="view-gallery">Ver Detalles</span>
-                                </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
-                            
-                            <!-- Display service name from database -->
-                            <h3 class="service-name">{{ servicio.nombre }}</h3> 
-                            
-                            <!-- Display service description from database -->
-                            <p class="service-description">{{ servicio.descripcion }}</p>
-                            
-                            <!-- Display service price from database (format as needed) -->
-                            <div class="service-price">{{ servicio.precio |cop_format }}</div>
-                            
-                            {% if servicio.duracion_estimada %}
-                            <div class="service-duration">
-                                <span class="duration-icon">⏱️</span>
-                                {{ servicio.duracion_estimada }}
-                            </div>
-                            {% endif %}
-                            
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <!-- Optional: Message to display if no services are found -->
-                        <p>No hay servicios disponibles en este momento. Por favor, vuelve a consultar más tarde.</p>
-                    {% endif %}
-
-                </div>
+                        {% else %}
+                        <div class="service-image service-no-image">
+                            <div class="service-placeholder">
+                                <span class="service-icon">✂️</span>
+                            </div>
+                            <div class="service-overlay">
+                                <span class="view-gallery">Ver Detalles</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Display service name from database -->
+                        <h3 class="service-name">{{ servicio.nombre }}</h3> 
+                        
+                        <!-- Display service description from database -->
+                        <p class="service-description">{{ servicio.descripcion }}</p>
+                        
+                        <!-- Display service price from database (format as needed) -->
+                        <div class="service-price">{{ servicio.precio |cop_format }}</div>
+                        
+                        {% if servicio.duracion_estimada %}
+                        <div class="service-duration">
+                            <span class="duration-icon">⏱️</span>
+                            {{ servicio.duracion_estimada }}
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Optional: Message to display if no services are found -->
+                    <p>No hay servicios disponibles en este momento. Por favor, vuelve a consultar más tarde.</p>
+                {% endif %}
             </div>
-        </section>
-    </main>
-
-    {# Incluye tu footer público aquí #}
-    <footer>
-        <p>Barber Brothers & copy; 2025</p>
-        <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
-    </footer>
-
-    {# Botón flotante de WhatsApp (ya incluido en estilos copiados) #}
-    <a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
-        <i class="whatsapp-icon">💬</i>
-    </a>
-    <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
-
-    {# Aquí puedes incluir el script para manejar el carrito, si lo tienes #}
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-
-    <!-- Cart Panel Structure (matching productos.html) -->
-    <div class="cart-panel" id="cart-panel">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button class="close-cart" id="close-cart">&times;</button>
         </div>
-        <div class="cart-items" id="cart-items">
-            <!-- Los productos se añadirán aquí dinámicamente -->
-            <div class="empty-cart">Tu carrito está vacío</div>
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total">COP 0</span>
-            </div>
-            <button class="checkout-button">Finalizar Compra</button>
-        </div>
-    </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
-    <!-- End Cart Panel Structure -->
-    
+    </section>
+
     <!-- Modal de Galería de Servicios -->
     <div class="service-modal" id="service-modal">
         <div class="modal-overlay" onclick="closeServiceModal()"></div>
@@ -211,13 +114,10 @@
         </div>
     </div>
     <!-- Fin Modal de Galería de Servicios -->
-    
-    <!-- Scripts adicionales -->
+{% endblock %}
+
+{% block extra_scripts %}
+    <!-- Scripts específicos de servicios -->
     <script src="{{ url_for('static', filename='js/service-gallery-compatible.js') }}"></script>
     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-    <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
-    {% include 'public/includes/menu_conflict_fix.html' %}
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-</body>
-</html>
+{% endblock %}

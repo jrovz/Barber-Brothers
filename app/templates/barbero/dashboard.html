@@ -1,0 +1,347 @@
+{% extends "barbero/barbero_base.html" %}
+
+{% block content %}
+<!-- Estadísticas rápidas -->
+<div class="dashboard-stats">
+    <div class="card">
+        <h3>Citas Hoy</h3>
+        <span class="count">{{ citas_hoy }}</span>
+        <a href="{{ url_for('barbero.mis_citas', estado='all') }}">
+            Ver detalles
+        </a>
+    </div>
+    
+    <div class="card">
+        <h3>Citas Pendientes</h3>
+        <span class="count">{{ citas_pendientes }}</span>
+        <a href="{{ url_for('barbero.mis_citas', estado='pendiente') }}">
+            Revisar pendientes
+        </a>
+    </div>
+    
+    <div class="card">
+        <h3>Especialidad</h3>
+        <span class="count" style="font-size: 1.5rem; color: var(--color-primary);">
+            {{ barbero.especialidad or 'N/A' }}
+        </span>
+        <a href="{{ url_for('barbero.perfil') }}">
+            Ver perfil
+        </a>
+    </div>
+</div>
+
+<!-- Nueva Cita -->
+<section class="dashboard-section">
+    <h2 class="section-title">➕ Crear Nueva Cita</h2>
+    
+    <div style="background: var(--color-bg-dark); padding: 2rem; border-radius: 6px; border-left: 4px solid var(--color-primary);">
+        <form method="POST" action="{{ url_for('barbero.nueva_cita') }}" id="quick-appointment-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Cliente</label>
+                    <input type="text" name="cliente_nombre" class="form-input" placeholder="Nombre completo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email del Cliente</label>
+                    <input type="email" name="cliente_email" class="form-input" placeholder="correo@ejemplo.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Servicio</label>
+                    <select name="servicio_id" class="form-input" required>
+                        <option value="">Seleccionar servicio...</option>
+                        {% for servicio in servicios_disponibles %}
+                            <option value="{{ servicio.id }}">{{ servicio.nombre }} - ${{ servicio.precio }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" name="fecha" id="fecha_cita_quick" class="form-input" min="{{ fecha_hoy }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Hora</label>
+                    <select name="hora" id="hora_cita_quick" class="form-input" required disabled>
+                        <option value="">Selecciona fecha primero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <select name="estado" class="form-input">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="confirmada">Confirmada</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn" style="margin-right: 1rem;">
+                ➕ Crear Cita
+            </button>
+            <button type="reset" class="btn btn-outline">
+                🔄 Limpiar
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- Mis Citas -->
+<section class="dashboard-section">
+    <h2 class="section-title">📋 Mis Citas</h2>
+    
+    <!-- Filtros rápidos -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('barbero.dashboard') }}" class="btn btn-sm {{ 'btn-outline' if request.args.get('filtro') else '' }}">
+            📋 Todas
+        </a>
+        <a href="{{ url_for('barbero.dashboard', filtro='hoy') }}" class="btn btn-sm {{ '' if request.args.get('filtro') != 'hoy' else 'btn-outline' }}">
+            📅 Hoy
+        </a>
+        <a href="{{ url_for('barbero.dashboard', filtro='pendientes') }}" class="btn btn-sm {{ '' if request.args.get('filtro') != 'pendientes' else 'btn-outline' }}">
+            ⏳ Pendientes
+        </a>
+        <a href="{{ url_for('barbero.dashboard', filtro='proximas') }}" class="btn btn-sm {{ '' if request.args.get('filtro') != 'proximas' else 'btn-outline' }}">
+            🔜 Próximas 7 días
+        </a>
+    </div>
+    
+    {% if citas_mostrar %}
+    <div class="data-table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Cliente</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in citas_mostrar %}
+                <tr>
+                    <td>
+                        <strong>{{ cita.fecha.strftime('%d/%m/%Y') if cita.fecha else 'Sin fecha' }}</strong><br>
+                        <small style="color: var(--color-text-muted);">
+                            {{ cita.fecha.strftime('%H:%M') if cita.fecha else '--:--' }}
+                        </small>
+                    </td>
+                    <td>
+                        <strong>{{ cita.cliente.nombre if cita.cliente else 'Cliente eliminado' }}</strong>
+                        {% if cita.cliente and cita.cliente.email %}
+                        <br><small style="color: var(--color-text-muted);">{{ cita.cliente.email }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ cita.servicio.nombre if cita.servicio else 'Servicio eliminado' }}</td>
+                    <td>
+                        {% if cita.estado == 'pendiente' %}
+                            <span class="badge badge-warning">Pendiente</span>
+                        {% elif cita.estado == 'confirmada' %}
+                            <span class="badge badge-info">Confirmada</span>
+                        {% elif cita.estado == 'completada' %}
+                            <span class="badge badge-success">Completada</span>
+                        {% elif cita.estado == 'cancelada' %}
+                            <span class="badge badge-danger">Cancelada</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions">
+                        <!-- Cambiar estado -->
+                        {% if cita.estado in ['pendiente', 'confirmada'] %}
+                        <form method="POST" action="{{ url_for('barbero.actualizar_estado_cita', cita_id=cita.id) }}" style="display: inline; margin-right: 0.5rem;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if cita.estado == 'pendiente' %}
+                                <button type="submit" name="estado" value="confirmada" class="btn btn-sm btn-info" title="Confirmar">
+                                    ✓
+                                </button>
+                            {% elif cita.estado == 'confirmada' %}
+                                <button type="submit" name="estado" value="completada" class="btn btn-sm btn-success" title="Completar">
+                                    ✅
+                                </button>
+                            {% endif %}
+                        </form>
+                        {% endif %}
+                        
+                        <!-- Cancelar -->
+                        {% if cita.estado not in ['completada', 'cancelada'] %}
+                        <form method="POST" action="{{ url_for('barbero.actualizar_estado_cita', cita_id=cita.id) }}" style="display: inline; margin-right: 0.5rem;" onsubmit="return confirm('¿Cancelar esta cita?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" name="estado" value="cancelada" class="btn btn-sm btn-secondary" title="Cancelar">
+                                ❌
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        <!-- Eliminar -->
+                        <form method="POST" action="{{ url_for('barbero.eliminar_cita', cita_id=cita.id) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar permanentemente?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-delete" title="Eliminar">
+                                🗑️
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if total_citas > citas_mostrar|length %}
+    <div style="text-align: center; margin-top: 1.5rem;">
+        <p style="color: var(--color-text-muted); margin-bottom: 1rem;">
+            Mostrando {{ citas_mostrar|length }} de {{ total_citas }} citas
+        </p>
+        <a href="{{ url_for('barbero.mis_citas') }}" class="btn btn-outline">
+            Ver todas las citas
+        </a>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+        <p style="font-size: 1.2rem; margin-bottom: 1rem;">📅 No hay citas para mostrar</p>
+        <p>Crea tu primera cita usando el formulario de arriba.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Acciones rápidas -->
+<section class="dashboard-section">
+    <h2 class="section-title">⚡ Acciones Rápidas</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+        <a href="{{ url_for('barbero.nueva_cita') }}" class="btn" style="padding: 1.5rem; text-align: center; text-decoration: none; display: block;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">➕</div>
+            <strong>Nueva Cita</strong>
+            <br><small>Programar una nueva cita</small>
+        </a>
+        
+        <a href="{{ url_for('barbero.mis_citas', estado='pendiente') }}" class="btn btn-outline" style="padding: 1.5rem; text-align: center; text-decoration: none; display: block;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+            <strong>Citas Pendientes</strong>
+            <br><small>Revisar citas por confirmar</small>
+        </a>
+        
+        <a href="{{ url_for('barbero.ver_horarios') }}" class="btn btn-outline" style="padding: 1.5rem; text-align: center; text-decoration: none; display: block;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🕒</div>
+            <strong>Mi Horario</strong>
+            <br><small>Ver disponibilidad</small>
+        </a>
+        
+        <a href="{{ url_for('barbero.perfil') }}" class="btn btn-outline" style="padding: 1.5rem; text-align: center; text-decoration: none; display: block;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">👤</div>
+            <strong>Mi Perfil</strong>
+            <br><small>Ver estadísticas y datos</small>
+        </a>
+    </div>
+</section>
+
+<!-- Información útil -->
+<section class="dashboard-section" style="background: linear-gradient(135deg, var(--color-bg-medium), var(--color-bg-light));">
+    <h2 class="section-title">💡 Información Útil</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+        <div style="padding: 1.5rem; background: var(--color-bg-dark); border-radius: 6px; border-left: 4px solid var(--color-primary);">
+            <h4 style="color: var(--color-primary); margin-bottom: 1rem;">🎯 Consejos para Gestionar Citas</h4>
+            <ul style="color: var(--color-text-secondary); line-height: 1.8;">
+                <li>Confirma las citas pendientes lo antes posible</li>
+                <li>Marca las citas como completadas una vez finalizadas</li>
+                <li>Revisa tu horario regularmente</li>
+                <li>Mantén actualizada la información de contacto</li>
+            </ul>
+        </div>
+        
+        <div style="padding: 1.5rem; background: var(--color-bg-dark); border-radius: 6px; border-left: 4px solid var(--color-info);">
+            <h4 style="color: var(--color-info); margin-bottom: 1rem;">📊 Tu Rendimiento</h4>
+            <p style="color: var(--color-text-secondary); line-height: 1.6;">
+                Mantén un buen ritmo confirmando y completando tus citas. 
+                Los clientes valoran la puntualidad y la comunicación clara.
+            </p>
+            <a href="{{ url_for('barbero.perfil') }}" style="color: var(--color-info); font-weight: 500;">
+                Ver estadísticas completas →
+            </a>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-actualizar estadísticas cada 2 minutos
+    setInterval(function() {
+        // Solo actualizar si la página está visible
+        if (!document.hidden) {
+            location.reload();
+        }
+    }, 120000); // 2 minutos
+    
+    // Confirmación para acciones rápidas de estado
+    const statusButtons = document.querySelectorAll('form button[name="estado"]');
+    statusButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const action = this.value === 'confirmada' ? 'confirmar' : (this.value === 'completada' ? 'completar' : 'cancelar');
+            if (!confirm(`¿Estás seguro de ${action} esta cita?`)) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Funcionalidad para el formulario de nueva cita rápida
+    const fechaInput = document.getElementById('fecha_cita_quick');
+    const horaSelect = document.getElementById('hora_cita_quick');
+    
+    if (fechaInput && horaSelect) {
+        fechaInput.addEventListener('change', function() {
+            const selectedDate = this.value;
+            if (!selectedDate) {
+                horaSelect.disabled = true;
+                horaSelect.innerHTML = '<option value="">Selecciona fecha primero</option>';
+                return;
+            }
+            
+            // Mostrar loading
+            horaSelect.disabled = true;
+            horaSelect.innerHTML = '<option value="">Cargando horarios...</option>';
+            
+            // Hacer petición para obtener horarios disponibles
+            fetch(`{{ url_for('barbero.api_horarios_disponibles', barbero_id=barbero.id) }}?fecha=${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    horaSelect.innerHTML = '';
+                    
+                    if (data.success && data.horarios.length > 0) {
+                        horaSelect.innerHTML = '<option value="">Seleccionar hora...</option>';
+                        data.horarios.forEach(horario => {
+                            const option = document.createElement('option');
+                            option.value = horario.hora;
+                            option.textContent = horario.hora;
+                            horaSelect.appendChild(option);
+                        });
+                        horaSelect.disabled = false;
+                    } else {
+                        horaSelect.innerHTML = '<option value="">No hay horarios disponibles</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    horaSelect.innerHTML = '<option value="">Error al cargar horarios</option>';
+                });
+        });
+    }
+    
+    // Reset form functionality
+    const resetBtn = document.querySelector('#quick-appointment-form button[type="reset"]');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            setTimeout(() => {
+                horaSelect.disabled = true;
+                horaSelect.innerHTML = '<option value="">Selecciona fecha primero</option>';
+            }, 100);
+        });
+    }
+});
+</script>
+{% endblock %} 

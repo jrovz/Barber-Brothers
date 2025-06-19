@@ -76,7 +76,7 @@ class Cita(db.Model):
     notas = db.Column(db.Text, nullable=True)
     confirmed_at = db.Column(db.DateTime, nullable=True) # Hora de confirmación    # Relaciones
     # cliente_rel ya está en Cliente model via backref='cliente'
-    barbero_rel = db.relationship('Barbero', backref='citas_agendadas', foreign_keys=[barbero_id]) # CAMBIADO AQUÍ
+    # barbero_rel ya está en Barbero model via backref='barbero'
     servicio_rel = db.relationship('Servicio', backref='citas_servicio', foreign_keys=[servicio_id]) # Cambiado backref para evitar conflicto si Servicio tiene otras citas
     
     def actualizar_segmentacion_cliente(self):

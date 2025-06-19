@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | Barber Brothers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+</head>
+<body style="background: linear-gradient(135deg, var(--color-bg-dark) 0%, var(--color-bg-main) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+
+<div class="login-container" style="max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <!-- Logo -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Barber Brothers" style="max-width: 120px; margin-bottom: 1rem;">
+        <h1 class="form-title" style="color: var(--color-text-accent); margin-bottom: 0.5rem;">Panel de Barberos</h1>
+        <p style="color: var(--color-text-muted); font-style: italic;">Acceso exclusivo para barberos</p>
+    </div>
+
+    <!-- Mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category or 'info' }}" style="margin-bottom: 1.5rem;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulario de login -->
+    <form method="POST" action="{{ url_for('barbero.login') }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.username.label(class="form-label") }}
+            {{ form.username(class="form-input", placeholder="Tu nombre de usuario") }}
+            {% for error in form.username.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-input", placeholder="Tu contraseña") }}
+            {% for error in form.password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; margin-bottom: 2rem;">
+            {{ form.remember_me(style="margin-right: 0.5rem;") }}
+            {{ form.remember_me.label(class="form-label", style="margin-bottom: 0; cursor: pointer;") }}
+        </div>
+
+        {{ form.submit(class="btn", style="width: 100%; padding: 1rem; font-size: 1.1rem;") }}
+    </form>
+
+    <!-- Enlaces útiles -->
+    <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+        <p style="color: var(--color-text-muted); font-size: 0.9rem;">
+            ¿No tienes acceso web? Contacta al administrador
+        </p>
+        <a href="{{ url_for('public.home') }}" style="color: var(--color-primary); font-size: 0.9rem;">
+            🏠 Volver al sitio principal
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus en el primer campo
+    const firstInput = document.querySelector('.form-input');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Efecto visual en el login
+    const form = document.querySelector('form');
+    const submitBtn = document.querySelector('.btn');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function() {
+            submitBtn.textContent = 'Accediendo...';
+            submitBtn.disabled = true;
+        });
+    }
+});
+</script>
+
+</body>
+</html> 

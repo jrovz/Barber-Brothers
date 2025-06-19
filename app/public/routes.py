@@ -143,10 +143,79 @@ def productos():
 
 @bp.route('/checkout', methods=['GET', 'POST'])
 def checkout():
+    from app.public.forms import CheckoutForm
+    from app.models.pedido import Pedido, PedidoItem
+    from app.models.producto import Producto
+    import json
+    
+    form = CheckoutForm()
+    
     if request.method == 'POST':
-        # Lógica para procesar el pedido
-        return {'success': True}, 201
-    return render_template("checkout.html")
+        if form.validate_on_submit():
+            try:
+                # Obtener datos del carrito desde el formulario
+                cart_data = request.form.get('cart_data')
+                if not cart_data:
+                    flash('El carrito está vacío', 'error')
+                    return redirect(url_for('public.checkout'))
+                
+                cart_items = json.loads(cart_data)
+                
+                if not cart_items:
+                    flash('El carrito está vacío', 'error')
+                    return redirect(url_for('public.checkout'))
+                
+                # Crear el pedido
+                nuevo_pedido = Pedido(
+                    numero_pedido=f"PED{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    cliente_nombre=form.nombre.data,
+                    cliente_email=form.email.data,
+                    cliente_telefono=form.telefono.data,
+                    notas=form.notas.data,
+                    total=0  # Se calculará después
+                )
+                
+                db.session.add(nuevo_pedido)
+                db.session.flush()  # Para obtener el ID
+                
+                # Procesar items del carrito
+                total_pedido = 0
+                for item in cart_items:
+                    producto = Producto.query.get(item['id'])
+                    if producto:
+                        cantidad = int(item['quantity'])
+                        subtotal = float(producto.precio) * cantidad
+                        
+                        pedido_item = PedidoItem(
+                            pedido_id=nuevo_pedido.id,
+                            producto_id=producto.id,
+                            producto_nombre=producto.nombre,
+                            producto_precio=producto.precio,
+                            cantidad=cantidad,
+                            subtotal=subtotal
+                        )
+                        
+                        db.session.add(pedido_item)
+                        total_pedido += subtotal
+                
+                # Actualizar el total del pedido
+                nuevo_pedido.total = total_pedido
+                db.session.commit()
+                
+                flash('¡Pedido creado exitosamente!', 'success')
+                return redirect(url_for('public.confirmacion_pedido', pedido_id=nuevo_pedido.id))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash('Error al procesar el pedido. Intenta de nuevo.', 'error')
+                print(f"Error en checkout: {e}")
+    
+    return render_template('public/checkout.html', form=form)
+
+@bp.route('/confirmacion-pedido/<int:pedido_id>')
+def confirmacion_pedido(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    return render_template('public/confirmacion_pedido.html', pedido=pedido)
 
 @bp.route('/servicios')
 def servicios():

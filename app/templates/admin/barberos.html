@@ -54,6 +54,41 @@
             {{ form.descripcion(class="form-input", rows=3) }}
             {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
         </div>
+        
+        <!-- Sección de Acceso Web -->
+        <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; margin-top: 1.5rem;">
+            <h3 style="color: var(--color-text-accent); margin-bottom: 1rem;">🌐 Acceso Web</h3>
+            <div class="form-group" style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                {{ form.tiene_acceso_web(style="margin-right: 0.5rem;", id="toggle_acceso_web_nuevo") }}
+                {{ form.tiene_acceso_web.label(class="form-label", style="margin-bottom: 0;") }}
+                {% for error in form.tiene_acceso_web.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                <small style="display: block; margin-top: 0.5rem; color: var(--color-text-muted);">
+                    Permitir que el barbero acceda a su panel web para gestionar sus citas
+                </small>
+            </div>
+            
+            <div id="campos_acceso_web_nuevo" style="display: none;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-input", placeholder="Usuario único para acceso") }}
+                        {% for error in form.username.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                        <small class="form-text text-muted">Si se deja vacío, se generará automáticamente</small>
+                    </div>
+                    <div class="form-group">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-input", placeholder="Contraseña") }}
+                        {% for error in form.password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.confirmar_password.label(class="form-label") }}
+                        {{ form.confirmar_password(class="form-input", placeholder="Repetir contraseña") }}
+                        {% for error in form.confirmar_password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         {{ form.submit(class="btn") }}
     </form>
 </section>
@@ -69,6 +104,7 @@
                 <th>Nombre</th>
                 <th>Especialidad</th>
                 <th>Estado</th>
+                <th>Acceso Web</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -91,6 +127,16 @@
                         <span class="badge badge-danger">Inactivo</span>
                     {% endif %}
                 </td>
+                <td>
+                    {% if barbero.tiene_acceso_web %}
+                        <span class="badge badge-info">✓ Habilitado</span>
+                        {% if barbero.username %}
+                            <br><small style="color: var(--color-text-muted);">@{{ barbero.username }}</small>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-secondary">✗ Deshabilitado</span>
+                    {% endif %}
+                </td>
                 <td class="actions">
                     <a href="{{ url_for('admin.editar_barbero', id=barbero.id) }}" class="btn btn-small btn-edit">Editar</a>
                     <!-- Botón para gestionar disponibilidad -->
@@ -103,7 +149,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center">No hay barberos registrados.</td>
+                <td colspan="7" class="text-center">No hay barberos registrados.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -143,6 +189,23 @@
         
         // Inicializar las vistas previas
         setupImagePreview('imagen_file', 'imagen_preview');
+        
+        // Control de visibilidad de campos de acceso web para nuevo barbero
+        const toggleAccesoWebNuevo = document.getElementById('toggle_acceso_web_nuevo');
+        const camposAccesoWebNuevo = document.getElementById('campos_acceso_web_nuevo');
+        
+        function toggleCamposAccesoNuevo() {
+            if (toggleAccesoWebNuevo.checked) {
+                camposAccesoWebNuevo.style.display = 'block';
+            } else {
+                camposAccesoWebNuevo.style.display = 'none';
+            }
+        }
+        
+        if (toggleAccesoWebNuevo && camposAccesoWebNuevo) {
+            toggleCamposAccesoNuevo();
+            toggleAccesoWebNuevo.addEventListener('change', toggleCamposAccesoNuevo);
+        }
     });
     </script>
     

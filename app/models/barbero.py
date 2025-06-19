@@ -2,8 +2,10 @@
 from app import db
 from datetime import datetime, timedelta
 from sqlalchemy.orm import validates
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 
-class Barbero(db.Model):
+class Barbero(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     especialidad = db.Column(db.String(100))
@@ -11,6 +13,11 @@ class Barbero(db.Model):
     imagen_url = db.Column(db.String(255))
     activo = db.Column(db.Boolean, default=True)
     creado = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Campos de autenticación
+    username = db.Column(db.String(80), unique=True, nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True)
+    tiene_acceso_web = db.Column(db.Boolean, default=False)
     # Relación con Citas (un barbero puede tener muchas citas)
     citas = db.relationship('Cita', backref='barbero', lazy='dynamic')
     
@@ -93,6 +100,54 @@ class Barbero(db.Model):
         
         return todos_los_slots
 
+    # Métodos de autenticación
+    def set_password(self, password):
+        """Establece una contraseña hasheada para el barbero"""
+        if password:
+            self.password_hash = generate_password_hash(password)
+            self.tiene_acceso_web = True
+        else:
+            self.password_hash = None
+            self.tiene_acceso_web = False
+
+    def check_password(self, password):
+        """Verifica si la contraseña es correcta"""
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
+
+    def generate_username(self):
+        """Genera un username único basado en el nombre del barbero"""
+        if not self.username:
+            # Crear username base del nombre (sin espacios, lowercase)
+            base_username = self.nombre.lower().replace(' ', '').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
+            
+            # Verificar si ya existe
+            counter = 1
+            username = base_username
+            while Barbero.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            self.username = username
+        return self.username
+
+    def puede_acceder_web(self):
+        """Verifica si el barbero tiene acceso web habilitado"""
+        return self.tiene_acceso_web and self.password_hash is not None and self.activo
+
+    def get_citas_propias(self, fecha_inicio=None, fecha_fin=None):
+        """Obtiene las citas asignadas a este barbero"""
+        from app.models.cliente import Cita
+        query = Cita.query.filter_by(barbero_id=self.id)
+        
+        if fecha_inicio:
+            query = query.filter(Cita.fecha >= fecha_inicio)
+        if fecha_fin:
+            query = query.filter(Cita.fecha <= fecha_fin)
+            
+        return query.order_by(Cita.fecha.desc()).all()
+
     def __repr__(self):
         return f'<Barbero {self.nombre}>'
     
@@ -169,8 +224,7 @@ class DisponibilidadBarbero(db.Model):
 def crear_disponibilidad_predeterminada(barbero_id):
     """
     Crea una disponibilidad predeterminada para un barbero
-    - Lunes a viernes: 9:00-13:00 y 15:00-20:00
-    - Sábados: 9:00-14:00
+    - Lunes a sábado: 8:00-12:00 y 13:00-20:00
     
     Args:
         barbero_id (int): ID del barbero
@@ -187,34 +241,24 @@ def crear_disponibilidad_predeterminada(barbero_id):
             print(f"El barbero {barbero_id} ya tiene disponibilidad configurada")
             return False
         
-        # Horario para días de semana (L-V)
-        for dia in range(0, 5):  # 0=Lunes, 4=Viernes
+        # Horario para días de semana (L-S)
+        for dia in range(0, 6):  # 0=Lunes, 5=Sábado
             disp_manana = DisponibilidadBarbero(
                 barbero_id=barbero_id,
                 dia_semana=dia,
-                hora_inicio=time(9, 0),  # 9:00 AM
-                hora_fin=time(13, 0),    # 1:00 PM
+                hora_inicio=time(8, 0),  # 8:00 AM
+                hora_fin=time(12, 0),    # 12:00 PM
                 activo=True
             )
             disp_tarde = DisponibilidadBarbero(
                 barbero_id=barbero_id,
                 dia_semana=dia,
-                hora_inicio=time(15, 0),  # 3:00 PM
+                hora_inicio=time(13, 0),  # 1:00 PM
                 hora_fin=time(20, 0),     # 8:00 PM
                 activo=True
             )
             db.session.add(disp_manana)
             db.session.add(disp_tarde)
-        
-        # Horario para sábado (medio día)
-        disp_sabado = DisponibilidadBarbero(
-            barbero_id=barbero_id,
-            dia_semana=5,  # 5=Sábado
-            hora_inicio=time(9, 0),  # 9:00 AM
-            hora_fin=time(14, 0),    # 2:00 PM
-            activo=True
-        )
-        db.session.add(disp_sabado)
         
         db.session.commit()
         return True

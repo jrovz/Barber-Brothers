@@ -1,122 +1,68 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
+{% extends "public/public_base.html" %}
+
+{% block title %}
+{% if success %}
+Cita Confirmada - Barber Brothers
+{% else %}
+Error de Confirmación - Barber Brothers
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block content %}
+<section class="confirmation-page">
+    <div class="confirmation-container">
         {% if success %}
-            Cita Confirmada - Barber Brothers
-        {% else %}
-            Error de Confirmación - Barber Brothers
-        {% endif %}
-    </title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-</head>
-<body>
-    <header>
-        <div class="header-container">
-            <div class="logo">
-                <img src="/static/logo.png" alt="Barber Brothers">
-            </div>
-
-            <!-- Navegación Desktop -->
-            <nav class="desktop-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- Botón Hamburguesa -->
-            <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
-                <span class="menu-toggle-icon"></span>
-            </button>
-
-            <!-- Menú Móvil -->
-            <div class="mobile-menu" id="mobile-menu">
-                <ul>
-                    <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
-                    <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
-                    <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
-                        <a href="#" id="cart-button-mobile">
-                            <i class="cart-symbol">🛒</i>
-                            <span class="cart-count">0</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </header>
-
-    <!-- Contenido de la página de confirmación -->
-    <section class="confirmation-page" style="padding: 60px 20px; text-align: center; min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-        <div class="container" style="max-width: 600px; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            {% if success %}
-                <h2 style="color: #28a745; font-size: 2em; margin-bottom: 20px;">{{ message }}</h2>
+            <div class="confirmation-success">
+                <div class="success-icon">✓</div>
+                <h2 class="confirmation-title">{{ message }}</h2>
+                
                 {% if cita %}
-                <div style="text-align: left; margin-bottom: 25px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <h4 style="margin-bottom: 15px; color: #333;">Detalles de tu cita:</h4>
-                    <p><strong>Servicio:</strong> {{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</p>
-                    <p><strong>Barbero:</strong> {{ cita.barbero_rel.nombre if cita.barbero_rel else 'N/A' }}</p>
-                    <p><strong>Fecha:</strong> {{ cita.fecha.strftime('%A, %d de %B de %Y') }}</p>
-                    <p><strong>Hora:</strong> {{ cita.fecha.strftime('%I:%M %p') }}</p>
+                <div class="appointment-details">
+                    <h3 class="details-title">Detalles de tu cita:</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Servicio:</span>
+                        <span class="detail-value">{{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Barbero:</span>
+                        <span class="detail-value">{{ cita.barbero_rel.nombre if cita.barbero_rel else 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha:</span>
+                        <span class="detail-value">{{ cita.fecha.strftime('%A, %d de %B de %Y') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Hora:</span>
+                        <span class="detail-value">{{ cita.fecha.strftime('%I:%M %p') }}</span>
+                    </div>
                 </div>
                 {% endif %}
-            {% else %}
-                <h2 style="color: #dc3545; font-size: 2em; margin-bottom: 20px;">{{ message }}</h2>
-                <p style="font-size: 1.1em; color: #555;">Por favor, intenta agendar tu cita nuevamente o contacta con nosotros si el problema persiste.</p>
-            {% endif %}
-            <a href="{{ url_for('public.home') }}" class="book-button" style="display: inline-block; margin-top: 20px; padding: 12px 25px; background-color: #333; color: white; text-decoration: none; border-radius: 5px; font-size: 1em;">Volver al Inicio</a>
-        </div>
-    </section>
-
-    <footer>
-        <p>Barber Brothers &copy; 2025</p>
-        <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
-    </footer>
-
-    <!-- Botón flotante de WhatsApp -->
-    <a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
-        <i class="whatsapp-icon">💬</i>
-    </a>
-
-    <!-- Panel del Carrito -->
-    <div class="cart-panel" id="cart-panel">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button class="close-cart" id="close-cart">&times;</button>
-        </div>
-        <div class="cart-items" id="cart-items">
-            <!-- Los productos se añadirán aquí dinámicamente -->
-            <div class="empty-cart">Tu carrito está vacío</div>
-        </div>
-        <div class="cart-footer">
-            <div class="cart-total">
-                <span>Total:</span>
-                <span id="cart-total">COP 0</span>
+                
+                <div class="confirmation-message">
+                    <p>Te hemos enviado un correo electrónico con los detalles de tu cita. ¡Esperamos verte pronto!</p>
+                </div>
             </div>
-            <button class="checkout-button">Finalizar Compra</button>
+        {% else %}
+            <div class="confirmation-error">
+                <div class="error-icon">✕</div>
+                <h2 class="confirmation-title">{{ message }}</h2>
+                <div class="error-message">
+                    <p>Por favor, intenta agendar tu cita nuevamente o contacta con nosotros si el problema persiste.</p>
+                    <p>Puedes llamarnos al <strong>3102160496</strong> o enviarnos un WhatsApp.</p>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="confirmation-actions">
+            <a href="{{ url_for('public.home') }}" class="btn btn-primary">Volver al Inicio</a>
+            {% if not success %}
+            <a href="{{ url_for('public.home') }}#availability" class="btn btn-secondary">Intentar de Nuevo</a>
+            {% endif %}
         </div>
     </div>
-    <div class="cart-overlay" id="cart-overlay"></div>
-
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
-</body>
-</html>
+</section>
+{% endblock %}
