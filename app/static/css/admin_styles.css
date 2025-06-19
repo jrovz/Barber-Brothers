@@ -163,6 +163,328 @@ img {
     border: 1px solid var(--color-border);
 }
 
+/* --- Estilos específicos para Sliders --- */
+.slider-form {
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-light) 100%);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.slider-form .form-title {
+    background: linear-gradient(90deg, var(--color-text-accent), var(--color-primary-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.6rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 2px solid var(--color-text-accent);
+    position: relative;
+}
+
+.slider-form .form-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--color-text-accent);
+}
+
+/* Grid para formulario de slider */
+.slider-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.slider-form-grid .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Selector de tipo de slide */
+.tipo-selector {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.tipo-selector .form-label {
+    color: var(--color-text-accent);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.tipo-options {
+    display: flex;
+    gap: 1rem;
+    background: var(--color-bg-dark);
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+}
+
+.tipo-option {
+    flex: 1;
+    position: relative;
+}
+
+.tipo-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tipo-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.tipo-option input[type="radio"]:checked + label {
+    background: var(--color-text-accent);
+    color: var(--color-bg-dark);
+    border-color: var(--color-text-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(210, 184, 131, 0.3);
+}
+
+.tipo-option label:hover {
+    background: var(--color-bg-medium);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+}
+
+/* Campos condicionales */
+.conditional-field {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transform: translateY(-10px);
+    transition: all 0.4s ease;
+    margin-top: 0;
+}
+
+.conditional-field.active {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+    margin-top: 1rem;
+}
+
+/* Estilo para campo de imagen */
+.image-upload-field {
+    position: relative;
+}
+
+.image-upload-field .form-input[type="file"] {
+    padding: 0.5rem;
+    background: var(--color-bg-dark);
+    border: 2px dashed var(--color-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.image-upload-field .form-input[type="file"]:hover {
+    border-color: var(--color-text-accent);
+    background: var(--color-bg-medium);
+}
+
+.image-upload-field .form-input[type="file"]:focus {
+    border-color: var(--color-text-accent);
+    box-shadow: 0 0 0 3px rgba(210, 184, 131, 0.2);
+}
+
+/* Campo de código Instagram */
+.instagram-field textarea {
+    min-height: 120px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    background: var(--color-bg-dark);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    resize: vertical;
+}
+
+.instagram-field .form-label {
+    color: #E4405F; /* Color característico de Instagram */
+}
+
+/* Botones del formulario slider */
+.slider-form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.slider-form-actions .btn {
+    min-width: 120px;
+    font-weight: 600;
+}
+
+.slider-form-actions .btn-primary {
+    background: linear-gradient(135deg, var(--color-text-accent), var(--color-primary-hover));
+    border: none;
+    color: var(--color-bg-dark);
+    box-shadow: 0 4px 12px rgba(210, 184, 131, 0.3);
+}
+
+.slider-form-actions .btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-hover), var(--color-text-accent));
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(210, 184, 131, 0.4);
+}
+
+/* Tabla de sliders */
+.sliders-table {
+    background: var(--color-bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sliders-table .data-table {
+    margin: 0;
+    border: none;
+    background: transparent;
+}
+
+.sliders-table .data-table th {
+    background: var(--color-bg-dark);
+    color: var(--color-text-accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.85rem;
+    padding: 1rem 0.8rem;
+}
+
+.sliders-table .data-table td {
+    padding: 1rem 0.8rem;
+    vertical-align: middle;
+}
+
+/* Vista previa de slider en tabla */
+.slider-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: 300px;
+}
+
+.slider-preview-image {
+    width: 60px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-dark);
+}
+
+.slider-preview-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.slider-preview-title {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 0.2rem 0;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slider-preview-subtitle {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slider-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.slider-type-badge.imagen {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.slider-type-badge.instagram {
+    background: rgba(228, 64, 95, 0.2);
+    color: #E4405F;
+    border: 1px solid rgba(228, 64, 95, 0.3);
+}
+
+.slider-status-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.slider-status-badge.activo {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.slider-status-badge.inactivo {
+    background: rgba(158, 158, 158, 0.2);
+    color: #9E9E9E;
+    border: 1px solid rgba(158, 158, 158, 0.3);
+}
+
+/* Orden visual */
+.orden-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--color-bg-dark);
+    color: var(--color-text-accent);
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid var(--color-border);
+}
+
 .form-title {
     font-size: 1.4rem;
     margin-bottom: 1.5rem;
@@ -1709,5 +2031,66 @@ textarea.form-input:focus {
     
     .mobile-card-actions .btn {
         min-width: 80px;
+    }
+    
+    /* Estilos móvil específicos para sliders */
+    .slider-form {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .slider-form .form-title {
+        font-size: 1.4rem;
+    }
+
+    .slider-form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .tipo-options {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .tipo-option label {
+        padding: 1rem;
+        text-align: center;
+    }
+
+    .slider-form-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .slider-form-actions .btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .sliders-table .data-table {
+        font-size: 0.85rem;
+    }
+
+    .slider-preview {
+        flex-direction: column;
+        text-align: center;
+        max-width: none;
+        gap: 0.5rem;
+    }
+
+    .slider-preview-image {
+        width: 80px;
+        height: 50px;
+        align-self: center;
+    }
+
+    .conditional-field.active {
+        max-height: 300px;
+    }
+
+    .instagram-field textarea {
+        min-height: 100px;
+        font-size: 0.8rem;
     }
 }

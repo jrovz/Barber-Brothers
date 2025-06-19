@@ -6,6 +6,11 @@ from app.models.cliente import Cliente, Mensaje, Cita
 from app.models.servicio import Servicio # Asegúrate de que este modelo existe
 from app.models.barbero import Barbero, DisponibilidadBarbero
 from app.models.categoria import Categoria # <<< IMPORT Categoria MODEL
+try:
+    from app.models.slider import Slider
+except Exception as e:
+    print(f"Warning: No se pudo importar el modelo Slider: {e}")
+    Slider = None
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
 from app import db
 from datetime import datetime, timedelta, time
@@ -17,8 +22,16 @@ def home():
     barberos = []
     servicios = []
     fechas_disponibles = []
+    sliders = []
     
     try:
+        # Obtener sliders activos ordenados por orden
+        if Slider is not None:
+            sliders = Slider.get_active_slides_ordered()
+        else:
+            print("Warning: Modelo Slider no disponible, usando lista vacía")
+            sliders = []
+        
         # Productos destacados
         # CORREGIDO: Usar 'creado' en lugar de 'created_at'
         featured_products = Producto.query.order_by(Producto.creado.desc()).limit(3).all() 
@@ -75,7 +88,8 @@ def home():
                           featured_products=featured_products,
                           barberos=barberos,
                           servicios=servicios,
-                          fechas_disponibles=fechas_disponibles)
+                          fechas_disponibles=fechas_disponibles,
+                          sliders=sliders)
 
 @bp.route('/about')
 def about():

@@ -8,9 +8,15 @@ from app.models.cliente import Mensaje, Cliente, Cita # Assuming Mensaje, Client
 from app.models.servicio import Servicio
 from app.models.barbero import Barbero, DisponibilidadBarbero
 from app.models.categoria import Categoria # Correctly import Categoria
+try:
+    from app.models.slider import Slider
+except Exception as e:
+    print(f"Warning: No se pudo importar el modelo Slider: {e}")
+    Slider = None
 from app import db
 # Import forms
 from .forms import LoginForm, ProductoForm, BarberoForm, ServicioForm, CitaForm, DisponibilidadForm, CategoriaForm, ClienteFilterForm
+from .slider_forms import SliderForm
 from app.admin.utils import save_image # Assuming you have this utility
 from datetime import datetime, time, timedelta
 import logging # For better logging, especially in edit_barbero
@@ -1104,3 +1110,166 @@ def actualizar_segmentos():
         flash(f'Error al actualizar segmentación: {str(e)}', 'danger')
         
     return redirect(url_for('admin.gestionar_clientes'))
+
+# ================================
+# GESTIÓN DE SLIDERS
+# ================================
+
+@bp.route('/sliders', methods=['GET', 'POST'])
+@login_required
+def gestionar_sliders():
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    if Slider is None:
+        flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+    
+    form = SliderForm()
+    
+    if form.validate_on_submit():
+        try:
+            slider = Slider(
+                titulo=form.titulo.data,
+                subtitulo=form.subtitulo.data,
+                tipo=form.tipo.data,
+                activo=form.activo.data,
+                orden=form.orden.data
+            )
+            
+            # Procesar según el tipo de slide
+            if form.tipo.data == 'imagen':
+                if form.imagen.data:
+                    filename = save_image(form.imagen.data, 'sliders')
+                    slider.imagen_url = url_for('static', filename=f'uploads/sliders/{filename}')
+            
+            elif form.tipo.data == 'instagram':
+                slider.instagram_embed_code = form.instagram_embed_code.data
+            
+            db.session.add(slider)
+            db.session.commit()
+            
+            flash(f'Slide "{slider.titulo}" creado exitosamente.', 'success')
+            return redirect(url_for('admin.gestionar_sliders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al crear slider: {str(e)}", exc_info=True)
+            flash('Error al crear el slide. Por favor, inténtalo de nuevo.', 'danger')
+    
+    # Obtener todos los sliders ordenados
+    sliders = Slider.query.order_by(Slider.orden.asc(), Slider.fecha_creacion.desc()).all()
+    
+    return render_template('admin/sliders.html', 
+                         title='Gestión de Sliders', 
+                         form=form, 
+                         sliders=sliders)
+
+@bp.route('/sliders/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_slider(id):
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    if Slider is None:
+        flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+    
+    slider = Slider.query.get_or_404(id)
+    form = SliderForm(obj=slider)
+    form._editing = True  # Marcar que estamos editando
+    
+    if form.validate_on_submit():
+        try:
+            slider.titulo = form.titulo.data
+            slider.subtitulo = form.subtitulo.data
+            slider.tipo = form.tipo.data
+            slider.activo = form.activo.data
+            slider.orden = form.orden.data
+            slider.fecha_actualizacion = datetime.utcnow()
+            
+            # Procesar según el tipo de slide
+            if form.tipo.data == 'imagen':
+                if form.imagen.data:
+                    # Eliminar imagen anterior si existe
+                    if slider.imagen_url:
+                        old_filename = slider.imagen_url.split('/')[-1]
+                        old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'sliders', old_filename)
+                        try:
+                            if os.path.exists(old_path):
+                                os.remove(old_path)
+                        except Exception as e:
+                            logger.warning(f"No se pudo eliminar la imagen anterior: {str(e)}")
+                    
+                    # Guardar nueva imagen
+                    filename = save_image(form.imagen.data, 'sliders')
+                    slider.imagen_url = url_for('static', filename=f'uploads/sliders/{filename}')
+                
+                # Limpiar código de Instagram si cambió a imagen
+                if slider.tipo != 'imagen':
+                    slider.instagram_embed_code = None
+            
+            elif form.tipo.data == 'instagram':
+                slider.instagram_embed_code = form.instagram_embed_code.data
+                
+                # Limpiar imagen si cambió a Instagram
+                if slider.tipo != 'instagram':
+                    if slider.imagen_url:
+                        old_filename = slider.imagen_url.split('/')[-1]
+                        old_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'sliders', old_filename)
+                        try:
+                            if os.path.exists(old_path):
+                                os.remove(old_path)
+                        except Exception as e:
+                            logger.warning(f"No se pudo eliminar la imagen: {str(e)}")
+                    slider.imagen_url = None
+            
+            db.session.commit()
+            flash(f'Slide "{slider.titulo}" actualizado exitosamente.', 'success')
+            return redirect(url_for('admin.gestionar_sliders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al actualizar slider: {str(e)}", exc_info=True)
+            flash('Error al actualizar el slide. Por favor, inténtalo de nuevo.', 'danger')
+    
+    return render_template('admin/editar_slider.html', 
+                         title=f'Editar Slide - {slider.titulo}', 
+                         form=form, 
+                         slider=slider)
+
+@bp.route('/sliders/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar_slider(id):
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    if Slider is None:
+        flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
+        return redirect(url_for('admin.dashboard'))
+    
+    slider = Slider.query.get_or_404(id)
+    
+    try:
+        # Eliminar imagen asociada si existe
+        if slider.imagen_url:
+            filename = slider.imagen_url.split('/')[-1]
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'sliders', filename)
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.warning(f"No se pudo eliminar la imagen del slide: {str(e)}")
+        
+        titulo = slider.titulo
+        db.session.delete(slider)
+        db.session.commit()
+        
+        flash(f'Slide "{titulo}" eliminado exitosamente.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al eliminar slider: {str(e)}", exc_info=True)
+        flash('Error al eliminar el slide. Por favor, inténtalo de nuevo.', 'danger')
+    
+    return redirect(url_for('admin.gestionar_sliders'))

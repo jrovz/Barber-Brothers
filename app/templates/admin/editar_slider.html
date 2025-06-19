@@ -1,0 +1,304 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin.gestionar_sliders') }}">← Volver a Sliders</a>
+    </div>
+</div>
+
+{% include 'admin/_flash_messages.html' %}
+
+<div class="admin-content">
+    <section class="admin-form">
+        <div class="edit-preview">
+            <h3>Vista Previa Actual</h3>
+            <div class="current-slide-preview">
+                {% if slider.tipo == 'imagen' and slider.imagen_url %}
+                    <img src="{{ slider.imagen_url }}" alt="{{ slider.titulo }}" class="preview-image">
+                {% elif slider.tipo == 'instagram' and slider.instagram_embed_code %}
+                    <div class="instagram-embed-preview">
+                        {{ slider.instagram_embed_code|safe }}
+                    </div>
+                {% else %}
+                    <div class="no-preview-large">
+                        <span class="no-preview-icon">🖼️</span>
+                        <p>Sin contenido configurado</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="slider-form">
+            {{ form.hidden_tag() }}
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ form.titulo.label(class="form-label") }}
+                    {{ form.titulo(class="form-control", value=slider.titulo) }}
+                    {% if form.titulo.errors %}
+                        <div class="form-errors">
+                            {% for error in form.titulo.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.subtitulo.label(class="form-label") }}
+                    {{ form.subtitulo(class="form-control", value=slider.subtitulo or '') }}
+                    {% if form.subtitulo.errors %}
+                        <div class="form-errors">
+                            {% for error in form.subtitulo.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.tipo.label(class="form-label") }}
+                    {{ form.tipo(class="form-control", id="tipo-selector") }}
+                    {% if form.tipo.errors %}
+                        <div class="form-errors">
+                            {% for error in form.tipo.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.orden.label(class="form-label") }}
+                    {{ form.orden(class="form-control", value=slider.orden) }}
+                    {% if form.orden.errors %}
+                        <div class="form-errors">
+                            {% for error in form.orden.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">Los slides se mostrarán ordenados de menor a mayor número</small>
+                </div>
+            </div>
+            
+            <!-- Campos específicos para tipo de slide -->
+            <div id="imagen-fields" class="slide-type-fields">
+                <div class="form-group">
+                    {{ form.imagen.label(class="form-label") }}
+                    {{ form.imagen(class="form-control") }}
+                    {% if form.imagen.errors %}
+                        <div class="form-errors">
+                            {% for error in form.imagen.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">
+                        {% if slider.tipo == 'imagen' and slider.imagen_url %}
+                            <strong>Imagen actual:</strong> {{ slider.imagen_url.split('/')[-1] }}<br>
+                        {% endif %}
+                        Sube una nueva imagen para reemplazar la actual. Recomendado: 1920x740px
+                    </small>
+                </div>
+            </div>
+            
+            <div id="instagram-fields" class="slide-type-fields" style="display: none;">
+                <div class="form-group">
+                    {{ form.instagram_embed_code.label(class="form-label") }}
+                    {{ form.instagram_embed_code(class="form-control") }}
+                    {% if form.instagram_embed_code.errors %}
+                        <div class="form-errors">
+                            {% for error in form.instagram_embed_code.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">
+                        <strong>Cómo obtener el código:</strong><br>
+                        1. Ve a la publicación de Instagram<br>
+                        2. Haz clic en los 3 puntos (...)<br>
+                        3. Selecciona "Insertar"<br>
+                        4. Copia todo el código HTML que aparece
+                    </small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    {{ form.activo(checked=slider.activo) }}
+                    {{ form.activo.label(class="checkbox-label") }}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Actualizar Slide</button>
+                <a href="{{ url_for('admin.gestionar_sliders') }}" class="btn btn-secondary">Cancelar</a>
+                
+                <!-- Botón de eliminar -->
+                <div class="delete-section">
+                    <form method="POST" 
+                          action="{{ url_for('admin.eliminar_slider', id=slider.id) }}" 
+                          style="display: inline-block;"
+                          onsubmit="return confirm('¿Estás COMPLETAMENTE SEGURO de eliminar este slide? Esta acción no se puede deshacer.')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger">🗑️ Eliminar Slide</button>
+                    </form>
+                </div>
+            </div>
+        </form>
+    </section>
+</div>
+
+<style>
+.edit-preview {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--color-bg-light);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.current-slide-preview {
+    background: var(--color-bg-dark);
+    border-radius: 6px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+}
+
+.instagram-embed-preview {
+    max-width: 540px;
+    margin: 0 auto;
+}
+
+.instagram-embed-preview .instagram-media {
+    margin: 0 auto !important;
+}
+
+.no-preview-large {
+    padding: 3rem;
+    color: var(--color-text-muted);
+}
+
+.no-preview-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.slide-type-fields {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--color-bg-light);
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+}
+
+.form-help {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+.delete-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: 1px solid #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .edit-preview {
+        padding: 1rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelector = document.getElementById('tipo-selector');
+    const imagenFields = document.getElementById('imagen-fields');
+    const instagramFields = document.getElementById('instagram-fields');
+    
+    // Establecer valores iniciales del formulario
+    tipoSelector.value = '{{ slider.tipo }}';
+    
+    {% if slider.tipo == 'instagram' and slider.instagram_embed_code %}
+    document.querySelector('#instagram_embed_code').value = `{{ slider.instagram_embed_code|replace('`', '\\`')|replace('\\', '\\\\')|safe }}`;
+    {% endif %}
+    
+    function toggleFields() {
+        const tipo = tipoSelector.value;
+        
+        if (tipo === 'imagen') {
+            imagenFields.style.display = 'block';
+            instagramFields.style.display = 'none';
+        } else if (tipo === 'instagram') {
+            imagenFields.style.display = 'none';
+            instagramFields.style.display = 'block';
+        }
+    }
+    
+    // Ejecutar al cargar y cuando cambie
+    toggleFields();
+    tipoSelector.addEventListener('change', toggleFields);
+});
+
+// Script para Instagram embeds
+if (window.instgrm) {
+    window.instgrm.Embeds.process();
+} else {
+    // Cargar script de Instagram si no está cargado
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = '//www.instagram.com/embed.js';
+    document.head.appendChild(script);
+}
+</script>
+{% endblock %} 

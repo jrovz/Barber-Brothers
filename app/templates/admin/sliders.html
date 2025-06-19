@@ -1,0 +1,352 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <p class="panel-subtitle">Gestiona los elementos del carrusel de la página principal</p>
+</div>
+
+{% include 'admin/_flash_messages.html' %}
+
+<div class="admin-content">
+    <!-- Formulario para crear nuevo slider -->
+    <section class="slider-form">
+        <h2 class="form-title">✨ Crear Nuevo Slide</h2>
+        
+        <form method="POST" enctype="multipart/form-data" id="slider-form">
+            {{ form.hidden_tag() }}
+            
+            <!-- Selector de tipo mejorado -->
+            <div class="tipo-selector full-width">
+                <label class="form-label">Tipo de Slide</label>
+                <div class="tipo-options">
+                    <div class="tipo-option">
+                        <input type="radio" id="tipo-imagen" name="tipo" value="imagen" {% if form.tipo.data == 'imagen' or not form.tipo.data %}checked{% endif %}>
+                        <label for="tipo-imagen">🖼️ Imagen</label>
+                    </div>
+                    <div class="tipo-option">
+                        <input type="radio" id="tipo-instagram" name="tipo" value="instagram" {% if form.tipo.data == 'instagram' %}checked{% endif %}>
+                        <label for="tipo-instagram">📷 Instagram</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-form-grid">
+                <div class="form-group">
+                    {{ form.titulo.label(class="form-label") }}
+                    {{ form.titulo(class="form-input") }}
+                    {% if form.titulo.errors %}
+                        <div class="form-errors">
+                            {% for error in form.titulo.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.subtitulo.label(class="form-label") }}
+                    {{ form.subtitulo(class="form-input") }}
+                    {% if form.subtitulo.errors %}
+                        <div class="form-errors">
+                            {% for error in form.subtitulo.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.orden.label(class="form-label") }}
+                    {{ form.orden(class="form-input") }}
+                    {% if form.orden.errors %}
+                        <div class="form-errors">
+                            {% for error in form.orden.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">Los slides se mostrarán ordenados de menor a mayor número</small>
+                </div>
+            </div>
+            
+            <!-- Campos específicos para tipo de slide -->
+            <div id="imagen-fields" class="conditional-field image-upload-field active">
+                <div class="form-group full-width">
+                    {{ form.imagen.label(class="form-label") }}
+                    {{ form.imagen(class="form-input") }}
+                    {% if form.imagen.errors %}
+                        <div class="form-errors">
+                            {% for error in form.imagen.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">Recomendado: 1920x740px para mejor visualización</small>
+                </div>
+            </div>
+            
+            <div id="instagram-fields" class="conditional-field instagram-field">
+                <div class="form-group full-width">
+                    {{ form.instagram_embed_code.label(class="form-label") }}
+                    {{ form.instagram_embed_code(class="form-input") }}
+                    {% if form.instagram_embed_code.errors %}
+                        <div class="form-errors">
+                            {% for error in form.instagram_embed_code.errors %}
+                                <span class="error-message">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">
+                        <strong>Cómo obtener el código:</strong><br>
+                        1. Ve a la publicación de Instagram<br>
+                        2. Haz clic en los 3 puntos (...)<br>
+                        3. Selecciona "Insertar"<br>
+                        4. Copia todo el código HTML que aparece
+                    </small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    {{ form.activo() }}
+                    {{ form.activo.label(class="checkbox-label") }}
+                </div>
+            </div>
+            
+            <div class="slider-form-actions">
+                <button type="submit" class="btn btn-primary">✨ Crear Slide</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Limpiar</button>
+            </div>
+        </form>
+    </section>
+    
+    <!-- Lista de sliders existentes -->
+    <section class="admin-table">
+        <h2>Slides Actuales ({{ sliders|length }})</h2>
+        
+        {% if sliders %}
+        <div class="sliders-table">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Vista Previa & Título</th>
+                        <th>Tipo</th>
+                        <th>Orden</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slider in sliders %}
+                    <tr>
+                        <td>
+                            <div class="slider-preview">
+                                {% if slider.tipo == 'imagen' and slider.imagen_url %}
+                                    <img src="{{ slider.imagen_url }}" alt="{{ slider.titulo }}" class="slider-preview-image">
+                                {% else %}
+                                    <div class="slider-preview-image" style="display: flex; align-items: center; justify-content: center; background: var(--color-bg-dark); color: var(--color-text-muted);">
+                                        {% if slider.tipo == 'instagram' %}📷{% else %}🖼️{% endif %}
+                                    </div>
+                                {% endif %}
+                                <div class="slider-preview-info">
+                                    <div class="slider-preview-title">{{ slider.titulo }}</div>
+                                    {% if slider.subtitulo %}
+                                        <div class="slider-preview-subtitle">{{ slider.subtitulo }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="display: none;">
+                            <strong>{{ slider.titulo }}</strong>
+                            {% if slider.subtitulo %}
+                                <br><small class="text-muted">{{ slider.subtitulo }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="slider-type-badge {{ slider.tipo }}">
+                                {% if slider.tipo == 'imagen' %}🖼️ Imagen{% else %}📷 Instagram{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="orden-display">{{ slider.orden }}</span>
+                        </td>
+                        <td>
+                            <span class="slider-status-badge {% if slider.activo %}activo{% else %}inactivo{% endif %}">
+                                {% if slider.activo %}✅ Activo{% else %}❌ Inactivo{% endif %}
+                            </span>
+                        </td>
+                        <td class="text-muted">
+                            {{ slider.fecha_creacion.strftime('%d/%m/%Y') }}
+                            {% if slider.fecha_actualizacion != slider.fecha_creacion %}
+                                <br><small>Editado: {{ slider.fecha_actualizacion.strftime('%d/%m/%Y') }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <a href="{{ url_for('admin.editar_slider', id=slider.id) }}" 
+                                   class="btn btn-edit btn-small">📝 Editar</a>
+                                
+                                <form method="POST" 
+                                      action="{{ url_for('admin.eliminar_slider', id=slider.id) }}" 
+                                      style="display: inline-block;"
+                                      onsubmit="return confirm('¿Estás seguro de que deseas eliminar este slide?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-delete btn-small">🗑️ Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🖼️</div>
+            <h3>No hay slides configurados</h3>
+            <p>Crea tu primer slide usando el formulario de arriba.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+.slide-preview {
+    width: 80px;
+    text-align: center;
+}
+
+.slide-thumb {
+    width: 60px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+}
+
+.instagram-preview, .no-preview {
+    width: 60px;
+    height: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-medium);
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+}
+
+.instagram-icon {
+    font-size: 1rem;
+    margin-bottom: 2px;
+}
+
+.orden-badge {
+    display: inline-block;
+    background: var(--color-accent);
+    color: white;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.slide-type-fields {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--color-bg-light);
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+}
+
+.form-help {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: block;
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+    .slide-preview {
+        width: 50px;
+    }
+    
+    .slide-thumb, .instagram-preview, .no-preview {
+        width: 40px;
+        height: 20px;
+        font-size: 0.6rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoRadios = document.querySelectorAll('input[name="tipo"]');
+    const imagenFields = document.getElementById('imagen-fields');
+    const instagramFields = document.getElementById('instagram-fields');
+    
+    function toggleFields() {
+        const selectedTipo = document.querySelector('input[name="tipo"]:checked');
+        const tipo = selectedTipo ? selectedTipo.value : 'imagen';
+        
+        // Remover clases activas
+        imagenFields.classList.remove('active');
+        instagramFields.classList.remove('active');
+        
+        // Agregar clase activa según el tipo
+        if (tipo === 'imagen') {
+            setTimeout(() => imagenFields.classList.add('active'), 50);
+        } else if (tipo === 'instagram') {
+            setTimeout(() => instagramFields.classList.add('active'), 50);
+        }
+    }
+    
+    // Ejecutar al cargar
+    toggleFields();
+    
+    // Agregar event listeners a todos los radio buttons
+    tipoRadios.forEach(radio => {
+        radio.addEventListener('change', toggleFields);
+    });
+    
+    // Efecto de hover para las opciones de tipo
+    const tipoOptions = document.querySelectorAll('.tipo-option label');
+    
+    tipoOptions.forEach(label => {
+        label.addEventListener('mouseenter', function() {
+            if (!this.previousElementSibling.checked) {
+                this.style.transform = 'translateY(-2px)';
+            }
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            if (!this.previousElementSibling.checked) {
+                this.style.transform = 'translateY(0)';
+            }
+        });
+    });
+});
+
+function resetForm() {
+    const form = document.getElementById('slider-form');
+    form.reset();
+    
+    // Resetear radio buttons al valor por defecto
+    document.getElementById('tipo-imagen').checked = true;
+    
+    // Trigger change event para actualizar campos visibles
+    setTimeout(() => {
+        document.getElementById('tipo-imagen').dispatchEvent(new Event('change'));
+    }, 100);
+}
+</script>
+{% endblock %} 
