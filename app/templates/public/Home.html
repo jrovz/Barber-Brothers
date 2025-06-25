@@ -104,8 +104,8 @@
                     <option value="">-- Selecciona un servicio --</option>
                     {% if servicios %}
                         {% for servicio in servicios %}
-                        <option value="{{ servicio.id }}" data-duracion="{{ servicio.duracion_estimada }}">
-                            {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP
+                        <option value="{{ servicio.id }}" data-duracion="{{ servicio.get_duracion_minutos() }}">
+                            {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP ({{ servicio.duracion_estimada or '30 min' }})
                         </option>
                         {% endfor %}
                     {% else %}
@@ -121,9 +121,11 @@
             <div class="date-selector">
                 {% for fecha in fechas_disponibles %}
                 <div class="date-option" data-fecha="{{ fecha.strftime('%Y-%m-%d') }}">
-                    <div class="day-name">{{ fecha.strftime('%a') }}</div>
+                    {% set dias_esp = {'Mon': 'Lun', 'Tue': 'Mar', 'Wed': 'Mié', 'Thu': 'Jue', 'Fri': 'Vie', 'Sat': 'Sáb', 'Sun': 'Dom'} %}
+                    {% set meses_esp = {'Jan': 'Ene', 'Feb': 'Feb', 'Mar': 'Mar', 'Apr': 'Abr', 'May': 'May', 'Jun': 'Jun', 'Jul': 'Jul', 'Aug': 'Ago', 'Sep': 'Sep', 'Oct': 'Oct', 'Nov': 'Nov', 'Dec': 'Dic'} %}
+                    <div class="day-name">{{ dias_esp[fecha.strftime('%a')] }}</div>
                     <div class="day-number">{{ fecha.day }}</div>
-                    <div class="month-name">{{ fecha.strftime('%b') }}</div>
+                    <div class="month-name">{{ meses_esp[fecha.strftime('%b')] }}</div>
                 </div>
                 {% endfor %}
             </div>

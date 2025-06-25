@@ -26,6 +26,10 @@ class Cliente(db.Model):
         """Clasifica al cliente según su patrón de visitas"""
         today = datetime.utcnow()
         
+        # Asegurar que total_visitas no sea None
+        if self.total_visitas is None:
+            self.total_visitas = 0
+        
         # Sin visitas anteriores
         if not self.ultima_visita:
             self.segmento = 'nuevo'
@@ -87,7 +91,10 @@ class Cita(db.Model):
                 self.cliente.ultima_visita = self.fecha
                 
             # Incrementar contador de visitas si no se había contado antes
-            self.cliente.total_visitas += 1
+            if self.cliente.total_visitas is None:
+                self.cliente.total_visitas = 1
+            else:
+                self.cliente.total_visitas += 1
             
             # Recalcular segmento
             self.cliente.clasificar_segmento()

@@ -175,6 +175,7 @@ class DisponibilidadBarbero(db.Model):
     def generar_slots_disponibles(self, fecha, duracion=30):
         """
         Genera slots de tiempo disponibles para una fecha específica
+        considerando solapamientos de citas existentes
         
         Args:
             fecha (date): Fecha para la que se quieren generar los slots
@@ -194,26 +195,43 @@ class DisponibilidadBarbero(db.Model):
         current_time = datetime.combine(fecha, self.hora_inicio)
         end_time = datetime.combine(fecha, self.hora_fin)
         
+        # Obtener todas las citas confirmadas y pendientes para este día y barbero
+        citas_del_dia = Cita.query.filter(
+            Cita.barbero_id == self.barbero_id,
+            Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
+            Cita.fecha < datetime.combine(fecha + timedelta(days=1), self.hora_inicio),
+            Cita.estado.in_(['confirmada', 'pendiente_confirmacion'])
+        ).all()
+        
+        # Crear lista de intervalos ocupados
+        intervalos_ocupados = []
+        for cita in citas_del_dia:
+            inicio_cita = cita.fecha
+            fin_cita = inicio_cita + timedelta(minutes=cita.duracion or 30)
+            intervalos_ocupados.append((inicio_cita, fin_cita))
+        
         # Generar slots hasta la hora de fin
         while current_time + timedelta(minutes=duracion) <= end_time:
-            # Verificar si ya existe una cita para este horario
             hora_slot = current_time.time()
-            fecha_hora = datetime.combine(fecha, hora_slot)
+            fecha_hora_inicio = datetime.combine(fecha, hora_slot)
+            fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion)
             
-            # Buscar citas que se solapen con este horario
-            cita_existente = Cita.query.filter_by(
-                barbero_id=self.barbero_id,
-                fecha=fecha_hora,
-                estado='confirmada'
-            ).first()
+            # Verificar si este slot se solapa con alguna cita existente
+            disponible = True
+            for inicio_ocupado, fin_ocupado in intervalos_ocupados:
+                # Verificar solapamiento: el slot no debe empezar antes de que termine una cita
+                # ni terminar después de que empiece otra cita
+                if not (fecha_hora_fin <= inicio_ocupado or fecha_hora_inicio >= fin_ocupado):
+                    disponible = False
+                    break
             
             slots.append({
                 'hora': hora_slot.strftime('%H:%M'),
-                'disponible': cita_existente is None
+                'disponible': disponible
             })
             
-            # Avanzar a la siguiente hora
-            current_time += timedelta(minutes=duracion)
+            # Avanzar al siguiente slot (cada 15 minutos para mayor flexibilidad)
+            current_time += timedelta(minutes=15)
             
         return slots
     
@@ -224,7 +242,7 @@ class DisponibilidadBarbero(db.Model):
 def crear_disponibilidad_predeterminada(barbero_id):
     """
     Crea una disponibilidad predeterminada para un barbero
-    - Lunes a sábado: 8:00-12:00 y 13:00-20:00
+    - Lunes a sábado: 8:00-12:00 y 14:00-20:00
     
     Args:
         barbero_id (int): ID del barbero
@@ -253,7 +271,7 @@ def crear_disponibilidad_predeterminada(barbero_id):
             disp_tarde = DisponibilidadBarbero(
                 barbero_id=barbero_id,
                 dia_semana=dia,
-                hora_inicio=time(13, 0),  # 1:00 PM
+                hora_inicio=time(14, 0),  # 2:00 PM
                 hora_fin=time(20, 0),     # 8:00 PM
                 activo=True
             )

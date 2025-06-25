@@ -28,3 +28,31 @@ class Servicio(db.Model):
         if imagenes:
             return imagenes[0].ruta_imagen
         return self.imagen_url
+    
+    def get_duracion_minutos(self):
+        """
+        Extrae la duración en minutos del campo duracion_estimada
+        
+        Returns:
+            int: Duración en minutos, 30 por defecto si no se puede parsear
+        """
+        if not self.duracion_estimada:
+            return 30
+            
+        duracion_str = str(self.duracion_estimada).lower()
+        
+        # Extraer números del string
+        import re
+        numeros = re.findall(r'\d+', duracion_str)
+        
+        if not numeros:
+            return 30
+            
+        numero = int(numeros[0])
+        
+        # Determinar si es horas o minutos
+        if 'hora' in duracion_str or 'hour' in duracion_str or 'hr' in duracion_str:
+            return numero * 60
+        else:
+            # Asumir que son minutos por defecto
+            return numero

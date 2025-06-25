@@ -124,14 +124,29 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!bookingConfirmation) return;
 
         document.getElementById('confirm-barbero').textContent = barberoName;
-        document.getElementById('confirm-servicio').textContent = servicioName;
+        
+        // Obtener la duración del servicio seleccionado
+        const selectedServiceOption = servicioSelect.options[servicioSelect.selectedIndex];
+        const duracionMinutos = selectedServiceOption.dataset.duracion || '30';
+        const servicioConDuracion = `${servicioName} (${duracionMinutos} min)`;
+        
+        document.getElementById('confirm-servicio').textContent = servicioConDuracion;
         
         const fechaObj = new Date(fecha + 'T00:00:00'); 
         const fechaFormateadaParaDisplay = fechaObj.toLocaleDateString('es-ES', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
         document.getElementById('confirm-fecha').textContent = fechaFormateadaParaDisplay;
-        document.getElementById('confirm-hora').textContent = hora;
+        
+        // Mostrar hora de inicio y estimación de finalización
+        const horaInicio = hora;
+        const [horas, minutos] = hora.split(':').map(Number);
+        const minutosFinalizacion = minutos + parseInt(duracionMinutos);
+        const horasFinalizacion = horas + Math.floor(minutosFinalizacion / 60);
+        const minutosRestantes = minutosFinalizacion % 60;
+        const horaFin = `${horasFinalizacion.toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')}`;
+        
+        document.getElementById('confirm-hora').textContent = `${horaInicio} - ${horaFin}`;
 
         // Poblar los campos ocultos que se enviarán con el formulario de confirmación
         if (selectedBarberoIdInput) selectedBarberoIdInput.value = barberoId;

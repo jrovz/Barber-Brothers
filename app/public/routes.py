@@ -360,15 +360,11 @@ def disponibilidad_barbero(barbero_id, fecha):
 
         if servicio_id:
             servicio = Servicio.query.get(servicio_id)
-            if servicio and servicio.duracion_estimada:
-                try:
-                    duracion_str = ''.join(filter(str.isdigit, str(servicio.duracion_estimada)))
-                    if duracion_str:
-                         duracion_servicio = int(duracion_str)
-                    else: 
-                         print(f"Warning: No se pudo extraer duración numérica de '{servicio.duracion_estimada}'. Usando {duracion_servicio} min.")
-                except (ValueError, TypeError):
-                     print(f"Warning: Error al convertir duración '{servicio.duracion_estimada}'. Usando {duracion_servicio} min.")
+            if servicio:
+                duracion_servicio = servicio.get_duracion_minutos()
+                print(f"Servicio '{servicio.nombre}': {duracion_servicio} minutos")
+            else:
+                print(f"Warning: Servicio con ID {servicio_id} no encontrado. Usando duración por defecto.")
         else:
              print("Warning: No se proporcionó servicio_id. Usando duración por defecto.")
 
@@ -420,16 +416,43 @@ def agendar_cita():
         fecha_hora_str = f"{data['fecha']} {data['hora']}"
         fecha_hora = datetime.strptime(fecha_hora_str, '%Y-%m-%d %H:%M')
 
-        # Verificar si el horario ya está ocupado por una cita confirmada o pendiente de confirmación
-        cita_existente_confirmada = Cita.query.filter(
+        # Obtener la duración del servicio para verificar conflictos
+        servicio = Servicio.query.get(int(data['servicio_id']))
+        duracion_servicio = servicio.get_duracion_minutos() if servicio else 30
+        
+        # Calcular el rango de tiempo que ocupará la nueva cita
+        inicio_nueva_cita = fecha_hora
+        fin_nueva_cita = inicio_nueva_cita + timedelta(minutes=duracion_servicio)
+        
+        # Obtener todas las citas del barbero para el día seleccionado
+        fecha_inicio_dia = datetime.combine(fecha_hora.date(), datetime.min.time())
+        fecha_fin_dia = fecha_inicio_dia + timedelta(days=1)
+        
+        citas_del_dia = Cita.query.filter(
             Cita.barbero_id == int(data['barbero_id']),
-            Cita.fecha == fecha_hora,
-            Cita.estado.in_(['confirmada', 'pendiente_confirmacion']) # Considerar ambas
-        ).first()
+            Cita.estado.in_(['confirmada', 'pendiente_confirmacion']),
+            Cita.fecha >= fecha_inicio_dia,
+            Cita.fecha < fecha_fin_dia
+        ).all()
 
-        if cita_existente_confirmada:
-            current_app.logger.warning(f"Intento de agendar cita en horario ocupado: Barbero {data['barbero_id']} a las {fecha_hora}")
-            return jsonify({'error': 'Este horario ya no está disponible. Por favor, selecciona otro.'}), 409 # 409 Conflict
+        # Verificar solapamientos en Python
+        hay_solapamiento = False
+        for cita_existente in citas_del_dia:
+            inicio_existente = cita_existente.fecha
+            fin_existente = inicio_existente + timedelta(minutes=cita_existente.duracion or 30)
+            
+            # Verificar si hay solapamiento: la nueva cita no debe empezar antes de que termine una existente
+            # ni terminar después de que empiece otra existente
+            if not (fin_nueva_cita <= inicio_existente or inicio_nueva_cita >= fin_existente):
+                hay_solapamiento = True
+                current_app.logger.warning(f"Solapamiento detectado con cita ID {cita_existente.id}: "
+                                         f"Existente: {inicio_existente} - {fin_existente}, "
+                                         f"Nueva: {inicio_nueva_cita} - {fin_nueva_cita}")
+                break
+
+        if hay_solapamiento:
+            current_app.logger.warning(f"Intento de agendar cita con solapamiento: Barbero {data['barbero_id']} desde {fecha_hora} hasta {fin_nueva_cita}")
+            return jsonify({'error': 'Este horario se solapa con otra cita. Por favor, selecciona otro horario.'}), 409 # 409 Conflict
 
         cliente = Cliente.query.filter_by(email=data['email']).first()
         if not cliente:
@@ -445,12 +468,17 @@ def agendar_cita():
             cliente.telefono = data['telefono']
             # No es necesario db.session.add(cliente) si ya existe y solo se modifica
 
+        # Obtener la duración del servicio
+        servicio = Servicio.query.get(int(data['servicio_id']))
+        duracion_servicio = servicio.get_duracion_minutos() if servicio else 30
+        
         nueva_cita = Cita(
             cliente_id=cliente.id,
             barbero_id=int(data['barbero_id']),
             servicio_id=int(data['servicio_id']),
             fecha=fecha_hora,
             estado='pendiente_confirmacion', # Estado inicial
+            duracion=duracion_servicio,  # Guardar la duración del servicio
             notas=data.get('notas', '')
         )
         db.session.add(nueva_cita)
