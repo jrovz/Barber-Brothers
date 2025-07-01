@@ -26,12 +26,12 @@ def send_appointment_confirmation_email(cliente_email, cliente_nombre, cita, tok
     confirm_url = url_for('public.confirmar_cita_route', token=token, _external=True)
     subject = "Confirma tu cita en Barber Brothers"
 
-    # Para acceder a cita.servicio_rel.nombre y cita.barbero_rel.nombre en la plantilla,
+    # Para acceder a cita.servicio_rel.nombre y cita.barbero.nombre en la plantilla,
     # asegúrate que estas relaciones estén cargadas.
     # Si usas lazy='dynamic', necesitarías .all() o .first(), pero aquí son relaciones directas.
     # Si hay problemas, puedes pasar los nombres directamente:
     # servicio_nombre = cita.servicio_rel.nombre if cita.servicio_rel else "No especificado"
-    # barbero_nombre = cita.barbero_rel.nombre if cita.barbero_rel else "No especificado"
+    # barbero_nombre = cita.barbero.nombre if cita.barbero else "No especificado"
 
     send_email(
         subject=subject,

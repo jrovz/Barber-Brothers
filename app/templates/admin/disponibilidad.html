@@ -142,7 +142,7 @@
         <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
             <div class="form-group">
                 {{ form.dia_semana.label(class="form-label") }}
-                {{ form.dia_semana(class="form-input") }}
+                {{ form.dia_semana(class="form-input", id="dia_semana_select") }}
                 {% for error in form.dia_semana.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
             <div class="form-group">
@@ -164,8 +164,8 @@
             </div>
         </div>
         <div style="margin-top: 1.5rem;">
-            <button type="submit" class="btn">➕ Añadir Horario</button>
-            <button type="reset" class="btn btn-outline">🔄 Limpiar</button>
+            <button type="submit" class="btn" id="submit_horario_btn">➕ Añadir Horario</button>
+            <button type="reset" class="btn btn-outline" onclick="resetForm()">🔄 Limpiar</button>
         </div>
     </form>
 </section>
@@ -421,5 +421,41 @@
     margin-right: 0.5rem;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const diaSelect = document.getElementById('dia_semana_select');
+    const submitBtn = document.getElementById('submit_horario_btn');
+    
+    // Función para resetear el formulario
+    window.resetForm = function() {
+        if (diaSelect) {
+            diaSelect.selectedIndex = 0; // Volver a "Selecciona un día"
+        }
+        const horaInicio = document.getElementById('hora_inicio');
+        const horaFin = document.getElementById('hora_fin');
+        if (horaInicio) horaInicio.value = '';
+        if (horaFin) horaFin.value = '';
+    };
+    
+    // Debug: Verificar el valor seleccionado
+    if (diaSelect) {
+        diaSelect.addEventListener('change', function() {
+            console.log('Día seleccionado:', this.value, 'Index:', this.selectedIndex);
+        });
+    }
+    
+    // Validación adicional en el cliente
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+            if (diaSelect && (diaSelect.value === '-1' || diaSelect.selectedIndex === 0)) {
+                e.preventDefault();
+                alert('Por favor, selecciona un día de la semana.');
+                diaSelect.focus();
+            }
+        });
+    }
+});
+</script>
 
 {% endblock %}

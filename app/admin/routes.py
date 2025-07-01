@@ -543,17 +543,31 @@ def gestionar_disponibilidad(barbero_id):
             if hora_fin <= hora_inicio:
                 flash('La hora de fin debe ser posterior a la hora de inicio.', 'danger')
             else:
-                disponibilidad = DisponibilidadBarbero(
+                # Verificar si ya existe un horario solapado para el mismo día
+                disponibilidad_existente = DisponibilidadBarbero.query.filter_by(
                     barbero_id=barbero.id,
-                    dia_semana=form.dia_semana.data,
-                    hora_inicio=hora_inicio,
-                    hora_fin=hora_fin,
-                    activo=form.activo.data
-                )
-                db.session.add(disponibilidad)
-                db.session.commit()
-                flash('Disponibilidad añadida correctamente.', 'success')
-                return redirect(url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id))
+                    dia_semana=form.dia_semana.data
+                ).filter(
+                    # Verificar solapamiento de horarios
+                    (DisponibilidadBarbero.hora_inicio < hora_fin) &
+                    (DisponibilidadBarbero.hora_fin > hora_inicio)
+                ).first()
+                
+                if disponibilidad_existente:
+                    dias_nombres = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+                    flash(f'Ya existe un horario que se solapa para el día {dias_nombres.get(form.dia_semana.data, "desconocido")}.', 'warning')
+                else:
+                    disponibilidad = DisponibilidadBarbero(
+                        barbero_id=barbero.id,
+                        dia_semana=form.dia_semana.data,
+                        hora_inicio=hora_inicio,
+                        hora_fin=hora_fin,
+                        activo=form.activo.data
+                    )
+                    db.session.add(disponibilidad)
+                    db.session.commit()
+                    flash('Disponibilidad añadida correctamente.', 'success')
+                    return redirect(url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id))
         except ValueError:
             flash('Formato de hora inválido. Use HH:MM.', 'danger')
         except Exception as e:

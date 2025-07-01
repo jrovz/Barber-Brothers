@@ -394,7 +394,7 @@ psql -h localhost -U postgres barberia_db < backup.sql
 # Usar eager loading para evitar N+1 queries
 citas = Cita.query.options(
     joinedload(Cita.cliente),
-    joinedload(Cita.barbero_rel),
+                joinedload(Cita.barbero),
     joinedload(Cita.servicio_rel)
 ).filter(Cita.fecha >= datetime.now()).all()
 

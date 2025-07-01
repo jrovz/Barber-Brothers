@@ -73,7 +73,7 @@
             {% for cita in citas %}
             <tr>
                 <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td>{{ cita.barbero_rel.nombre }}</td>
+                <td>{{ cita.barbero.nombre }}</td>
                 <td>{{ cita.servicio_rel.nombre }}</td>
                 <td>${{ "%.2f"|format(cita.servicio_rel.precio) }}</td>
                 <td>

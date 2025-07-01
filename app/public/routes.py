@@ -488,7 +488,7 @@ def agendar_cita():
         current_app.logger.info(f"Cita ID {nueva_cita.id} creada, token generado. Enviando correo a {cliente.email}")
 
         # Enviar correo de confirmación
-        # Las relaciones barbero_rel y servicio_rel se cargarán automáticamente al acceder a ellas
+        # Las relaciones barbero y servicio_rel se cargarán automáticamente al acceder a ellas
         # en la plantilla del correo si no son lazy='dynamic' o si se accede a ellas antes.
         # Para estar seguros, podemos precargarlas o pasar los nombres directamente.
         # Aquí, el modelo Cita ya tiene las relaciones, así que deberían funcionar.

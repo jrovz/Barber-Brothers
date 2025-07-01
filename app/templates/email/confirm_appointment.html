@@ -17,7 +17,7 @@
         <p>Por favor, confirma los detalles de tu cita haciendo clic en el siguiente enlace:</p>
         <p>
             <strong>Servicio:</strong> {{ cita.servicio_rel.nombre if cita.servicio_rel else 'Servicio no especificado' }}<br>
-            <strong>Barbero:</strong> {{ cita.barbero_rel.nombre if cita.barbero_rel else 'Barbero no especificado' }}<br>
+            <strong>Barbero:</strong> {{ cita.barbero.nombre if cita.barbero else 'Barbero no especificado' }}<br>
             <strong>Fecha y Hora:</strong> {{ cita.fecha.strftime('%d/%m/%Y a las %H:%M') }}
         </p>
         <p><a href="{{ confirm_url }}" class="button">Confirmar mi Cita</a></p>

@@ -5,6 +5,17 @@ from wtforms.validators import DataRequired, Email, Length, NumberRange, Optiona
 from flask_wtf.file import FileField, FileAllowed, MultipleFileField
 from app.models.categoria import Categoria # Importar el modelo Categoria
 
+# Validador personalizado para campos que pueden tener valor 0
+class DataRequiredAllowZero(DataRequired):
+    """
+    Validador personalizado que permite el valor 0, a diferencia de DataRequired
+    que considera 0 como falsy y lo rechaza.
+    """
+    def __call__(self, form, field):
+        if field.data is None or (isinstance(field.data, str) and field.data.strip() == '') or field.data == -1:
+            raise ValidationError(self.message or 'Este campo es obligatorio.')
+        return True
+
 class LoginForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired(), Length(min=4, max=64)])
     password = PasswordField('Contraseña', validators=[DataRequired()])
@@ -115,9 +126,10 @@ class ServicioForm(FlaskForm):
     
 class DisponibilidadForm(FlaskForm):
     dia_semana = SelectField('Día de la Semana', choices=[
+        (-1, 'Selecciona un día'),
         (0, 'Lunes'), (1, 'Martes'), (2, 'Miércoles'), 
         (3, 'Jueves'), (4, 'Viernes'), (5, 'Sábado')
-    ], coerce=int, validators=[DataRequired()])
+    ], coerce=int, validators=[DataRequiredAllowZero(message="Debe seleccionar un día de la semana")])
     hora_inicio = StringField('Hora de Inicio (HH:MM)', validators=[DataRequired()])
     hora_fin = StringField('Hora de Fin (HH:MM)', validators=[DataRequired()])
     activo = BooleanField('Activo', default=True)
