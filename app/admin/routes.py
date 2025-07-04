@@ -1155,7 +1155,7 @@ def gestionar_sliders():
             if form.tipo.data == 'imagen':
                 if form.imagen.data:
                     filename = save_image(form.imagen.data, 'sliders')
-                    slider.imagen_url = url_for('static', filename=f'uploads/sliders/{filename}')
+                    slider.imagen_url = filename
             
             elif form.tipo.data == 'instagram':
                 slider.instagram_embed_code = form.instagram_embed_code.data
@@ -1217,7 +1217,7 @@ def editar_slider(id):
                     
                     # Guardar nueva imagen
                     filename = save_image(form.imagen.data, 'sliders')
-                    slider.imagen_url = url_for('static', filename=f'uploads/sliders/{filename}')
+                    slider.imagen_url = filename
                 
                 # Limpiar código de Instagram si cambió a imagen
                 if slider.tipo != 'imagen':
