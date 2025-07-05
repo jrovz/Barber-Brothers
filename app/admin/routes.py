@@ -20,6 +20,7 @@ from .slider_forms import SliderForm
 from app.admin.utils import save_image # Assuming you have this utility
 from datetime import datetime, time, timedelta
 import logging # For better logging, especially in edit_barbero
+import os # For file operations
 
 # Configure logging for specific routes if needed
 logger = logging.getLogger(__name__)
@@ -1212,6 +1213,7 @@ def editar_slider(id):
                         try:
                             if os.path.exists(old_path):
                                 os.remove(old_path)
+                                logger.info(f"Imagen anterior eliminada: {old_path}")
                         except Exception as e:
                             logger.warning(f"No se pudo eliminar la imagen anterior: {str(e)}")
                     
@@ -1234,6 +1236,7 @@ def editar_slider(id):
                         try:
                             if os.path.exists(old_path):
                                 os.remove(old_path)
+                                logger.info(f"Imagen eliminada al cambiar a Instagram: {old_path}")
                         except Exception as e:
                             logger.warning(f"No se pudo eliminar la imagen: {str(e)}")
                     slider.imagen_url = None
@@ -1265,25 +1268,46 @@ def eliminar_slider(id):
     slider = Slider.query.get_or_404(id)
     
     try:
+        titulo = slider.titulo
+        imagen_eliminada = False
+        error_imagen = None
+        
         # Eliminar imagen asociada si existe
-        if slider.imagen_url:
-            filename = slider.imagen_url.split('/')[-1]
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'sliders', filename)
+        if slider.imagen_url and slider.tipo == 'imagen':
             try:
+                filename = slider.imagen_url.split('/')[-1]
+                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'sliders', filename)
+                
+                logger.info(f"Intentando eliminar archivo: {file_path}")
+                
                 if os.path.exists(file_path):
                     os.remove(file_path)
+                    imagen_eliminada = True
+                    logger.info(f"Imagen eliminada exitosamente: {file_path}")
+                else:
+                    logger.warning(f"El archivo no existe: {file_path}")
+                    error_imagen = f"El archivo de imagen no fue encontrado en el servidor"
+                    
             except Exception as e:
-                logger.warning(f"No se pudo eliminar la imagen del slide: {str(e)}")
+                error_imagen = f"Error al eliminar la imagen: {str(e)}"
+                logger.error(f"Error al eliminar imagen del slide: {str(e)}", exc_info=True)
         
-        titulo = slider.titulo
+        # Eliminar el slider de la base de datos
         db.session.delete(slider)
         db.session.commit()
         
-        flash(f'Slide "{titulo}" eliminado exitosamente.', 'success')
+        # Mostrar mensaje de éxito con información adicional
+        if error_imagen:
+            flash(f'Slide "{titulo}" eliminado de la base de datos, pero hubo un problema con la imagen: {error_imagen}', 'warning')
+        else:
+            mensaje = f'Slide "{titulo}" eliminado exitosamente.'
+            if imagen_eliminada:
+                mensaje += ' La imagen también fue eliminada del servidor.'
+            flash(mensaje, 'success')
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error al eliminar slider: {str(e)}", exc_info=True)
-        flash('Error al eliminar el slide. Por favor, inténtalo de nuevo.', 'danger')
+        flash(f'Error al eliminar el slide: {str(e)}', 'danger')
     
     return redirect(url_for('admin.gestionar_sliders'))
