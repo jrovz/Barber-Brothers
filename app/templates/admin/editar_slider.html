@@ -11,32 +11,51 @@
 {% include 'admin/_flash_messages.html' %}
 
 <div class="admin-content">
-    <section class="admin-form">
-        <div class="edit-preview">
-            <h3>Vista Previa Actual</h3>
-            <div class="current-slide-preview">
-                {% if slider.tipo == 'imagen' and slider.imagen_url %}
-                    <img src="{{ slider.imagen_url }}" alt="{{ slider.titulo }}" class="preview-image">
-                {% elif slider.tipo == 'instagram' and slider.instagram_embed_code %}
-                    <div class="instagram-embed-preview">
-                        {{ slider.instagram_embed_code|safe }}
-                    </div>
-                {% else %}
-                    <div class="no-preview-large">
-                        <span class="no-preview-icon">🖼️</span>
-                        <p>Sin contenido configurado</p>
-                    </div>
-                {% endif %}
-            </div>
+    <!-- Vista Previa Actual -->
+    <section class="slider-form">
+        <h2 class="form-title">👀 Vista Previa Actual</h2>
+        <div class="current-slide-preview">
+            {% if slider.tipo == 'imagen' and slider.imagen_url %}
+                <img src="{{ slider.imagen_url }}" alt="{{ slider.titulo }}" class="preview-image">
+            {% elif slider.tipo == 'instagram' and slider.instagram_embed_code %}
+                <div class="instagram-embed-preview">
+                    {{ slider.instagram_embed_code|safe }}
+                </div>
+            {% else %}
+                <div class="no-preview-large">
+                    <span class="no-preview-icon">🖼️</span>
+                    <p>Sin contenido configurado</p>
+                </div>
+            {% endif %}
         </div>
+    </section>
+
+    <!-- Formulario de Edición -->
+    <section class="slider-form">
+        <h2 class="form-title">✏️ Editar Slide</h2>
         
         <form method="POST" enctype="multipart/form-data" id="slider-form">
             {{ form.hidden_tag() }}
             
-            <div class="form-grid">
+            <!-- Selector de tipo mejorado -->
+            <div class="tipo-selector full-width">
+                <label class="form-label">Tipo de Slide</label>
+                <div class="tipo-options">
+                    <div class="tipo-option">
+                        <input type="radio" id="tipo-imagen" name="tipo" value="imagen" {% if slider.tipo == 'imagen' %}checked{% endif %}>
+                        <label for="tipo-imagen">🖼️ Imagen</label>
+                    </div>
+                    <div class="tipo-option">
+                        <input type="radio" id="tipo-instagram" name="tipo" value="instagram" {% if slider.tipo == 'instagram' %}checked{% endif %}>
+                        <label for="tipo-instagram">📷 Instagram</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-form-grid">
                 <div class="form-group">
                     {{ form.titulo.label(class="form-label") }}
-                    {{ form.titulo(class="form-control", value=slider.titulo) }}
+                    {{ form.titulo(class="form-input", value=slider.titulo) }}
                     {% if form.titulo.errors %}
                         <div class="form-errors">
                             {% for error in form.titulo.errors %}
@@ -48,7 +67,7 @@
                 
                 <div class="form-group">
                     {{ form.subtitulo.label(class="form-label") }}
-                    {{ form.subtitulo(class="form-control", value=slider.subtitulo or '') }}
+                    {{ form.subtitulo(class="form-input", value=slider.subtitulo or '') }}
                     {% if form.subtitulo.errors %}
                         <div class="form-errors">
                             {% for error in form.subtitulo.errors %}
@@ -59,20 +78,8 @@
                 </div>
                 
                 <div class="form-group">
-                    {{ form.tipo.label(class="form-label") }}
-                    {{ form.tipo(class="form-control", id="tipo-selector") }}
-                    {% if form.tipo.errors %}
-                        <div class="form-errors">
-                            {% for error in form.tipo.errors %}
-                                <span class="error-message">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <div class="form-group">
                     {{ form.orden.label(class="form-label") }}
-                    {{ form.orden(class="form-control", value=slider.orden) }}
+                    {{ form.orden(class="form-input", value=slider.orden) }}
                     {% if form.orden.errors %}
                         <div class="form-errors">
                             {% for error in form.orden.errors %}
@@ -85,10 +92,10 @@
             </div>
             
             <!-- Campos específicos para tipo de slide -->
-            <div id="imagen-fields" class="slide-type-fields">
-                <div class="form-group">
+            <div id="imagen-fields" class="conditional-field image-upload-field active">
+                <div class="form-group full-width">
                     {{ form.imagen.label(class="form-label") }}
-                    {{ form.imagen(class="form-control") }}
+                    {{ form.imagen(class="form-input") }}
                     {% if form.imagen.errors %}
                         <div class="form-errors">
                             {% for error in form.imagen.errors %}
@@ -105,10 +112,10 @@
                 </div>
             </div>
             
-            <div id="instagram-fields" class="slide-type-fields" style="display: none;">
-                <div class="form-group">
+            <div id="instagram-fields" class="conditional-field instagram-field">
+                <div class="form-group full-width">
                     {{ form.instagram_embed_code.label(class="form-label") }}
-                    {{ form.instagram_embed_code(class="form-control") }}
+                    {{ form.instagram_embed_code(class="form-input") }}
                     {% if form.instagram_embed_code.errors %}
                         <div class="form-errors">
                             {% for error in form.instagram_embed_code.errors %}
@@ -133,18 +140,28 @@
                 </div>
             </div>
             
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Actualizar Slide</button>
-                <a href="{{ url_for('admin.gestionar_sliders') }}" class="btn btn-secondary">Cancelar</a>
-                
-                <!-- Botón de eliminar -->
-                <div class="delete-section">
+            <div class="slider-form-actions">
+                <div class="primary-actions">
+                    <button type="submit" class="btn btn-primary btn-enhanced">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text">Actualizar Slide</span>
+                    </button>
+                    <a href="{{ url_for('admin.gestionar_sliders') }}" class="btn btn-secondary btn-enhanced">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">Cancelar</span>
+                    </a>
+                    
+                    <!-- Botón de eliminar simplificado -->
                     <form method="POST" 
                           action="{{ url_for('admin.eliminar_slider', id=slider.id) }}" 
-                          style="display: inline-block;"
-                          onsubmit="return confirm('¿Estás COMPLETAMENTE SEGURO de eliminar este slide? Esta acción no se puede deshacer.')">
+                          class="delete-form"
+                          onsubmit="return confirm('¿Estás COMPLETAMENTE SEGURO de eliminar este slide?\n\n⚠️ Esta acción es IRREVERSIBLE y eliminará:\n• El slide de la base de datos\n• La imagen asociada del servidor\n• Todos los datos relacionados\n\n¿Continuar con la eliminación?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="btn btn-danger">🗑️ Eliminar Slide</button>
+                        <button type="submit" class="btn btn-danger btn-enhanced btn-delete">
+                            <span class="btn-icon">🗑️</span>
+                            <span class="btn-text">Eliminar Slide</span>
+                            <span class="btn-pulse"></span>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -153,19 +170,13 @@
 </div>
 
 <style>
-.edit-preview {
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: var(--color-bg-light);
-    border-radius: 8px;
-    border: 1px solid var(--color-border);
-}
-
+/* Estilos específicos para la vista previa */
 .current-slide-preview {
     background: var(--color-bg-dark);
     border-radius: 6px;
-    padding: 1rem;
+    padding: 1.5rem;
     text-align: center;
+    margin-top: 1rem;
 }
 
 .preview-image {
@@ -196,98 +207,301 @@
     margin-bottom: 1rem;
 }
 
-.slide-type-fields {
-    margin: 1.5rem 0;
-    padding: 1rem;
-    background: var(--color-bg-light);
-    border-radius: 6px;
-    border: 1px solid var(--color-border);
-}
-
-.form-help {
-    color: var(--color-text-muted);
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-    display: block;
-}
-
-.delete-section {
+/* BOTONES MEJORADOS */
+.slider-form-actions {
     margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--color-border);
 }
 
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-    border: 1px solid #dc3545;
+.primary-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
-.btn-danger:hover {
-    background-color: #c82333;
+.btn-enhanced {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    overflow: hidden;
+    min-height: 48px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-enhanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-enhanced:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-enhanced .btn-icon {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.btn-enhanced:hover .btn-icon {
+    transform: scale(1.1);
+}
+
+.btn-enhanced .btn-text {
+    font-weight: 600;
+}
+
+/* Botón primario mejorado */
+.btn-enhanced.btn-primary {
+    background: linear-gradient(135deg, var(--color-text-accent) 0%, var(--color-primary-hover) 100%);
+    border: 2px solid var(--color-text-accent);
+    color: var(--color-bg-dark);
+    position: relative;
+}
+
+.btn-enhanced.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-enhanced.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-enhanced.btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-text-accent) 100%);
+    border-color: var(--color-primary-hover);
+}
+
+/* Botón secundario mejorado */
+.btn-enhanced.btn-secondary {
+    background: var(--color-bg-medium);
+    border: 2px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.btn-enhanced.btn-secondary:hover {
+    background: var(--color-bg-dark);
+    border-color: var(--color-text-muted);
+    color: var(--color-text-primary);
+}
+
+/* Botón de eliminar mejorado */
+.delete-form {
+    margin: 0;
+    display: inline-block;
+}
+
+.btn-enhanced.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: 2px solid #dc3545;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-enhanced.btn-danger .btn-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.btn-enhanced.btn-danger:hover .btn-pulse {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+}
+
+.btn-enhanced.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
     border-color: #bd2130;
+    transform: translateY(-2px);
 }
 
 .breadcrumb a {
-    color: var(--color-accent);
+    color: var(--color-primary);
     text-decoration: none;
     font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
 .breadcrumb a:hover {
-    color: var(--color-accent-hover);
-    text-decoration: underline;
+    background: rgba(210, 184, 131, 0.1);
+    color: var(--color-primary-hover);
+    text-decoration: none;
+}
+
+/* Ajustes para el checkbox */
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--color-bg-medium);
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    transition: all 0.2s ease;
+}
+
+.checkbox-wrapper:hover {
+    background: var(--color-bg-dark);
+    border-color: var(--color-primary);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--color-primary);
+}
+
+.checkbox-label {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-wrapper:hover .checkbox-label {
+    color: var(--color-text-primary);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .edit-preview {
-        padding: 1rem;
+    .slider-form {
+        padding: 1.5rem;
     }
     
-    .form-grid {
+    .slider-form-grid {
         grid-template-columns: 1fr;
     }
     
-    .form-actions {
+    .tipo-options {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.5rem;
     }
     
-    .form-actions .btn {
-        width: 100%;
+    .tipo-option label {
+        padding: 1rem;
+        text-align: center;
     }
+    
+    .primary-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .btn-enhanced {
+        width: 100%;
+        justify-content: center;
+        min-width: auto;
+    }
+}
+
+/* Animaciones adicionales */
+@keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: calc(200px + 100%) 0; }
+}
+
+.btn-enhanced.btn-primary {
+    background-image: linear-gradient(135deg, var(--color-text-accent) 0%, var(--color-primary-hover) 100%);
+    background-size: 200px 100%;
+    animation: shimmer 3s infinite linear;
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelector = document.getElementById('tipo-selector');
+    const tipoRadios = document.querySelectorAll('input[name="tipo"]');
     const imagenFields = document.getElementById('imagen-fields');
     const instagramFields = document.getElementById('instagram-fields');
     
-    // Establecer valores iniciales del formulario
-    tipoSelector.value = '{{ slider.tipo }}';
-    
+    // Establecer valores iniciales del formulario (JavaScript arreglado)
+    const sliderTipo = '{{ slider.tipo }}';
     {% if slider.tipo == 'instagram' and slider.instagram_embed_code %}
-    document.querySelector('#instagram_embed_code').value = `{{ slider.instagram_embed_code|replace('`', '\\`')|replace('\\', '\\\\')|safe }}`;
+        const instagramCode = {{ slider.instagram_embed_code|replace('`', '\\`')|replace('\\', '\\\\')|tojson }};
+        const instagramTextarea = document.querySelector('#instagram_embed_code');
+        if (instagramTextarea && instagramCode) {
+            instagramTextarea.value = instagramCode;
+        }
     {% endif %}
     
     function toggleFields() {
-        const tipo = tipoSelector.value;
+        const selectedTipo = document.querySelector('input[name="tipo"]:checked');
+        const tipo = selectedTipo ? selectedTipo.value : 'imagen';
         
+        // Remover clases activas
+        imagenFields.classList.remove('active');
+        instagramFields.classList.remove('active');
+        
+        // Agregar clase activa según el tipo
         if (tipo === 'imagen') {
-            imagenFields.style.display = 'block';
-            instagramFields.style.display = 'none';
+            setTimeout(() => imagenFields.classList.add('active'), 50);
         } else if (tipo === 'instagram') {
-            imagenFields.style.display = 'none';
-            instagramFields.style.display = 'block';
+            setTimeout(() => instagramFields.classList.add('active'), 50);
         }
     }
     
-    // Ejecutar al cargar y cuando cambie
+    // Ejecutar al cargar
     toggleFields();
-    tipoSelector.addEventListener('change', toggleFields);
+    
+    // Agregar event listeners a todos los radio buttons
+    tipoRadios.forEach(radio => {
+        radio.addEventListener('change', toggleFields);
+    });
+    
+    // Efecto de hover para las opciones de tipo
+    const tipoOptions = document.querySelectorAll('.tipo-option label');
+    
+    tipoOptions.forEach(label => {
+        label.addEventListener('mouseenter', function() {
+            if (!this.previousElementSibling.checked) {
+                this.style.transform = 'translateY(-2px)';
+            }
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            if (!this.previousElementSibling.checked) {
+                this.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    // Efecto de clic en botones
+    const btnsEnhanced = document.querySelectorAll('.btn-enhanced');
+    btnsEnhanced.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
 });
 
 // Script para Instagram embeds
