@@ -47,7 +47,7 @@ class ProductoForm(FlaskForm):
     precio = DecimalField('Precio (COP)', validators=[DataRequired(), NumberRange(min=0)])
     categoria_id = SelectField('Categoría', coerce=int, validators=[Optional()])
     cantidad = IntegerField('Cantidad en Inventario', validators=[DataRequired(), NumberRange(min=0)])  # Nuevo campo
-    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()])
+    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()], render_kw={"autocomplete": "off", "placeholder": "https://ejemplo.com/imagen.jpg"})
     imagen_file = FileField('Subir Imagen', validators=[
         Optional(),
         FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'], 'Solo archivos de imagen!')
@@ -75,7 +75,7 @@ class BarberoForm(FlaskForm):
     confirmar_password = PasswordField('Confirmar Contraseña', validators=[Optional()])
     
     submit = SubmitField('Guardar')
-    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional(), URL(message="URL no válida")])
+    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional(), URL(message="URL no válida")], render_kw={"autocomplete": "off", "placeholder": "https://ejemplo.com/imagen.jpg"})
     
     def validate_username(self, username):
         """Validar que el username sea único"""
@@ -107,7 +107,7 @@ class ServicioForm(FlaskForm):
     activo = BooleanField('Servicio Activo', default=True)
     
     # Mantener campo URL para compatibilidad hacia atrás
-    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()])
+    imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()], render_kw={"autocomplete": "off", "placeholder": "https://ejemplo.com/imagen.jpg"})
     
     # Campo para subir múltiples imágenes
     imagenes_files = MultipleFileField('Subir Imágenes', validators=[

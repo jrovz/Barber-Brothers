@@ -450,9 +450,10 @@ def editar_barbero(id):
     # Pass obj=barbero to pre-fill the form on GET
     form = BarberoForm(obj=barbero if request.method == 'GET' else None)
     
+    # Añadir barbero_id al form para validación de username ANTES de validar
+    form.barbero_id = barbero.id
+    
     if form.validate_on_submit():
-        # Añadir barbero_id al form para validación de username
-        form.barbero_id = barbero.id
         
         barbero.nombre = form.nombre.data
         barbero.especialidad = form.especialidad.data
