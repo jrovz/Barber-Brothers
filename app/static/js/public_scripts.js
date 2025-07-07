@@ -176,88 +176,90 @@ document.addEventListener('DOMContentLoaded', function() {
     //    calculateTotal();
     // }
 
-    // --- Añadir aquí cualquier otro JS específico de Home.html si es necesario ---
-    // Por ejemplo, la lógica del slider:
-    const sliderContainer = document.querySelector('.slider-container');
-    const slides = document.querySelectorAll('.slide');
-    const prevArrow = document.querySelector('.prev-arrow');
-    const nextArrow = document.querySelector('.next-arrow');
-    const dots = document.querySelectorAll('.dot');
-    
-    let currentIndex = 0;
-    let slideInterval;
+    // --- SLIDER LOGIC REMOVED - Handled in Home.html to avoid conflicts ---
 
-    function updateSlider() {
-        if (!sliderContainer || !slides.length) return; // Salir si no hay slider
-        sliderContainer.style.transform = `translateX(-${currentIndex * 100}%)`;
+    // Slider Image Preloading and Instagram Support
+    function optimizeSliderPerformance() {
+        const slides = document.querySelectorAll('.slide');
+        const slideBackgrounds = document.querySelectorAll('.slide-bg');
         
-        // Actualizar dots activos
-        if (dots.length) {
-            dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
+        if (!slides.length) return;
+        
+        console.log('Optimizing slider performance...');
+        
+        // Preload slide background images for smoother transitions
+        slideBackgrounds.forEach((slideBg, index) => {
+            const bgImageUrl = slideBg.style.backgroundImage;
+            if (bgImageUrl) {
+                const imageUrl = bgImageUrl.replace(/url\(['"]?(.*?)['"]?\)/, '$1');
+                if (imageUrl && imageUrl !== 'none') {
+                    const img = new Image();
+                    img.onload = function() {
+                        console.log('Slide ' + (index + 1) + ' image preloaded');
+                        slideBg.classList.add('image-loaded');
+                    };
+                    img.onerror = function() {
+                        console.warn('Failed to preload slide ' + (index + 1) + ' image');
+                    };
+                    img.src = imageUrl;
+                }
+            }
+        });
+        
+        // Handle Instagram embed reprocessing when slides become active
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const slide = mutation.target;
+                    if (slide.classList.contains('active') && slide.classList.contains('instagram-embed-slide')) {
+                        // Reinitialize Instagram embed if needed
+                        if (window.instgrm && window.instgrm.Embeds) {
+                            setTimeout(function() {
+                                window.instgrm.Embeds.process();
+                            }, 100);
+                        }
+                    }
+                }
             });
+        });
+        
+        // Observe all slides for class changes
+        slides.forEach(function(slide) {
+            observer.observe(slide, { attributes: true, attributeFilter: ['class'] });
+        });
+        
+        // Force Instagram embeds processing on initial load
+        if (window.instgrm && window.instgrm.Embeds) {
+            setTimeout(function() {
+                window.instgrm.Embeds.process();
+            }, 500);
+        }
+        
+        // Add intersection observer for performance optimization
+        if ('IntersectionObserver' in window) {
+            const sliderObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        // Slider is visible, ensure smooth performance
+                        entry.target.style.willChange = 'transform';
+                    } else {
+                        // Slider not visible, reduce performance overhead
+                        entry.target.style.willChange = 'auto';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            const heroSlider = document.querySelector('.hero-slider');
+            if (heroSlider) {
+                sliderObserver.observe(heroSlider);
+            }
         }
     }
-
-    function nextSlide() {
-        if (!slides.length) return;
-        currentIndex = (currentIndex + 1) % slides.length;
-        updateSlider();
+    
+    // Initialize slider optimizations after DOM is ready
+    if (document.querySelector('.hero-slider')) {
+        optimizeSliderPerformance();
     }
-
-    function prevSlide() {
-        if (!slides.length) return;
-        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-        updateSlider();
-    }
-
-    function goToSlide(index) {
-        if (!slides.length) return;
-        currentIndex = index;
-        updateSlider();
-        resetInterval(); // Reiniciar intervalo al hacer clic en un dot
-    }
-
-    function startInterval() {
-        if (!slides.length) return;
-        // Limpiar intervalo existente por si acaso
-        clearInterval(slideInterval); 
-        slideInterval = setInterval(nextSlide, 5000); // Cambiar cada 5 segundos
-    }
-
-    function resetInterval() {
-        if (!slides.length) return;
-        clearInterval(slideInterval);
-        startInterval();
-    }
-
-    // Añadir listeners para controles del slider (solo si existen)
-    if (nextArrow) {
-        nextArrow.addEventListener('click', () => {
-            nextSlide();
-            resetInterval();
-        });
-    }
-    if (prevArrow) {
-        prevArrow.addEventListener('click', () => {
-            prevSlide();
-            resetInterval();
-        });
-    }
-    if (dots.length) {
-        dots.forEach(dot => {
-            dot.addEventListener('click', () => {
-                goToSlide(parseInt(dot.dataset.slide));
-            });
-        });
-    }
-
-    // Iniciar slider si existe
-    if (sliderContainer && slides.length > 1) {
-        updateSlider(); // Estado inicial
-        startInterval(); // Iniciar cambio automático
-    }
-
 
     // Gestión del menú móvil
     const menuToggle = document.getElementById('menu-toggle');

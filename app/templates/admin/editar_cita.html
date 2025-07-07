@@ -29,6 +29,10 @@
                 {{ form.cliente_email(class="form-input", id="admin_edit_cliente_email", placeholder="correo@ejemplo.com") }}
                 {% if form.cliente_email.errors %}{% for e in form.cliente_email.errors %}<span class="error-message">{{e}}</span>{% endfor %}{% endif %}
             </div>
+            <div class="form-group"> <!-- NUEVO CAMPO TELÉFONO -->
+                <label for="admin_edit_cliente_telefono" class="form-label">Teléfono del Cliente</label>
+                <input type="tel" id="admin_edit_cliente_telefono" name="cliente_telefono" class="form-input" placeholder="+57 300 123 4567" maxlength="20" value="{{ cita.cliente.telefono if cita.cliente and cita.cliente.telefono else '' }}">
+            </div>
             <div class="form-group">
                 {{ form.barbero_id.label(class="form-label") }}
                 {{ form.barbero_id(class="form-select", id="admin_edit_barbero_select") }}

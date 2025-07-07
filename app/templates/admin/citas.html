@@ -39,6 +39,10 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            <div class="form-group"> <!-- NUEVO CAMPO TELÉFONO -->
+                <label for="admin_cliente_telefono" class="form-label">Teléfono del Cliente</label>
+                <input type="tel" id="admin_cliente_telefono" name="cliente_telefono" class="form-input" placeholder="+57 300 123 4567" maxlength="20">
+            </div>
             <div class="form-group">
                 {{ form.barbero_id.label(class="form-label") }}
                 {{ form.barbero_id(class="form-select", id="admin_barbero_select") }}
@@ -103,10 +107,11 @@
                 <label for="estado" class="form-label">Estado:</label>
                 <select name="estado" id="estado" class="form-select">
                     <option value="">Todos</option>
-                    <option value="pendiente" {% if request.args.get('estado') == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="pendiente_confirmacion" {% if request.args.get('estado') == 'pendiente_confirmacion' %}selected{% endif %}>Pendiente Confirmación</option>
                     <option value="confirmada" {% if request.args.get('estado') == 'confirmada' %}selected{% endif %}>Confirmada</option>
                     <option value="cancelada" {% if request.args.get('estado') == 'cancelada' %}selected{% endif %}>Cancelada</option>
                     <option value="completada" {% if request.args.get('estado') == 'completada' %}selected{% endif %}>Completada</option>
+                    <option value="expirada" {% if request.args.get('estado') == 'expirada' %}selected{% endif %}>Expirada</option>
                 </select>
             </div>
             
@@ -123,14 +128,42 @@
     </form>
 </section>
 
+<!-- Mostrar filtros activos -->
+{% if request.args.get('estado') or request.args.get('fecha') %}
+<section class="active-filters">
+    <h3 class="section-title">Filtros Activos:</h3>
+    <div class="filter-tags">
+        {% if request.args.get('estado') %}
+        <span class="filter-tag">
+            Estado: {{ request.args.get('estado')|replace('_', ' ')|title }}
+            <a href="{{ url_for('admin.gestionar_citas', fecha=request.args.get('fecha')) }}" class="remove-filter">×</a>
+        </span>
+        {% endif %}
+        {% if request.args.get('fecha') %}
+        <span class="filter-tag">
+            Fecha: {{ request.args.get('fecha') }}
+            <a href="{{ url_for('admin.gestionar_citas', estado=request.args.get('estado')) }}" class="remove-filter">×</a>
+        </span>
+        {% endif %}
+        <a href="{{ url_for('admin.gestionar_citas') }}" class="btn btn-sm btn-outline">Limpiar todos los filtros</a>
+    </div>
+</section>
+{% endif %}
+
 <!-- Tabla de citas -->
 <section class="data-table-container">
-    <h2 class="section-title">Citas Existentes</h2>
+    <h2 class="section-title">
+        Citas Existentes
+        {% if request.args.get('estado') or request.args.get('fecha') %}
+            <span class="subtitle">(Filtradas)</span>
+        {% endif %}
+    </h2>
     <table class="data-table">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Cliente</th>
+                <th>Teléfono</th>
                 <th>Barbero</th>
                 <th>Servicio</th>
                 <th>Fecha</th>
@@ -143,16 +176,19 @@
             <tr>
                 <td>{{ cita.id }}</td>
                 <td>{{ cita.cliente.nombre if cita.cliente else 'N/A' }}</td>
+                <td class="phone-cell">{{ cita.cliente.telefono if cita.cliente and cita.cliente.telefono else 'N/A' }}</td>
                 <td>{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</td>
                 <td>{{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</td> {# MODIFIED: Assuming Cita has a relationship 'servicio' that gives the Servicio object #}
                 <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
                 <td>
                     <span class="badge 
                         {% if cita.estado == 'confirmada' %}badge-success
-                        {% elif cita.estado == 'pendiente' %}badge-warning
+                        {% elif cita.estado == 'pendiente_confirmacion' %}badge-warning
                         {% elif cita.estado == 'cancelada' %}badge-danger
-                        {% else %}badge-info{% endif %}">
-                        {{ cita.estado }}
+                        {% elif cita.estado == 'completada' %}badge-info
+                        {% elif cita.estado == 'expirada' %}badge-secondary
+                        {% else %}badge-primary{% endif %}">
+                        {{ cita.estado|replace('_', ' ')|title }}
                     </span>
                 </td>                <td class="actions">
                     <a href="{{ url_for('admin.editar_cita', id=cita.id) }}" class="btn btn-small btn-edit">Editar</a>
@@ -164,7 +200,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="7" class="text-center">No hay citas disponibles</td>
+                <td colspan="8" class="text-center">No hay citas disponibles</td>
             </tr>
             {% endfor %}
         </tbody>

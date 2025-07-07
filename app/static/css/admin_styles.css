@@ -1226,6 +1226,89 @@ textarea.form-input:focus {
     white-space: nowrap;
 }
 
+/* --- Estilos para campos telefónicos --- */
+input[type="tel"] {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.data-table .phone-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+/* --- Filtros Activos --- */
+.active-filters {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.active-filters .section-title {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+    color: var(--color-text-accent);
+    font-weight: 600;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+    color: var(--color-bg-dark);
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.filter-tag .remove-filter {
+    margin-left: 0.5rem;
+    color: var(--color-bg-dark);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    line-height: 1;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.filter-tag .remove-filter:hover {
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--color-bg-dark);
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    font-weight: normal;
+    font-style: italic;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
 .cliente-profile {
     padding: 1.5rem;
 }
@@ -1421,7 +1504,7 @@ textarea.form-input:focus {
     }
     
     .data-table {
-        min-width: 600px; /* Minimum width to maintain readability */
+        min-width: 700px; /* Minimum width to maintain readability with phone column */
         font-size: 0.9rem;
     }
     
@@ -1429,6 +1512,15 @@ textarea.form-input:focus {
     .data-table td {
         padding: 0.6rem 0.8rem;
         font-size: 0.85rem;
+    }
+    
+    /* Responsive para columna de teléfono */
+    .phone-cell {
+        font-size: 0.75rem !important;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     
     /* Card Layout for Complex Tables */
@@ -2092,5 +2184,17 @@ textarea.form-input:focus {
     .instagram-field textarea {
         min-height: 100px;
         font-size: 0.8rem;
+    }
+}
+
+/* Estilos adicionales para columna de teléfono en dispositivos pequeños */
+@media (max-width: 480px) {
+    .data-table {
+        min-width: 650px; /* Ajustar para columna de teléfono */
+    }
+    
+    .phone-cell {
+        max-width: 90px !important;
+        font-size: 0.7rem !important;
     }
 }

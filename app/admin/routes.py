@@ -841,13 +841,19 @@ def gestionar_citas():
                         pass
 
                     # Crear nuevo cliente si no se encontró por email
-                    cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', "0000000000")) # Asumir un campo de teléfono o placeholder
+                    cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                    cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=cliente_telefono_form if cliente_telefono_form else None)
                     db.session.add(cliente)
                     flash(f'Nuevo cliente "{cliente_nombre_form}" con email "{cliente_email_form}" será creado.', 'info')
                 elif cliente.nombre.lower() != cliente_nombre_form.lower():
                     # Si el email existe pero el nombre es diferente, actualizar el nombre.
                     flash(f'Cliente encontrado por email. Nombre actualizado de "{cliente.nombre}" a "{cliente_nombre_form}".', 'info')
                     cliente.nombre = cliente_nombre_form
+                
+                # Actualizar teléfono del cliente existente si se proporciona
+                cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                if cliente_telefono_form:
+                    cliente.telefono = cliente_telefono_form
                 
                 # Aquí 'cliente' ya está definido (existente o nuevo)
                 nueva_cita = Cita(
@@ -878,8 +884,36 @@ def gestionar_citas():
                 for error in errors:
                     flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
 
-    citas_lista = Cita.query.order_by(Cita.fecha.desc()).all()
-    return render_template("admin/citas.html", title="Gestionar Citas", citas=citas_lista, form=form, datetime=datetime)
+    # Aplicar filtros GET
+    query_citas = Cita.query
+    
+    # Filtro por estado
+    estado_filtro = request.args.get('estado')
+    if estado_filtro:
+        query_citas = query_citas.filter(Cita.estado == estado_filtro)
+    
+    # Filtro por fecha
+    fecha_filtro = request.args.get('fecha')
+    if fecha_filtro:
+        try:
+            # Convertir string a fecha y filtrar por el día completo
+            fecha_obj = datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
+            query_citas = query_citas.filter(db.func.date(Cita.fecha) == fecha_obj)
+        except ValueError:
+            flash('Formato de fecha inválido para el filtro.', 'warning')
+    
+    # Ejecutar query con filtros aplicados
+    citas_lista = query_citas.order_by(Cita.fecha.desc()).all()
+    
+    return render_template("admin/citas.html", 
+                         title="Gestionar Citas", 
+                         citas=citas_lista, 
+                         form=form, 
+                         datetime=datetime,
+                         filtros_aplicados={
+                             'estado': estado_filtro,
+                             'fecha': fecha_filtro
+                         })
 
 @bp.route('/citas/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -922,7 +956,10 @@ def editar_cita(id):
                     else:
                         # El email es el mismo o pertenece al cliente actual. Actualizar nombre si es necesario.
                         cliente_encontrado_por_email.nombre = cliente_nombre_form
-                        # Considerar actualizar teléfono si se añade ese campo
+                        # Actualizar teléfono si se proporciona
+                        cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                        if cliente_telefono_form:
+                            cliente_encontrado_por_email.telefono = cliente_telefono_form
                         cliente_para_cita = cliente_encontrado_por_email
                 else:
                     # El email es nuevo.
@@ -938,16 +975,23 @@ def editar_cita(id):
                          # flash('Email del cliente actualizado.', 'info')
                          
                          # Opción: Crear nuevo cliente si el email es nuevo y diferente al original
-                         cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', cita.cliente.telefono if cita.cliente else "0000000000"))
+                         cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                         telefono_cliente = cliente_telefono_form if cliente_telefono_form else (cita.cliente.telefono if cita.cliente else None)
+                         cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=telefono_cliente)
                          db.session.add(cliente_para_cita)
                          flash(f'Nuevo cliente creado con email "{cliente_email_form}" ya que el email cambió.', 'info')
 
                     elif not cita.cliente: # La cita no tenía cliente, crear uno nuevo
-                        cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=request.form.get('cliente_telefono', "0000000000"))
+                        cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                        cliente_para_cita = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=cliente_telefono_form if cliente_telefono_form else None)
                         db.session.add(cliente_para_cita)
                         flash(f'Nuevo cliente "{cliente_nombre_form}" será creado.', 'info')
                     else: # El email no cambió, y el cliente ya existía
-                        cita.cliente.nombre = cliente_nombre_form # Solo actualizar nombre
+                        cita.cliente.nombre = cliente_nombre_form # Actualizar nombre
+                        # Actualizar teléfono si se proporciona
+                        cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                        if cliente_telefono_form:
+                            cita.cliente.telefono = cliente_telefono_form
                         cliente_para_cita = cita.cliente
 
 

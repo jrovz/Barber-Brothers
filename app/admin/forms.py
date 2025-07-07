@@ -149,11 +149,12 @@ class CitaForm(FlaskForm):
     barbero_id = SelectField('Barbero Asignado', coerce=int, validators=[DataRequired(message="Debe seleccionar un barbero.")])
     servicio_id = SelectField('Servicio Solicitado', coerce=int, validators=[DataRequired(message="Debe seleccionar un servicio.")])
     estado = SelectField('Estado de la Cita', choices=[
-        ('pendiente', 'Pendiente'),
+        ('pendiente_confirmacion', 'Pendiente Confirmación'),
         ('confirmada', 'Confirmada'),
         ('cancelada', 'Cancelada'),
-        ('completada', 'Completada')
-    ], default='pendiente')
+        ('completada', 'Completada'),
+        ('expirada', 'Expirada')
+    ], default='pendiente_confirmacion')
     submit = SubmitField('Guardar Cita')
 
     def __init__(self, *args, **kwargs):
@@ -163,7 +164,7 @@ class CitaForm(FlaskForm):
         self.barbero_id.choices = [(0, 'Selecciona un barbero')] + [(b.id, b.nombre) for b in Barbero.query.filter_by(activo=True).order_by(Barbero.nombre).all()]
         self.servicio_id.choices = [(0, 'Selecciona un servicio')] + [(s.id, s.nombre) for s in Servicio.query.filter_by(activo=True).order_by(Servicio.nombre).all()]
         # Añadir opción por defecto también para estado si se desea
-        self.estado.choices = [('pendiente', 'Pendiente'), ('confirmada', 'Confirmada'), ('cancelada', 'Cancelada'), ('completada', 'Completada')]
+        self.estado.choices = [('pendiente_confirmacion', 'Pendiente Confirmación'), ('confirmada', 'Confirmada'), ('cancelada', 'Cancelada'), ('completada', 'Completada'), ('expirada', 'Expirada')]
 
 class ClienteFilterForm(FlaskForm):
     segmento = SelectField('Segmento', choices=[
