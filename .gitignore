@@ -193,3 +193,41 @@ pgdata/
 *.key
 config.py
 *.env
+
+# Archivos de uploads (imágenes subidas por usuarios)
+app/static/uploads/
+app/static/uploads/**/*
+
+# Archivos temporales y de prueba
+app/static/test-root.txt
+*.tmp
+*.log
+
+# Configuraciones específicas del servidor
+gunicorn.conf.py
+uwsgi.ini
+
+# Variables de entorno
+.env.local
+.env.production
+
+# Carpetas del sistema
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Dependencias
+node_modules/
+.npm
+
+# Logs
+logs/
+*.log
