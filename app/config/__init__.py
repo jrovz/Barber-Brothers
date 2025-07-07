@@ -10,7 +10,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     # Configuraciones para carga de archivos    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB límite de tamaño
+    MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30 MB límite de tamaño
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() in ['true', '1', 't']
