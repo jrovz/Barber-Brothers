@@ -177,6 +177,7 @@ cython_debug/
 *.db
 static/uploads/
 migrations/versions/__pycache__/
+migrations/versions/
 .DS_Store
 
 # VS Code
