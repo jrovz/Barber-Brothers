@@ -178,6 +178,7 @@ cython_debug/
 static/uploads/
 migrations/versions/__pycache__/
 migrations/versions/
+migrations/
 .DS_Store
 
 # VS Code
