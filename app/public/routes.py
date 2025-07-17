@@ -58,7 +58,7 @@ def home():
              print(f"  ID: {s.id}, Nombre: {s.nombre}, Activo (DB value): {s.activo}, Type: {type(s.activo)}")
 
         print("--- DEBUG: Querying ACTIVE Servicios ---")
-        servicios = Servicio.query.filter_by(activo=True).all()
+        servicios = Servicio.query.filter_by(activo=True).order_by(Servicio.orden.asc(), Servicio.nombre.asc()).all()
         print(f"Servicios found with filter_by(activo=True): {len(servicios)}")
         for s in servicios:
             print(f"  Active Servicio ID: {s.id}, Nombre: {s.nombre}")

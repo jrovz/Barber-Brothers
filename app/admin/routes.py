@@ -656,7 +656,8 @@ def gestionar_servicios():
                 precio=form.precio.data,
                 duracion_estimada=form.duracion_estimada.data,
                 activo=form.activo.data,
-                imagen_url=imagen_url
+                imagen_url=imagen_url,
+                orden=form.orden.data
             )
             db.session.add(nuevo_servicio)
             
@@ -719,6 +720,7 @@ def editar_servicio(id):
         servicio.precio = form.precio.data
         servicio.duracion_estimada = form.duracion_estimada.data
         servicio.activo = form.activo.data
+        servicio.orden = form.orden.data
         
         if form.imagen_file.data:
             imagen_path = save_image(form.imagen_file.data, 'servicios')
@@ -762,6 +764,7 @@ def editar_servicio(id):
         form.duracion_estimada.data = servicio.duracion_estimada
         form.activo.data = servicio.activo
         form.imagen_url.data = servicio.imagen_url
+        form.orden.data = servicio.orden
 
     return render_template('admin/editar_servicio.html', 
                            title="Editar Servicio", 

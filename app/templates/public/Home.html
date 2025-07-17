@@ -105,7 +105,7 @@
                     {% if servicios %}
                         {% for servicio in servicios %}
                         <option value="{{ servicio.id }}" data-duracion="{{ servicio.get_duracion_minutos() }}">
-                            {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP ({{ servicio.duracion_estimada or '30 min' }})
+                            {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP ({{ servicio.get_duracion_hhmm() }})
                         </option>
                         {% endfor %}
                     {% else %}

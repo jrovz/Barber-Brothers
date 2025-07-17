@@ -106,6 +106,7 @@ class ServicioForm(FlaskForm):
     duracion_estimada = StringField('Duración Estimada', validators=[Optional(), Length(max=50)])
     activo = BooleanField('Servicio Activo', default=True)
     
+    orden = IntegerField('Posición en el Home', validators=[DataRequired(), NumberRange(min=0)], default=0)
     # Mantener campo URL para compatibilidad hacia atrás
     imagen_url = StringField('URL de Imagen (opcional)', validators=[Optional()], render_kw={"autocomplete": "off", "placeholder": "https://ejemplo.com/imagen.jpg"})
     

@@ -12,6 +12,7 @@ class Servicio(db.Model):
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     imagen_url = db.Column(db.String(255), nullable=True) # URL de la imagen del servicio (mantener por compatibilidad)
     
+    orden = db.Column(db.Integer, nullable=False, default=0, index=True)  # Nuevo campo para el orden de aparición
     # Relación con múltiples imágenes
     imagenes = db.relationship('ServicioImagen', back_populates='servicio', lazy='dynamic', cascade='all, delete-orphan')
     
@@ -56,3 +57,12 @@ class Servicio(db.Model):
         else:
             # Asumir que son minutos por defecto
             return numero
+
+    def get_duracion_hhmm(self):
+        """
+        Devuelve la duración estimada en formato HH:MM (ej: 01:30)
+        """
+        minutos = self.get_duracion_minutos()
+        horas = minutos // 60
+        mins = minutos % 60
+        return f"{horas:02d}:{mins:02d}"
