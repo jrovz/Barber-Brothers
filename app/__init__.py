@@ -135,6 +135,9 @@ def create_app(config_name='default'):
     from app.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
     
+    from app.barbero import bp as barbero_bp
+    app.register_blueprint(barbero_bp, url_prefix='/barbero')
+    
     return app
 
 
