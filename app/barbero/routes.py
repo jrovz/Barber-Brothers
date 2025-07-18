@@ -11,8 +11,12 @@ from sqlalchemy import and_, or_
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     """Login específico para barberos"""
-    if current_user.is_authenticated and hasattr(current_user, 'tiene_acceso_web') and current_user.tiene_acceso_web:
-        return redirect(url_for('barbero.dashboard'))
+    # Si ya está autenticado y es un barbero, redirigir al dashboard de barbero
+    if current_user.is_authenticated:
+        if hasattr(current_user, 'tiene_acceso_web') and current_user.tiene_acceso_web:
+            return redirect(url_for('barbero.dashboard'))
+        # Si está autenticado pero no es barbero, cerrar sesión
+        logout_user()
     
     form = BarberoLoginForm()
     if form.validate_on_submit():
@@ -22,7 +26,8 @@ def login():
             login_user(barbero, remember=form.remember_me.data)
             flash(f'¡Bienvenido, {barbero.nombre}!', 'success')
             next_page = request.args.get('next')
-            if not next_page or not next_page.startswith('/'):
+            # Asegurarse de que next_page sea una ruta de barbero
+            if not next_page or not next_page.startswith('/barbero'):
                 next_page = url_for('barbero.dashboard')
             return redirect(next_page)
         else:

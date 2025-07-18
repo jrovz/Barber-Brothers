@@ -15,9 +15,27 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 mail = Mail()
 # Configuración de login
-login_manager.login_view = 'admin.login'
+login_manager.login_view = 'admin.login'  # Vista predeterminada para admin
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
+
+# Configuración personalizada para diferentes tipos de usuarios
+def init_login_manager(app):
+    @login_manager.user_loader
+    def load_user(user_id):
+        # Primero intentamos cargar un admin
+        from app.models.admin import User
+        admin = User.query.get(int(user_id))
+        if admin:
+            return admin
+            
+        # Si no es admin, intentamos cargar un barbero
+        from app.models.barbero import Barbero
+        barbero = Barbero.query.get(int(user_id))
+        if barbero:
+            return barbero
+            
+        return None
 
 # Detectar entorno Azure - (Desactivado para entorno local)
 def is_azure():
@@ -110,7 +128,9 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-      # Initialize the database if needed (run migrations and import initial data)
+    init_login_manager(app)  # Inicializar el manejador de login personalizado
+    
+    # Initialize the database if needed (run migrations and import initial data)
     with app.app_context():
         try:
             # Usar módulo de conexión local
