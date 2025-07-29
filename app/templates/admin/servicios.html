@@ -86,6 +86,7 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Orden</th> <!-- NUEVA COLUMNA -->
                 <th>Nombre</th>
                 <th>Precio</th>
                 <th>Duración</th>
@@ -97,6 +98,7 @@
             {% for servicio in servicios %}
             <tr>
                 <td>{{ servicio.id }}</td>
+                <td><span class="badge badge-secondary">{{ servicio.orden }}</span></td> <!-- NUEVO CAMPO -->
                 <td>{{ servicio.nombre }}</td>
                 <td>{{ servicio.precio|cop_format }}</td>
                 <td>{{ servicio.duracion_estimada or 'N/A' }}</td>
@@ -117,7 +119,7 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="6" class="text-center">No hay servicios registrados.</td>
+                <td colspan="7" class="text-center">No hay servicios registrados.</td>
             </tr>
             {% endfor %}
         </tbody>

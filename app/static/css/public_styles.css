@@ -1503,6 +1503,8 @@ footer p {
     box-shadow: var(--shadow-soft);
     transition: transform 0.3s, box-shadow 0.3s;
     border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
 }
 
 .product:hover {
@@ -1534,6 +1536,9 @@ footer p {
 
 .product-info {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Permite que este contenedor crezca y ocupe el espacio disponible */
 }
 
 .product-title {
@@ -1559,6 +1564,11 @@ footer p {
     margin-bottom: 1.3rem;
     line-height: 1.6;
 }
+
+.product-info .add-to-cart {
+    margin-top: auto; /* Empuja el botón hacia la parte inferior de la tarjeta */
+}
+
 
 /* Estilos contacto */
 .contact-container {
@@ -2810,4 +2820,3 @@ footer p {
     max-width: 600px;
     margin: 0 auto;
 }
-

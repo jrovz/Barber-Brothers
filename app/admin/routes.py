@@ -690,7 +690,8 @@ def gestionar_servicios():
             return redirect(url_for('admin.gestionar_servicios'))
 
         # Obtener la lista de servicios
-        servicios_lista = Servicio.query.order_by(Servicio.nombre).all()
+        # MODIFICADO: Ordenar por el campo 'orden' y luego por 'nombre' para consistencia
+        servicios_lista = Servicio.query.order_by(Servicio.orden.asc(), Servicio.nombre.asc()).all()
         return render_template("admin/servicios.html", 
                             title="Gestionar Servicios", 
                             servicios=servicios_lista, 
