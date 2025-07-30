@@ -92,30 +92,54 @@
     <div class="alert alert-warning">
         Hay {{ productos_bajo_stock|length }} productos con menos de 5 unidades en stock.
     </div>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Stock Actual</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos_bajo_stock %}
-            <tr>
-                <td>{{ producto.nombre }}</td>
-                <td>
-                    <span class="badge {% if producto.cantidad <= 2 %}badge-danger{% else %}badge-warning{% endif %}">
-                        {{ producto.cantidad }} unidades
+    <div class="data-table-wrapper">
+        <table class="data-table mobile-cards">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Stock Actual</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos_bajo_stock %}
+                <tr>
+                    <td>{{ producto.nombre }}</td>
+                    <td>
+                        <span class="badge {% if producto.cantidad <= 2 %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ producto.cantidad }} unidades
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-sm">Actualizar stock</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Vista de tarjetas para móvil -->
+    <div class="mobile-cards-container">
+        {% for producto in productos_bajo_stock %}
+        <div class="mobile-card">
+            <div class="mobile-card-body">
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Producto</span>
+                    <span class="mobile-card-value">{{ producto.nombre }}</span>
+                </div>
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Stock Actual</span>
+                    <span class="mobile-card-value">
+                        <span class="badge {% if producto.cantidad <= 2 %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ producto.cantidad }} unidades
+                        </span>
                     </span>
-                </td>
-                <td>
-                    <a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-sm">Actualizar stock</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                </div>
+            </div>
+            <div class="mobile-card-actions"><a href="{{ url_for('admin.editar_producto', id=producto.id) }}" class="btn btn-sm">Actualizar stock</a></div>
+        </div>
+        {% endfor %}
+    </div>
 </section>
 {% endif %}
 
@@ -138,47 +162,82 @@
         <p>No hay mensajes recientes.</p>
     {% endif %}
      {# Enlace a la gestión completa de mensajes #}
-    <div style="margin-top: 1rem;">
+    <div class="section-footer">
          <a href="#" class="btn btn-secondary">Ver todos los mensajes</a>
     </div>
 </section>
 
-<div class="dashboard-widget">
-    <h3>Próximas Citas</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Cliente</th>
-                <th>Barbero</th>
-                <th>Servicio</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for cita in proximas_citas %}
-            <tr>
-                <td>{{ cita.cliente.nombre }}</td>
-                <td>{{ cita.barbero.nombre }}</td>
-                <td>{{ cita.servicio }}</td>
-                <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
-                <td>
-                    <span class="badge {% if cita.estado == 'confirmada' %}badge-success
-                                       {% elif cita.estado == 'pendiente' %}badge-warning
-                                       {% elif cita.estado == 'cancelada' %}badge-danger
-                                       {% else %}badge-info{% endif %}">
-                        {{ cita.estado }}
+<section class="dashboard-section">
+    <h2 class="section-title">Próximas Citas</h2>
+    <div class="data-table-wrapper">
+        <table class="data-table mobile-cards">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Barbero</th>
+                    <th>Servicio</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in proximas_citas %}
+                <tr>
+                    <td>{{ cita.cliente.nombre }}</td>
+                    <td>{{ cita.barbero.nombre }}</td>
+                    <td>{{ cita.servicio }}</td>
+                    <td>{{ cita.fecha.strftime('%d/%m/%Y %H:%M') }}</td>
+                    <td>
+                        <span class="badge {% if cita.estado == 'confirmada' %}badge-success
+                                           {% elif cita.estado == 'pendiente' %}badge-warning
+                                           {% elif cita.estado == 'cancelada' %}badge-danger
+                                           {% else %}badge-info{% endif %}">
+                            {{ cita.estado }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No hay citas próximas</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Vista de tarjetas para móvil -->
+    <div class="mobile-cards-container">
+        {% for cita in proximas_citas %}
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <span class="mobile-card-title">{{ cita.cliente.nombre }}</span>
+                <span class="mobile-card-value">{{ cita.fecha.strftime('%d/%m %H:%M') }}</span>
+            </div>
+            <div class="mobile-card-body">
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Barbero</span>
+                    <span class="mobile-card-value">{{ cita.barbero.nombre }}</span>
+                </div>
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Servicio</span>
+                    <span class="mobile-card-value">{{ cita.servicio }}</span>
+                </div>
+                <div class="mobile-card-field full-width">
+                    <span class="mobile-card-label">Estado</span>
+                    <span class="mobile-card-value">
+                        <span class="badge {% if cita.estado == 'confirmada' %}badge-success{% elif cita.estado == 'pendiente' %}badge-warning{% elif cita.estado == 'cancelada' %}badge-danger{% else %}badge-info{% endif %}">
+                            {{ cita.estado }}
+                        </span>
                     </span>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5">No hay citas próximas</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Ver todas</a>
-</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="mobile-card"><p>No hay citas próximas</p></div>
+        {% endfor %}
+    </div>
+    <div class="section-footer">
+        <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Ver todas las citas</a>
+    </div>
+</section>
 
 {% endblock %}

@@ -592,13 +592,19 @@ textarea.form-input {
 }
 
 /* --- Tablas --- */
-.data-table-container {
-    background-color: var(--color-bg-light);
+/* NUEVO: Contenedor wrapper para hacer las tablas responsivas con scroll horizontal */
+.data-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
     border: 1px solid var(--color-border);
     border-radius: 5px;
+    background-color: var(--color-bg-light);
+}
+
+.data-table-container {
     padding: 1.5rem 2rem;
     margin-bottom: 2rem;
-    overflow: hidden;
 }
 
 .data-table-container .section-title {
@@ -612,18 +618,21 @@ textarea.form-input {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
-    background-color: var(--color-bg-light);
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-    overflow: hidden; /* Para que el border-radius funcione en las esquinas */
+    /* Se eliminan bordes y fondos de la tabla misma, se manejan en el wrapper */
+    background-color: transparent;
+    border: none;
+}
+
+/* Contenedor de tarjetas para móvil, oculto en escritorio por defecto */
+.mobile-cards-container {
+    display: none;
 }
 
 .data-table th,
 .data-table td {
     padding: 0.9rem 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border); /* Mantenemos el separador de filas */
 }
 
 .data-table th {
@@ -637,7 +646,7 @@ textarea.form-input {
 }
 
 .data-table tbody tr:last-child td {
-    border-bottom: none;
+    border-bottom: 0;
 }
 
 .data-table tbody tr:hover {
@@ -895,6 +904,14 @@ textarea.form-input {
     color: var(--color-text-accent);
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 0.7rem;
+}
+
+/* Footer para secciones con acciones */
+.section-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+    text-align: right;
 }
 
 /* Estilos para los gráficos del dashboard */
@@ -1498,13 +1515,14 @@ input[type="tel"] {
     
     /* Table Responsive - Card Layout */
     .data-table-container {
-        padding: 1rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        padding: 1rem 0; /* Ajustar padding ya que el wrapper maneja el resto */
     }
     
+    /* ELIMINAMOS min-width que causa el problema de scroll */
     .data-table {
-        min-width: 700px; /* Minimum width to maintain readability with phone column */
+        /* Eliminado: min-width forzaba el scroll horizontal. El contenedor ya tiene overflow. */
+        /* min-width: 700px; */
+        width: 100%; /* Asegura que la tabla intente ocupar el ancho disponible y no más. */
         font-size: 0.9rem;
     }
     
@@ -1529,7 +1547,7 @@ input[type="tel"] {
     }
     
     .mobile-cards-container {
-        display: block;
+        display: block; /* Se muestra en móvil */
     }
     
     .mobile-card {
@@ -2189,10 +2207,6 @@ input[type="tel"] {
 
 /* Estilos adicionales para columna de teléfono en dispositivos pequeños */
 @media (max-width: 480px) {
-    .data-table {
-        min-width: 650px; /* Ajustar para columna de teléfono */
-    }
-    
     .phone-cell {
         max-width: 90px !important;
         font-size: 0.7rem !important;
