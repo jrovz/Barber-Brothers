@@ -16,6 +16,7 @@
     /* Acentos y Estados */
     --color-primary: var(--color-text-accent); /* Usar el acento dorado como primario */
     --color-primary-hover: #e0c89a; /* Hover del color primario */
+    --color-primary-rgb: 210, 184, 131; /* Necesario para sombras RGBA y focos */
     --color-success: #28a745; /* Verde éxito */
     --color-danger: #dc3545;  /* Rojo peligro */
     --color-warning: #ffc107; /* Amarillo advertencia */
@@ -33,6 +34,9 @@
     /* Fuentes */
     --font-primary: 'Playfair Display', serif;
     --font-secondary: 'Lora', serif;
+
+    /* Sombras reutilizables */
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* --- Reset Básico y Estilos Globales --- */
@@ -93,6 +97,25 @@ img {
     flex-grow: 1;
     padding: 2rem;
     overflow-y: auto; /* Para scroll si el contenido es largo */
+}
+
+/* Mejoras de tabla: ancho mínimo en layouts estrechos controlado por wrapper */
+.data-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background-color: var(--color-bg-light);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate; /* Usar separate para permitir borde continuo por fila */
+    border-spacing: 0;          /* Sin espacios entre celdas */
+    background-color: transparent;
+    border: none;
+    min-width: 680px; /* Proteger legibilidad en columnas múltiples */
 }
 
 /* --- Sidebar --- */
@@ -632,7 +655,6 @@ textarea.form-input {
 .data-table td {
     padding: 0.9rem 1rem;
     text-align: left;
-    border-bottom: 1px solid var(--color-border); /* Mantenemos el separador de filas */
 }
 
 .data-table th {
@@ -645,9 +667,15 @@ textarea.form-input {
     letter-spacing: 0.5px;
 }
 
-.data-table tbody tr:last-child td {
-    border-bottom: 0;
+.data-table thead tr {
+    border-bottom: 1px solid var(--color-border);
 }
+
+.data-table tbody tr {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr:last-child { border-bottom: 0; }
 
 .data-table tbody tr:hover {
     background-color: var(--color-bg-medium);

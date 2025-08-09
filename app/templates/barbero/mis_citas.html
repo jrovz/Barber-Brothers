@@ -53,6 +53,7 @@
     <h2 class="section-title">📋 Mis Citas ({{ citas.total }} total)</h2>
     
     {% if citas.items %}
+    <div class="data-table-wrapper">
     <table class="data-table">
         <thead>
             <tr>
@@ -129,10 +130,11 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     
     <!-- Paginación -->
     {% if citas.pages > 1 %}
-    <div style="display: flex; justify-content: center; align-items: center; margin-top: 2rem; gap: 1rem;">
+    <div style="display: flex; justify-content: center; align-items: center; margin-top: 1.5rem; gap: 1rem; flex-wrap: wrap;">
         {% if citas.has_prev %}
             <a href="{{ url_for('barbero.mis_citas', page=citas.prev_num, estado=estado, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline">
                 « Anterior

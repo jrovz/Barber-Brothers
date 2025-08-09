@@ -87,13 +87,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Renderizar horarios: data.horarios es un array de strings de hora (ej: ["09:00", "09:30"])
+            // Helpers para formato 12h y filtro de horas pasadas si es hoy
+            const [anioSel, mesSel, diaSel] = fecha.split('-').map(Number);
+            const now = new Date();
+            const isToday = (
+                now.getFullYear() === anioSel && (now.getMonth() + 1) === mesSel && now.getDate() === diaSel
+            );
+
+            const isPastOnSelectedDay = (hhmm) => {
+                const [hh, mm] = hhmm.split(':').map(Number);
+                const slotDate = new Date(anioSel, mesSel - 1, diaSel, hh, mm, 0, 0); // Local time
+                return slotDate.getTime() <= now.getTime();
+            };
+
+            const format12Hour = (hhmm) => {
+                const [hh, mm] = hhmm.split(':').map(Number);
+                const suffix = hh >= 12 ? 'pm' : 'am';
+                const hour12 = (hh % 12) || 12;
+                return `${hour12}:${mm.toString().padStart(2, '0')} ${suffix}`;
+            };
+
+            // Renderizar horarios: data.horarios es un array de strings de hora (ej: ["09:00", "09:30"]) 
             data.horarios.forEach(horaString => {
                 if (typeof horaString === 'string') {
+                    // Si es el día actual, ocultar horas que ya pasaron
+                    if (isToday && isPastOnSelectedDay(horaString)) {
+                        return; // no renderizar este slot
+                    }
+
                     const slotButton = document.createElement('button');
                     slotButton.type = 'button';
                     slotButton.classList.add('time-slot-btn'); // Clase para estilizar
-                    slotButton.textContent = horaString;      // El string de hora es el contenido
+                    slotButton.textContent = format12Hour(horaString); // Mostrar en 12h con am/pm
                     slotButton.dataset.hora = horaString;     // Guardar la hora en data attribute
 
                     slotButton.addEventListener('click', function() {
@@ -138,15 +163,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         document.getElementById('confirm-fecha').textContent = fechaFormateadaParaDisplay;
         
-        // Mostrar hora de inicio y estimación de finalización
+        // Mostrar hora de inicio y estimación de finalización (formato 12h)
         const horaInicio = hora;
         const [horas, minutos] = hora.split(':').map(Number);
         const minutosFinalizacion = minutos + parseInt(duracionMinutos);
         const horasFinalizacion = horas + Math.floor(minutosFinalizacion / 60);
         const minutosRestantes = minutosFinalizacion % 60;
-        const horaFin = `${horasFinalizacion.toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')}`;
-        
-        document.getElementById('confirm-hora').textContent = `${horaInicio} - ${horaFin}`;
+        const horaFin24 = `${(horasFinalizacion%24).toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')}`;
+
+        const to12h = (hhmm) => {
+            const [h, m] = hhmm.split(':').map(Number);
+            const suf = h >= 12 ? 'pm' : 'am';
+            const h12 = (h % 12) || 12;
+            return `${h12}:${m.toString().padStart(2, '0')} ${suf}`;
+        };
+
+        document.getElementById('confirm-hora').textContent = `${to12h(horaInicio)} - ${to12h(horaFin24)}`;
 
         // Poblar los campos ocultos que se enviarán con el formulario de confirmación
         if (selectedBarberoIdInput) selectedBarberoIdInput.value = barberoId;

@@ -82,6 +82,15 @@ class Cita(db.Model):
     # cliente ya está en Cliente model via backref='cliente'
     # barbero ya está en Barbero model via backref='barbero'
     servicio_rel = db.relationship('Servicio', backref='citas_servicio', foreign_keys=[servicio_id]) # Cambiado backref para evitar conflicto si Servicio tiene otras citas
+
+    # Alias para compatibilidad con plantillas que usan cita.servicio
+    @property
+    def servicio(self):
+        return self.servicio_rel
+
+    @servicio.setter
+    def servicio(self, value):
+        self.servicio_rel = value
     
     def actualizar_segmentacion_cliente(self):
         """Actualiza la segmentación del cliente cuando se completa una cita"""

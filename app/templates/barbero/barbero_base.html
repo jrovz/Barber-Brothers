@@ -9,6 +9,9 @@
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
 </head>
 <body>
+    <!-- Toggle menú móvil y overlay -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Abrir menú">☰</button>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
     <div class="admin-container">
         <!-- Sidebar para barberos -->
         <aside class="sidebar" style="background: linear-gradient(180deg, var(--color-bg-dark) 0%, var(--color-bg-medium) 100%);">
@@ -111,6 +114,37 @@
                 link.parentElement.classList.add('active');
             }
         });
+
+        // Toggle del menú móvil
+        const mobileToggle = document.getElementById('mobileMenuToggle');
+        const overlay = document.getElementById('mobileOverlay');
+        const sidebar = document.querySelector('.sidebar');
+
+        function closeMobileMenu() {
+            sidebar.classList.remove('mobile-active');
+            overlay.classList.remove('active');
+            mobileToggle.classList.remove('open');
+        }
+
+        function openMobileMenu() {
+            sidebar.classList.add('mobile-active');
+            overlay.classList.add('active');
+            mobileToggle.classList.add('open');
+        }
+
+        if (mobileToggle && overlay && sidebar) {
+            mobileToggle.addEventListener('click', function() {
+                if (sidebar.classList.contains('mobile-active')) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+
+            overlay.addEventListener('click', function() {
+                closeMobileMenu();
+            });
+        }
     });
     </script>
 </body>

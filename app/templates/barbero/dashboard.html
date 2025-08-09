@@ -112,6 +112,7 @@
     
     {% if citas_mostrar %}
     <div class="data-table-container">
+        <div class="data-table-wrapper">
         <table class="data-table">
             <thead>
                 <tr>
@@ -188,6 +189,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
     
     {% if total_citas > citas_mostrar|length %}

@@ -11,6 +11,7 @@
     
     {% if disponibilidades %}
     <div class="data-table-container">
+        <div class="data-table-wrapper">
         <table class="data-table">
             <thead>
                 <tr>
@@ -48,6 +49,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
     {% else %}
     <div style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
