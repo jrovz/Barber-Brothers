@@ -89,6 +89,7 @@ except Exception as e:
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
 from app import db
 from datetime import datetime, timedelta, time
+from flask import send_from_directory
 
 @bp.route('/')
 def home():
@@ -165,6 +166,16 @@ def home():
                           servicios=servicios,
                           fechas_disponibles=fechas_disponibles,
                           sliders=sliders)
+
+
+@bp.route('/ads.txt')
+def ads_txt():
+    """Sirve el archivo ads.txt desde la carpeta static para verificación de AdSense."""
+    try:
+        return send_from_directory(current_app.static_folder, 'ads.txt', mimetype='text/plain')
+    except Exception as e:
+        current_app.logger.error(f"ads.txt no encontrado o error al servirlo: {e}")
+        return ('Not Found', 404)
 
 @bp.route('/about')
 def about():
