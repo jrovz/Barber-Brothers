@@ -422,7 +422,7 @@ header nav ul li a:hover::after {
     align-items: flex-start;
     background-color: var(--color-bg-dark);
     position: fixed;
-    top: 120px; /* Debajo del header fijo */
+    top: 120px; /* Debajo del header fijo en desktop */
     right: 0;
     width: 280px;
     max-width: 90%;
@@ -2523,17 +2523,20 @@ footer p {
     }
     
     .mobile-menu {
-        position: fixed; /* Cambiado de absolute a fixed para mejor comportamiento */
+        position: fixed; /* menú anclado a la ventana */
         top: 0;
         right: 0;
-        width: 80%; /* Ancho más razonable para móvil */
+        bottom: 0; /* asegurar que llegue al borde inferior */
+        width: 80%;
         max-width: 300px;
-        height: 100vh; /* Altura completa */
-        padding: 5rem 1.5rem 1.5rem; /* Espacio para la hamburguesa */
+        height: 100vh; /* ocupar toda la altura visible */
+        max-height: 100vh; /* evitar recortes por cálculos previos */
+        padding: 5rem 1.5rem 1.5rem; /* espacio superior para el botón hamburguesa */
         background-color: var(--color-bg-dark);
         z-index: 1000;
         transform: translateX(100%);
         transition: transform 0.3s ease;
+        overflow-y: auto; /* permitir scroll interno si el contenido excede */
     }
     
     /* Estilos de overlay para el menú móvil */

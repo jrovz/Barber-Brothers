@@ -17,19 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.appendChild(menuOverlay);
     }
     
-    // Agregar botón de cierre al menú móvil si no existe
-    if (mobileMenu && !mobileMenu.querySelector('.close-menu')) {
-        const closeMenuButton = document.createElement('button');
-        closeMenuButton.className = 'close-menu';
-        closeMenuButton.innerHTML = '&times;';
-        closeMenuButton.setAttribute('aria-label', 'Cerrar menú');
-        mobileMenu.prepend(closeMenuButton);
-        
-        // Agregar evento para cerrar el menú
-        closeMenuButton.addEventListener('click', function() {
-            closeMobileMenu();
-        });
-    }
+    // Nota: Eliminamos el botón de cierre interno para evitar doble "X".
+    // El mismo botón hamburguesa (transformado a "X" con la clase .open)
+    // será el control único de cerrado.
     
     // Función para verificar si el carrito está abierto
     function isCartOpen() {
