@@ -1,3 +1,100 @@
+"""
+Rutas del panel de administración de Barber Brothers.
+
+Este módulo registra todas las rutas del Blueprint `admin` (`bp`) que dan soporte
+al backoffice. Incluye autenticación de administradores, panel con métricas y
+CRUDs de entidades principales del sistema, además de utilidades de depuración.
+
+Contenido principal
+- Autenticación y sesión:
+  - `GET/POST /login`: Inicio de sesión para administradores. Valida credenciales
+    con el modelo `User` y verifica `is_admin()` antes de permitir acceso.
+  - `GET /logout`: Cierra la sesión del usuario actual.
+  - Todas las rutas administrativas aplican `@login_required` y verifican
+    `current_user.is_admin()`; de lo contrario devuelven 403.
+
+- Dashboard (`GET /`):
+  - Verifica conectividad a la base de datos.
+  - Métricas: conteos de productos, barberos, clientes; mensajes no leídos;
+    citas de hoy/semana/mes; servicios más solicitados; productos con bajo stock.
+  - Estadísticas por barbero: cálculo aproximado de ocupación a partir de su
+    disponibilidad semanal.
+
+- Productos:
+  - `GET/POST /productos`: Alta de productos con subida de imagen (archivo o URL).
+  - `GET/POST /productos/editar/<id>`: Edición de datos, cantidad y portada.
+  - `POST /productos/eliminar/<id>`: Eliminación segura con manejo de errores.
+
+- Categorías:
+  - `GET/POST /categorias`, `GET/POST /categorias/editar/<id>`,
+    `POST /categorias/eliminar/<id>` con validaciones (no eliminar si tiene
+    productos asociados).
+
+- Barberos y disponibilidad:
+  - `GET/POST /barberos`, `GET/POST /barberos/editar/<id>`,
+    `POST /barberos/eliminar/<id>` (no eliminar si tiene citas).
+  - `GET/POST /barberos/<barbero_id>/disponibilidad`: Alta de tramos horarios,
+    detectando solapamientos por día de la semana.
+  - `POST /barberos/disponibilidad/eliminar/<disp_id>`: Eliminación de un tramo.
+  - `POST /barberos/<barbero_id>/disponibilidad/crear_predeterminada`: Genera un
+    horario estándar de trabajo.
+
+- Servicios y galería de imágenes:
+  - `GET/POST /servicios`: Alta con imagen principal y carga múltiple de
+    imágenes a la galería (`ServicioImagen`).
+  - `GET/POST /servicios/editar/<id>`: Edición, agregando imágenes nuevas al
+    final de la secuencia de orden.
+  - `POST /servicios/imagen/<imagen_id>/eliminar`: "Soft delete" (marca como
+    inactiva) y responde en JSON.
+  - `POST /servicios/eliminar/<id>`: Eliminación segura (evita si hay citas).
+
+- Citas:
+  - `GET/POST /citas`: Creación validando fecha y hora. Vincula cliente por
+    email (crea si no existe) y actualiza teléfono/nombre cuando corresponde.
+  - `GET/POST /citas/editar/<id>`: Maneja cambio de email con casos de conflicto
+    y creación de nuevo cliente cuando aplica.
+  - `POST /citas/eliminar/<id>`: Eliminación con control de errores.
+  - Filtros por `estado` y por `fecha` (día completo) vía query string.
+
+- Clientes y segmentación:
+  - `GET/POST /clientes`: Listado con filtros por `segmento` y orden por nombre,
+    total de visitas o última visita. Incluye métricas agregadas por segmento.
+  - `GET /clientes/<id>`: Detalle del cliente con historial de citas y gasto.
+  - `POST /clientes/actualizar-segmentos`: Recalcula segmentación.
+
+- Sliders (portada):
+  - `GET/POST /sliders`: Alta de slides tipo `imagen` o `instagram`.
+  - `GET/POST /sliders/editar/<id>`: Edición, intercambio de tipo y limpieza de
+    campos incompatibles (por ejemplo, eliminar imagen si pasa a Instagram).
+  - `POST /sliders/eliminar/<id>`: Borra el registro y elimina la imagen física
+    si existía.
+
+- Depuración:
+  - `GET /debug/images`: Vista para auditar imágenes disponibles y rutas de
+    subida.
+
+Dependencias y utilidades
+- Formularios: `LoginForm`, `ProductoForm`, `BarberoForm`, `ServicioForm`,
+  `CitaForm`, `DisponibilidadForm`, `CategoriaForm`, `ClienteFilterForm`.
+- Modelos: `Producto`, `User`, `Mensaje`, `Cliente`, `Cita`, `Servicio`,
+  `Barbero`, `DisponibilidadBarbero`, `Categoria`, `Slider`, `ServicioImagen`.
+- Subida de archivos: `save_image(file, carpeta)` guarda en
+  `UPLOAD_FOLDER/<carpeta>` y retorna la ruta accesible.
+- Transacciones: todas las operaciones de escritura usan `db.session.commit()` y
+  `db.session.rollback()` ante excepciones, mostrando mensajes con `flash`.
+- Respuestas: HTML (render de plantillas en `templates/admin/*.html`) y JSON en
+  endpoints específicos de API interna (por ejemplo, eliminar imagen de
+  servicio).
+- Seguridad: cada ruta administrativa verifica explícitamente `is_admin()` para
+  evitar accesos indebidos, devolviendo 403 en caso contrario.
+
+Notas de mantenimiento
+- Si cambian los modelos, revisar las importaciones y relaciones usadas.
+- El cálculo de ocupación en el dashboard es estimado y mejorable si se dispone
+  de duración real por cita y ventanas exactas de agenda.
+- Asegurar que `UPLOAD_FOLDER` esté configurado y exista para evitar errores de
+  E/S al gestionar imágenes.
+"""
 from flask import render_template, request, redirect, url_for, flash, abort, current_app, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp

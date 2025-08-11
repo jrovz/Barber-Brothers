@@ -1,4 +1,74 @@
 # filepath: app/admin/forms.py
+"""
+Formularios del panel de administración de Barber Brothers.
+
+Este módulo define los formularios (WTForms) utilizados en el área de
+administración. Cada formulario se centra en una entidad o flujo específico y
+aplica validaciones tanto genéricas como de negocio. Se utilizan además campos
+de carga de archivos con restricciones de tipo para imágenes.
+
+Resumen de formularios y validaciones
+- DataRequiredAllowZero (validador personalizado):
+  - Permite explícitamente el valor 0 en campos que por defecto WTForms
+    consideraría falsy. También se utiliza el valor sentinela -1 para forzar la
+    selección válida en listas desplegables.
+
+- LoginForm y BarberoLoginForm:
+  - Autenticación para administradores y barberos con `username`, `password` y
+    opción "Recuérdame". Longitudes mínimas razonables en usuario, contraseña obligatoria.
+
+- CategoriaForm:
+  - Campo `nombre` con validación de unicidad mediante consulta a `Categoria`.
+    Durante edición, permite el mismo nombre si corresponde al registro actual.
+
+- ProductoForm:
+  - Campos: `nombre`, `descripcion`, `precio`, `categoria_id`, `cantidad`.
+  - Carga de imagen por URL o archivo (`imagen_url`, `imagen_file`).
+  - En `__init__` rellena `categoria_id.choices` con categorías ordenadas e
+    inserta opción inicial "--- Sin Categoría ---" con id 0 para representar
+    ausencia de categoría (nullable en BD).
+
+- BarberoForm:
+  - Campos principales: `nombre`, `especialidad`, `descripcion`, `activo`,
+    `imagen_file`/`imagen_url`.
+  - Acceso web opcional: `tiene_acceso_web`, `username`, `password`,
+    `confirmar_password`.
+  - Validaciones:
+    - `validate_username`: verifica unicidad en `Barbero.username`. Para edición
+      se espera que el controlador asigne `form.barbero_id` para permitir el
+      mismo usuario en el registro actual.
+    - `validate_password` y `validate_confirmar_password`: obligan contraseña y
+      consistencia si se habilita el acceso web.
+
+- ServicioForm:
+  - Campos: `nombre`, `descripcion`, `precio`, `duracion_estimada`, `activo`,
+    `orden` (posición en Home).
+  - Imagen principal por URL o archivo, y soporte de carga múltiple con
+    `imagenes_files` para galería del servicio (tipos permitidos: jpg, jpeg,
+    png, gif, webp).
+
+- DisponibilidadForm:
+  - Define `dia_semana` con choices [-1, 0..5] usando `DataRequiredAllowZero`
+    para forzar selección válida. Campos `hora_inicio` y `hora_fin` en formato
+    HH:MM y `activo`.
+
+- CitaForm:
+  - Datos del cliente: `cliente_nombre`, `cliente_email` (con validación `Email`).
+  - Selección de `barbero_id` y `servicio_id` poblados en `__init__` con
+    entidades activas y opción inicial de selección (id 0).
+  - `estado` con choices fijos y valor por defecto `pendiente_confirmacion`.
+
+- ClienteFilterForm:
+  - Filtros para listados de clientes: `segmento` y `ordenar_por`, ambos
+    opcionales, más `submit`.
+
+Consideraciones generales
+- Tipos de archivo permitidos se limitan a imágenes para campos de subida.
+- Los placeholders y opciones sentinela (0, -1) están pensados para UX clara y
+  validaciones coherentes en el servidor.
+- Algunos validadores consultan modelos (por ejemplo, `Categoria`, `Barbero`) y
+  dependen de la base de datos disponible en el contexto de la aplicación.
+"""
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, FloatField, TextAreaField, URLField, SelectField, DecimalField, DateTimeField, IntegerField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, URL, ValidationError # Añadir ValidationError

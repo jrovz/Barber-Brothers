@@ -1,3 +1,77 @@
+"""
+Rutas públicas del sitio Barber Brothers.
+
+Este módulo define las vistas y endpoints del Blueprint `public` orientados a la
+parte pública del sitio: página principal, productos, servicios, checkout de
+tienda, contacto, y APIs de soporte para disponibilidad y agenda de citas.
+
+Resumen de rutas y responsabilidades
+- Home (`GET /`):
+  - Carga sliders activos (si el modelo `Slider` está disponible) en orden.
+  - Obtiene productos destacados (últimos por fecha de creación).
+  - Lista barberos activos y servicios activos (ordenados por `orden`, `nombre`).
+  - Genera un rango de fechas próximas para el calendario de cita.
+  - Renderiza `templates/public/Home.html`.
+
+- About (`GET /about`):
+  - Página informativa estática (`about.html`).
+
+- Contacto (`GET/POST /contacto`):
+  - Muestra formulario de contacto (GET) y persiste `Cliente` y `Mensaje` (POST).
+  - Realiza `flush()` para obtener IDs y `commit()` con manejo básico de errores.
+  - Renderiza `contacto.html` en GET; retorna estado 201 en POST exitoso.
+
+- Productos (`GET /productos`):
+  - Construye `categorias_con_productos` agrupando productos activos por
+    `Categoria` para la vista pública.
+  - Renderiza `templates/public/productos.html`.
+
+- Checkout y confirmación de pedido:
+  - `GET/POST /checkout`: Usa `CheckoutForm` para datos del cliente y carrito
+    (JSON en `cart_data`). Crea `Pedido` y `PedidoItem`, calcula totales y
+    confirma transacción. Renderiza `templates/public/checkout.html`.
+  - `GET /confirmacion-pedido/<pedido_id>`: Muestra `templates/public/confirmacion_pedido.html`.
+
+- Servicios (`GET /servicios`):
+  - Verifica conectividad y lista solo `Servicio` activos.
+  - Renderiza `templates/public/servicios.html`.
+
+- API: Servicio (`GET /api/servicio/<servicio_id>`):
+  - Retorna JSON con datos de un servicio activo, precio formateado con
+    `utils.format_cop`, imagen principal y galería (`get_imagenes_activas`).
+
+- API: Disponibilidad (`GET /api/disponibilidad/<barbero_id>/<fecha>`):
+  - Calcula horarios disponibles para un barbero y fecha dada (YYYY-MM-DD),
+    considerando la duración del servicio (`get_duracion_minutos`) y su
+    disponibilidad horaria. Devuelve lista de strings de horas y mensaje.
+
+- API: Agendar Cita (`POST /api/agendar-cita`):
+  - Valida datos obligatorios, calcula rango horario de la nueva cita y verifica
+    solapamientos con citas existentes del día (confirmadas o pendientes).
+  - Crea/actualiza `Cliente`, crea `Cita` con duración del servicio y estado
+    inicial `pendiente_confirmacion`. Genera token y envía correo de
+    confirmación (`send_appointment_confirmation_email`). Responde JSON.
+
+- Confirmar Cita (`GET /confirmar-cita/<token>`):
+  - Verifica token y expira/valida. Doble verificación de conflicto: si el
+    slot ya está tomado, marca la cita como cancelada por conflicto; si no, la
+    confirma y persiste. Renderiza `templates/public/confirmation_status.html`.
+
+Dependencias clave
+- Modelos: `Producto`, `Categoria`, `Servicio`, `Barbero`, `DisponibilidadBarbero`,
+  `Cliente`, `Mensaje`, `Cita`, `Pedido`, `PedidoItem`, `Slider` (opcional).
+- Formularios: `CheckoutForm` (en `app/public/forms.py`).
+- Utilidades: `send_appointment_confirmation_email`, `utils.format_cop`.
+- Plantillas: `public/Home.html`, `public/productos.html`, `public/servicios.html`,
+  `public/checkout.html`, `public/confirmacion_pedido.html`,
+  `public/confirmation_status.html`, `contacto.html`, `about.html`.
+
+Seguridad y notas
+- Rutas públicas sin autenticación. La integridad se asegura con validaciones de
+  servidor y verificación de solapamientos al agendar.
+- El modelo `Slider` es opcional: si no está disponible, se procede con lista
+  vacía. Existen logs/prints de depuración en `home()` y APIs para diagnóstico.
+"""
 from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from app.public import bp
@@ -6,6 +80,7 @@ from app.models.cliente import Cliente, Mensaje, Cita
 from app.models.servicio import Servicio # Asegúrate de que este modelo existe
 from app.models.barbero import Barbero, DisponibilidadBarbero
 from app.models.categoria import Categoria # <<< IMPORT Categoria MODEL
+from app.models.pedido import Pedido  # Necesario para confirmacion_pedido
 try:
     from app.models.slider import Slider
 except Exception as e:
