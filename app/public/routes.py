@@ -602,40 +602,56 @@ def agendar_cita():
 
 @bp.route('/confirmar-cita/<token>', methods=['GET'])
 def confirmar_cita_route(token):
-    cita = Cita.verify_confirmation_token(token) # El método ya maneja la expiración
-    
-    if not cita:
-        flash('El enlace de confirmación no es válido, ha expirado o la cita ya fue confirmada/cancelada.', 'danger')
+    # Intentar obtener la cita desde el token sin imponer estado (manejo idempotente)
+    cita_token = Cita.get_cita_from_token(token)
+    if not cita_token:
+        flash('El enlace de confirmación no es válido o ha expirado.', 'danger')
         return render_template('public/confirmation_status.html',
                                success=False,
-                               message='El enlace de confirmación no es válido, ha expirado o la cita ya no puede ser confirmada.')
+                               message='El enlace de confirmación no es válido o ha expirado.')
 
-    # Doble verificación de disponibilidad (opcional pero recomendado)
-    # En caso de que otro usuario haya confirmado una cita para el mismo slot mientras este token estaba pendiente.
+    # Si ya está confirmada, mostrar éxito (posible prefetch del enlace por el proveedor de correo)
+    if cita_token.estado == 'confirmada':
+        return render_template('public/confirmation_status.html',
+                               success=True,
+                               message='¡Tu cita ya estaba confirmada!',
+                               cita=cita_token)
+
+    # Si está cancelada o expirada, informar claramente
+    if cita_token.estado in ['cancelada', 'expirada', 'cancelada_conflicto']:
+        return render_template('public/confirmation_status.html',
+                               success=False,
+                               message='Esta cita ya no puede ser confirmada (estado actual: {}).'.format(cita_token.estado))
+
+    # En este punto, esperamos que esté pendiente de confirmación
+    if cita_token.estado != 'pendiente_confirmacion':
+        return render_template('public/confirmation_status.html',
+                               success=False,
+                               message='Esta cita no está en estado pendiente de confirmación.')
+
+    # Doble verificación de conflicto antes de confirmar
     conflicting_cita = Cita.query.filter(
-        Cita.barbero_id == cita.barbero_id,
-        Cita.fecha == cita.fecha,
-        Cita.id != cita.id,
+        Cita.barbero_id == cita_token.barbero_id,
+        Cita.fecha == cita_token.fecha,
+        Cita.id != cita_token.id,
         Cita.estado == 'confirmada'
     ).first()
 
     if conflicting_cita:
-        cita.estado = 'cancelada_conflicto' # O algún estado que indique esto
+        cita_token.estado = 'cancelada_conflicto'
         db.session.commit()
         flash('Lo sentimos, este horario fue tomado justo antes de tu confirmación. Por favor, agenda de nuevo.', 'danger')
         return render_template('public/confirmation_status.html',
                                success=False,
                                message='Lo sentimos, este horario fue tomado justo antes de tu confirmación. Por favor, agenda de nuevo.')
 
-    cita.estado = 'confirmada'
-    cita.confirmed_at = datetime.utcnow()
-    # El token ya no es necesario en la BD una vez usado si se genera bajo demanda.
-    # Si lo estuvieras guardando, aquí lo invalidarías.
+    # Confirmar la cita
+    cita_token.estado = 'confirmada'
+    cita_token.confirmed_at = datetime.utcnow()
     db.session.commit()
     
     flash('¡Tu cita ha sido confirmada exitosamente!', 'success')
-    # Opcional: Enviar notificación al barbero/admin.
     return render_template('public/confirmation_status.html',
                            success=True,
                            message='¡Tu cita ha sido confirmada exitosamente!',
-                           cita=cita) # Pasar la cita para mostrar detalles
+                           cita=cita_token)

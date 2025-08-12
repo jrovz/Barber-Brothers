@@ -144,6 +144,24 @@ class Cita(db.Model):
             return None
         return None
 
+    @staticmethod
+    def get_cita_from_token(token, max_age_seconds=3600):
+        """Devuelve la cita asociada al token si el token es válido y no ha expirado.
+        No impone estado específico; útil para flujos idempotentes (ya confirmada).
+        """
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            cita_id = serializer.loads(
+                token,
+                salt='email-confirmation-salt',
+                max_age=max_age_seconds
+            )
+            return Cita.query.get(cita_id)
+        except (SignatureExpired, BadTimeSignature):
+            return None
+        except Exception:
+            return None
+
     def __repr__(self):
         return f'<Cita {self.id} - {self.fecha} - {self.estado}>'
     
