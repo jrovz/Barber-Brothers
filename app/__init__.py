@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -18,6 +18,21 @@ mail = Mail()
 login_manager.login_view = 'admin.login'  # Vista predeterminada para admin
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
+
+# Redirecciones de login por blueprint
+login_manager.blueprint_login_views = {
+    'admin': 'admin.login',
+    'barbero': 'barbero.login',
+}
+
+# Fallback adicional por URL cuando no se detecta blueprint
+@login_manager.unauthorized_handler
+def handle_unauthorized():
+    next_url = request.url
+    if request.path.startswith('/barbero'):
+        return redirect(url_for('barbero.login', next=next_url))
+    # Por defecto, enviar a login de admin
+    return redirect(url_for('admin.login', next=next_url))
 
 # Configuración personalizada para diferentes tipos de usuarios
 def init_login_manager(app):
