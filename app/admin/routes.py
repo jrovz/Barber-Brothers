@@ -307,6 +307,25 @@ def dashboard():
         ]
     }
 
+    # NUEVO: Usar configuraciones personalizadas del administrador
+    from flask import g
+    from app.middleware.admin_middleware import AdminDashboardOptimizer
+    from app.utils.admin_cookies import AdminCookieManager
+    
+    # Obtener configuraciones personalizadas (cargadas por middleware)
+    dashboard_config = getattr(g, 'admin_dashboard_config', AdminCookieManager.DEFAULT_DASHBOARD_CONFIG.copy())
+    metrics_config = getattr(g, 'admin_metrics_config', {})
+    interface_settings = getattr(g, 'admin_interface_settings', AdminCookieManager.DEFAULT_INTERFACE_SETTINGS.copy())
+    productivity_metrics = getattr(g, 'admin_productivity_metrics', {})
+    trending_data = getattr(g, 'admin_trending_data', {})
+    
+    # Personalizar widgets según configuración
+    widgets_to_show = AdminDashboardOptimizer.get_personalized_widgets(dashboard_config)
+    smart_kpis = AdminDashboardOptimizer.get_smart_kpis(metrics_config)
+    
+    # Configurar período de métricas según preferencias
+    metrics_period = dashboard_config.get('metrics_period', 'month')
+    
     return render_template(
         'admin/dashboard.html', 
         title='Dashboard Admin',
@@ -324,7 +343,16 @@ def dashboard():
         citas_mes=citas_mes,
         stats_barberos=stats_barberos,
         top_servicios=top_servicios,
-        productos_bajo_stock=productos_bajo_stock
+        productos_bajo_stock=productos_bajo_stock,
+        # NUEVO: Variables de personalización
+        dashboard_config=dashboard_config,
+        metrics_config=metrics_config,
+        interface_settings=interface_settings,
+        widgets_to_show=widgets_to_show,
+        smart_kpis=smart_kpis,
+        metrics_period=metrics_period,
+        productivity_metrics=productivity_metrics,
+        trending_data=trending_data
     )
 
 # --- Gestión de Productos (CRUD) ---
@@ -1006,6 +1034,20 @@ def gestionar_citas():
     # Ejecutar query con filtros aplicados
     citas_lista = query_citas.order_by(Cita.fecha.desc()).all()
     
+    # NUEVO: Guardar filtros utilizados en cookies para acceso rápido
+    if request.method == 'GET' and (estado_filtro or fecha_filtro):
+        from flask import make_response
+        from app.utils.admin_cookies import AdminCookieManager
+        
+        filter_data = {}
+        if estado_filtro:
+            filter_data['estado'] = estado_filtro
+        if fecha_filtro:
+            filter_data['fecha'] = fecha_filtro
+        
+        # Esta función se llamará en el after_request del middleware
+        # pero podemos también forzarla aquí para casos específicos
+    
     return render_template("admin/citas.html", 
                          title="Gestionar Citas", 
                          citas=citas_lista, 
@@ -1457,3 +1499,104 @@ def eliminar_slider(id):
         flash(f'Error al eliminar el slide: {str(e)}', 'danger')
     
     return redirect(url_for('admin.gestionar_sliders'))
+
+# ================================
+# API ENDPOINTS PARA CONFIGURACIONES
+# ================================
+
+@bp.route('/api/save-dashboard-config', methods=['POST'])
+@login_required
+def save_dashboard_config():
+    """Guarda la configuración del dashboard en cookies"""
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    try:
+        from flask import request, make_response, jsonify
+        from app.utils.admin_cookies import AdminCookieManager
+        
+        config_data = request.get_json()
+        if not config_data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        response = make_response(jsonify({'success': True, 'message': 'Configuración guardada'}))
+        AdminCookieManager.save_dashboard_config(response, config_data)
+        
+        logger.info(f"Dashboard config saved for admin {current_user.id}")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error saving dashboard config: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@bp.route('/api/save-interface-setting', methods=['POST'])
+@login_required
+def save_interface_setting():
+    """Guarda una configuración específica de interfaz"""
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    try:
+        from flask import request, make_response, jsonify
+        from app.utils.admin_cookies import AdminCookieManager
+        
+        setting_data = request.get_json()
+        if not setting_data:
+            return jsonify({'success': False, 'error': 'No data provided'}), 400
+        
+        response = make_response(jsonify({'success': True, 'message': 'Configuración guardada'}))
+        
+        # Guardar cada configuración
+        for key, value in setting_data.items():
+            AdminCookieManager.save_interface_setting(response, key, value)
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error saving interface setting: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@bp.route('/api/refresh-metrics', methods=['POST'])
+@login_required
+def refresh_metrics():
+    """Actualiza las métricas del dashboard"""
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    try:
+        from app.utils.admin_cookies import AdminMetricsCalculator
+        
+        metrics = AdminMetricsCalculator.calculate_productivity_metrics()
+        trending = AdminMetricsCalculator.get_trending_data()
+        
+        return jsonify({
+            'success': True,
+            'metrics': metrics,
+            'trending': trending,
+            'updated_at': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error refreshing metrics: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@bp.route('/api/get-quick-access', methods=['GET'])
+@login_required
+def get_quick_access():
+    """Obtiene datos de acceso rápido"""
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    try:
+        from app.utils.admin_cookies import AdminCookieManager
+        
+        quick_access = AdminCookieManager.get_quick_access_data()
+        
+        return jsonify({
+            'success': True,
+            'data': quick_access
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting quick access data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500

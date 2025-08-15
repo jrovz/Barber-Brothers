@@ -1,9 +1,19 @@
 {% extends "public/public_base.html" %}
+{% from 'business_optimization_snippets.html' import 
+    business_optimization_scripts, 
+    personalized_welcome, 
+    recommended_products, 
+    conversion_indicator,
+    smart_form_fields,
+    personalization_meta_tags,
+    tracking_scripts,
+    cookie_consent_banner %}
 
 {% block title %}Barbería - Inicio{% endblock %}
 
 {% block extra_head %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{ personalization_meta_tags(personalization) }}
 {% endblock %}
 
 {% block content %}
@@ -79,7 +89,13 @@
         </div>
     </section>
     
-    <section class="availability">
+    <!-- Contenido personalizado basado en cookies -->
+    {{ personalized_welcome(personalization) }}
+    
+    <!-- Productos recomendados para usuarios recurrentes -->
+    {{ recommended_products(productos_recomendados) }}
+    
+    <section class="availability booking-section" id="booking-section">
         <h2>Agenda tu Cita</h2>
         
         <!-- Selector de barbero y servicio -->
@@ -465,5 +481,20 @@
     </script>
     
     <!-- Script de reservas -->
-    <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/booking.js') }}">    </script>
+    
+    <!-- Scripts de optimización comercial -->
+    {{ business_optimization_scripts() }}
+    
+    <!-- Auto-completar inteligente -->
+    {{ smart_form_fields(personalization) }}
+    
+    <!-- Tracking de eventos -->
+    {{ tracking_scripts(personalization) }}
+    
+
+    
+    <!-- Banner de consentimiento de cookies -->
+    {{ cookie_consent_banner() }}
+    
 {% endblock %}

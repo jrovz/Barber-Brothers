@@ -1,0 +1,548 @@
+<!-- 
+Business Optimization Snippets - Barber Brothers
+==============================================
+
+Snippets reutilizables para optimización de conversión
+que pueden ser incluidos en cualquier template.
+
+Author: AI Assistant
+Version: 1.0
+-->
+
+<!-- Snippet: Scripts de optimización comercial -->
+{% macro business_optimization_scripts() %}
+<script src="{{ url_for('static', filename='js/business_optimization.js') }}"></script>
+<script src="{{ url_for('static', filename='js/smart_cart.js') }}"></script>
+
+<style>
+/* Estilos para elementos de optimización */
+.auto-filled {
+    animation: highlight-autofill 0.5s ease-in-out;
+}
+
+@keyframes highlight-autofill {
+    0% { background-color: #f0f8ff; }
+    50% { background-color: #e6f3ff; }
+    100% { background-color: #f0f8ff; }
+}
+
+.conversion-popup {
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.returning-customer-greeting {
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.quick-booking-widget {
+    animation: zoomIn 0.4s ease-out;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.cart-recommendations {
+    border-top: 2px solid #f0f0f0;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.recently-viewed-section {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    margin: 20px 0;
+    padding: 20px;
+}
+
+.shipping-incentive {
+    position: relative;
+    overflow: hidden;
+}
+
+.cart-recovery-banner {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .cart-recovery-banner {
+        top: 80px;
+        width: 95%;
+    }
+    
+    .recently-viewed-products {
+        flex-direction: column;
+    }
+    
+    .recently-viewed-item {
+        min-width: 100% !important;
+        margin-bottom: 15px;
+    }
+}
+</style>
+{% endmacro %}
+
+<!-- Snippet: Mensaje de bienvenida personalizado -->
+{% macro personalized_welcome(personalization) %}
+{% if personalization and personalization.is_returning_customer %}
+<div class="personalized-welcome" style="background: linear-gradient(135deg, var(--color-bg-card, #15130f) 0%, var(--color-bg-medium, #121111) 100%); 
+     color: var(--color-text-primary, #f5f0e6); padding: 25px; border-radius: 15px; margin: 25px 15px; text-align: center;
+     border: 2px solid var(--color-accent, #b39656);
+     box-shadow: var(--shadow-medium, 0 6px 16px rgba(0, 0, 0, 0.6)), 0 0 30px rgba(179, 150, 86, 0.2);
+     backdrop-filter: blur(10px);">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+        <span style="font-size: 2.5em;">👋</span>
+        <h2 style="margin: 0; font-size: 1.4em; color: var(--color-text-accent, #d2b883); font-family: 'Lora', serif;">
+            ¡Hola de nuevo{% if personalization.client_name %}, {{ personalization.client_name }}{% endif %}!
+        </h2>
+    </div>
+    <p style="margin: 0 0 20px 0; color: var(--color-text-secondary, #e3d9c6); font-size: 1.05em; line-height: 1.5;">
+        {% if personalization.total_reservas > 0 %}
+            Gracias por confiar en Barber Brothers<br>
+            <small style="color: var(--color-text-accent, #d2b883); font-weight: 600;">
+                ({{ personalization.total_reservas }} cita{% if personalization.total_reservas != 1 %}s{% endif %} anteriores)
+            </small>
+        {% else %}
+            Nos alegra verte otra vez en nuestra barbería
+        {% endif %}
+        <br>¿Listo para tu próxima experiencia premium?
+    </p>
+    {% if personalization.show_quick_booking %}
+    <div style="margin-top: 20px;">
+        <button onclick="scrollToBooking()" 
+                style="background: linear-gradient(135deg, var(--color-accent, #b39656), var(--color-accent-hover, #c9aa6b)); 
+                       color: var(--color-bg-dark, #040404); border: none;
+                       padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: bold;
+                       font-family: 'Lora', serif; font-size: 1em;
+                       transition: all 0.3s ease; box-shadow: var(--shadow-soft);"
+                onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(179, 150, 86, 0.5)';"
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-soft)';">
+            ⚡ Reserva Rápida Disponible
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function scrollToBooking() {
+    const bookingSection = document.querySelector('.booking-section, #booking-section');
+    if (bookingSection) {
+        bookingSection.scrollIntoView({ behavior: 'smooth' });
+        // Activar reserva rápida si está disponible
+        if (window.businessOptimizer && window.businessOptimizer.executeQuickBooking) {
+            setTimeout(() => window.businessOptimizer.executeQuickBooking(), 500);
+        }
+    }
+}
+</script>
+{% endif %}
+{% endmacro %}
+
+<!-- Snippet: Productos recomendados -->
+{% macro recommended_products(productos_recomendados) %}
+{% if productos_recomendados and productos_recomendados|length > 0 %}
+<div class="recommended-products-section" style="margin: 30px 15px; padding: 25px; 
+     background: linear-gradient(135deg, var(--color-bg-card, #15130f) 0%, var(--color-bg-light, #1c1a19) 100%); 
+     border-radius: 15px; border: 1px solid var(--color-border, #302c25);
+     box-shadow: var(--shadow-medium, 0 6px 16px rgba(0, 0, 0, 0.6)), 0 0 25px rgba(179, 150, 86, 0.1);">
+    <div style="text-align: center; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
+            <span style="font-size: 1.8em;">💡</span>
+            <h3 style="margin: 0; color: var(--color-text-accent, #d2b883); font-size: 1.3em; font-family: 'Lora', serif;">
+                Basado en tus intereses
+            </h3>
+        </div>
+        <p style="margin: 0; color: var(--color-text-muted, #c4b9a2); font-size: 0.9em;">
+            Productos seleccionados especialmente para ti
+        </p>
+    </div>
+    <div class="recommended-products-grid" 
+         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+        {% for producto in productos_recomendados %}
+        <div class="recommended-product" 
+             style="background: var(--color-bg-medium, #121111); padding: 20px; border-radius: 12px; text-align: center;
+                    border: 1px solid var(--color-border, #302c25);
+                    box-shadow: var(--shadow-soft, 0 4px 8px rgba(0, 0, 0, 0.5)); 
+                    transition: all 0.3s ease;"
+             onmouseover="this.style.transform='translateY(-8px)'; this.style.borderColor='var(--color-accent, #b39656)'; this.style.boxShadow='0 8px 25px rgba(179, 150, 86, 0.3)'"
+             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--color-border, #302c25)'; this.style.boxShadow='var(--shadow-soft)'">
+            {% if producto.imagen_url %}
+            <div style="margin-bottom: 15px;">
+                <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" 
+                     style="width: 90px; height: 90px; object-fit: cover; border-radius: 10px; 
+                            border: 2px solid var(--color-border, #302c25);">
+            </div>
+            {% endif %}
+            <h5 style="margin: 0 0 10px 0; color: var(--color-text-primary, #f5f0e6); font-size: 1em; 
+                       font-family: 'Lora', serif; font-weight: 600;">
+                {{ producto.nombre }}
+            </h5>
+            <p style="margin: 0 0 15px 0; color: var(--color-accent, #b39656); font-weight: bold; font-size: 1.1em;">
+                ${{ "{:,.0f}".format(producto.precio) }} COP
+            </p>
+            <button class="add-to-cart" 
+                    data-id="{{ producto.id }}" 
+                    data-name="{{ producto.nombre }}" 
+                    data-price="{{ producto.precio }}" 
+                    data-image="{{ producto.imagen_url or '/static/images/default-product.jpg' }}"
+                    style="background: linear-gradient(135deg, var(--color-accent, #b39656), var(--color-accent-hover, #c9aa6b)); 
+                           color: var(--color-bg-dark, #040404); border: none; 
+                           padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9em;
+                           font-family: 'Lora', serif; font-weight: bold;
+                           transition: all 0.3s ease; box-shadow: var(--shadow-soft);"
+                    onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(179, 150, 86, 0.4)'"
+                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='var(--shadow-soft)'">
+                🛒 Añadir al Carrito
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+<!-- Snippet: Indicador de conversión -->
+{% macro conversion_indicator(personalization) %}
+{% if personalization and personalization.conversion_probability %}
+<div class="conversion-indicator" style="position: fixed; bottom: 80px; right: 20px; z-index: 1000;
+     background: {% if personalization.conversion_probability > 0.7 %}linear-gradient(135deg, var(--color-accent, #b39656), var(--color-accent-hover, #c9aa6b)){% elif personalization.conversion_probability > 0.4 %}linear-gradient(135deg, #cc8800, #e69900){% else %}linear-gradient(135deg, var(--color-bg-card, #15130f), var(--color-bg-medium, #121111)){% endif %};
+     color: {% if personalization.conversion_probability > 0.4 %}var(--color-bg-dark, #040404){% else %}var(--color-text-primary, #f5f0e6){% endif %}; 
+     padding: 12px 18px; border-radius: 25px; font-size: 0.85em; 
+     font-family: 'Lora', serif; font-weight: 600;
+     border: 1px solid {% if personalization.conversion_probability > 0.7 %}var(--color-accent, #b39656){% elif personalization.conversion_probability > 0.4 %}#e69900{% else %}var(--color-border, #302c25){% endif %};
+     box-shadow: var(--shadow-medium, 0 6px 16px rgba(0, 0, 0, 0.6)), 0 0 20px rgba(179, 150, 86, 0.3);
+     backdrop-filter: blur(10px);
+     transition: all 0.3s ease;"
+     onmouseover="this.style.transform='scale(1.05)'"
+     onmouseout="this.style.transform='scale(1)'">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.1em;">
+            {% if personalization.conversion_probability > 0.7 %}🔥{% elif personalization.conversion_probability > 0.4 %}🎯{% else %}📈{% endif %}
+        </span>
+        <span>{{ "%.0f"|format(personalization.conversion_probability * 100) }}% Conversión</span>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+<!-- Snippet: Auto-completar formularios -->
+{% macro smart_form_fields(personalization) %}
+{% if personalization and personalization.client_name %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-completar campos si están vacíos
+    const clientData = {
+        nombre: '{{ personalization.client_name or "" }}',
+        email: '{{ personalization.client_email or "" }}',
+        telefono: '{{ personalization.client_telefono or "" }}'
+    };
+    
+    Object.entries(clientData).forEach(([field, value]) => {
+        if (value) {
+            // Buscar campos por diferentes selectores
+            const selectors = [
+                `input[name="${field}"]`,
+                `input[id="client-${field === 'nombre' ? 'name' : field}"]`,
+                `input[id="${field}"]`,
+                `#${field}`
+            ];
+            
+            for (const selector of selectors) {
+                const input = document.querySelector(selector);
+                if (input && !input.value) {
+                    input.value = value;
+                    input.style.backgroundColor = '#f0f8ff';
+                    input.style.borderColor = '#4CAF50';
+                    
+                    // Tooltip de auto-completado
+                    const tooltip = document.createElement('div');
+                    tooltip.textContent = '✓ Auto-completado';
+                    tooltip.style.cssText = `
+                        position: absolute; background: #4CAF50; color: white; 
+                        padding: 4px 8px; border-radius: 4px; font-size: 11px; 
+                        z-index: 1000; opacity: 0; transition: opacity 0.3s;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = input.getBoundingClientRect();
+                    tooltip.style.left = rect.right + 10 + 'px';
+                    tooltip.style.top = rect.top + 'px';
+                    
+                    setTimeout(() => tooltip.style.opacity = '1', 100);
+                    setTimeout(() => {
+                        tooltip.style.opacity = '0';
+                        setTimeout(() => document.body.removeChild(tooltip), 300);
+                    }, 2000);
+                    
+                    break;
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endmacro %}
+
+<!-- Snippet: Meta tags para personalización -->
+{% macro personalization_meta_tags(personalization) %}
+{% if personalization %}
+<meta name="user-segment" content="{{ personalization.user_type or 'new_visitor' }}">
+<meta name="conversion-probability" content="{{ personalization.conversion_probability or 0 }}">
+<meta name="personalization-active" content="true">
+{% if personalization.is_returning_customer %}
+<meta name="returning-customer" content="true">
+{% endif %}
+{% endif %}
+{% endmacro %}
+
+<!-- Snippet: Scripts de tracking -->
+{% macro tracking_scripts(personalization) %}
+<script>
+// Tracking de eventos personalizados
+(function() {
+    const personalization = {{ personalization|tojson if personalization else '{}' }};
+    
+    // Event tracking
+    function trackBusinessEvent(event, data = {}) {
+        console.log('📊 Business Event:', event, data);
+        
+        // Google Analytics
+        if (typeof gtag !== 'undefined') {
+            gtag('event', event, {
+                event_category: 'business_optimization',
+                custom_map: {
+                    'user_segment': personalization.user_type || 'unknown',
+                    'conversion_probability': personalization.conversion_probability || 0,
+                    'is_returning': personalization.is_returning_customer || false
+                },
+                ...data
+            });
+        }
+        
+        // Tracking interno
+        const events = JSON.parse(localStorage.getItem('business_events') || '[]');
+        events.push({
+            event: event,
+            data: data,
+            timestamp: Date.now(),
+            personalization: personalization
+        });
+        localStorage.setItem('business_events', JSON.stringify(events.slice(-100))); // Mantener últimos 100
+    }
+    
+    // Tracking automático de página
+    trackBusinessEvent('page_view', {
+        page: window.location.pathname,
+        user_segment: personalization.user_type || 'new_visitor'
+    });
+    
+    // Tracking de tiempo en página
+    const pageStartTime = Date.now();
+    window.addEventListener('beforeunload', function() {
+        const timeOnPage = Date.now() - pageStartTime;
+        trackBusinessEvent('page_exit', {
+            time_on_page: timeOnPage,
+            page: window.location.pathname
+        });
+    });
+    
+    // Exportar función para uso global
+    window.trackBusinessEvent = trackBusinessEvent;
+})();
+</script>
+{% endmacro %}
+
+<!-- Snippet: Política de cookies (GDPR) -->
+{% macro cookie_consent_banner() %}
+<div id="cookie-consent-banner" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; 
+     background: linear-gradient(135deg, var(--color-bg-card, #15130f) 0%, var(--color-bg-dark, #040404) 100%);
+     color: var(--color-text-primary, #f5f0e6); padding: 25px 20px; z-index: 10000; text-align: center;
+     border-top: 2px solid var(--color-accent, #b39656);
+     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.7), 0 -1px 5px rgba(179, 150, 86, 0.3);
+     backdrop-filter: blur(10px);">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+            <div style="font-size: 2em;">🍪</div>
+            <h4 style="margin: 0; font-size: 1.2em; color: var(--color-text-accent, #d2b883); 
+                       font-family: 'Lora', serif; font-weight: 600;">
+                Política de Cookies
+            </h4>
+        </div>
+        <p style="margin: 0 0 20px 0; font-size: 0.95em; color: var(--color-text-secondary, #e3d9c6); 
+                  line-height: 1.5; max-width: 800px; margin-left: auto; margin-right: auto;">
+            Utilizamos cookies para personalizar tu experiencia, recordar tus preferencias y ofrecerte el mejor servicio en nuestra barbería. 
+            Al continuar navegando, aceptas nuestro uso de cookies.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="acceptAllCookies()" 
+                    style="background: linear-gradient(135deg, var(--color-accent, #b39656), var(--color-accent-hover, #c9aa6b)); 
+                           color: var(--color-bg-dark, #040404); border: none; 
+                           padding: 14px 28px; border-radius: 8px; cursor: pointer; font-weight: bold;
+                           font-family: 'Lora', serif; font-size: 0.95em;
+                           transition: all 0.3s ease; box-shadow: var(--shadow-soft);"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(179, 150, 86, 0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-soft)'">
+                ✓ Aceptar Todo
+            </button>
+            <button onclick="acceptEssentialCookies()" 
+                    style="background: var(--color-bg-medium, #121111); 
+                           color: var(--color-text-secondary, #e3d9c6); 
+                           border: 1px solid var(--color-border, #302c25); 
+                           padding: 14px 24px; border-radius: 8px; cursor: pointer;
+                           font-family: 'Lora', serif; font-size: 0.95em;
+                           transition: all 0.3s ease;"
+                    onmouseover="this.style.borderColor='var(--color-accent, #b39656)'; this.style.color='var(--color-text-accent, #d2b883)'"
+                    onmouseout="this.style.borderColor='var(--color-border, #302c25)'; this.style.color='var(--color-text-secondary, #e3d9c6)'">
+                Solo Esenciales
+            </button>
+            <button onclick="showCookieSettings()" 
+                    style="background: none; color: var(--color-text-muted, #c4b9a2); 
+                           border: 1px solid var(--color-text-muted, #c4b9a2); 
+                           padding: 14px 24px; border-radius: 8px; cursor: pointer;
+                           font-family: 'Lora', serif; font-size: 0.95em;
+                           transition: all 0.3s ease;"
+                    onmouseover="this.style.borderColor='var(--color-accent, #b39656)'; this.style.color='var(--color-accent, #b39656)'"
+                    onmouseout="this.style.borderColor='var(--color-text-muted, #c4b9a2)'; this.style.color='var(--color-text-muted, #c4b9a2)'">
+                ⚙️ Configurar
+            </button>
+        </div>
+        <div style="margin-top: 15px;">
+            <small style="color: var(--color-text-muted, #c4b9a2); font-size: 0.8em;">
+                Puedes cambiar tus preferencias en cualquier momento desde la configuración.
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mostrar banner si no hay consentimiento
+document.addEventListener('DOMContentLoaded', function() {
+    const consent = localStorage.getItem('cookie_consent');
+    if (!consent) {
+        document.getElementById('cookie-consent-banner').style.display = 'block';
+    }
+});
+
+function acceptAllCookies() {
+    const consent = {
+        timestamp: new Date().toISOString(),
+        essential: true,
+        analytics: true,
+        marketing: true,
+        personalization: true
+    };
+    localStorage.setItem('cookie_consent', JSON.stringify(consent));
+    document.getElementById('cookie-consent-banner').style.display = 'none';
+    
+    // Activar funcionalidades
+    enablePersonalization();
+    enableAnalytics();
+    
+    showToast('¡Gracias! Cookies configuradas para la mejor experiencia.', 'success');
+}
+
+function acceptEssentialCookies() {
+    const consent = {
+        timestamp: new Date().toISOString(),
+        essential: true,
+        analytics: false,
+        marketing: false,
+        personalization: false
+    };
+    localStorage.setItem('cookie_consent', JSON.stringify(consent));
+    document.getElementById('cookie-consent-banner').style.display = 'none';
+    
+    showToast('Configuración guardada. Solo cookies esenciales activas.', 'info');
+}
+
+function showCookieSettings() {
+    // Implementar modal de configuración detallada
+    alert('Funcionalidad de configuración detallada próximamente disponible.');
+}
+
+function enablePersonalization() {
+    console.log('🎯 Personalización activada');
+    // Inicializar business optimizer si existe
+    if (window.businessOptimizer) {
+        window.businessOptimizer.init();
+    }
+}
+
+function enableAnalytics() {
+    console.log('📊 Analytics activado');
+    // Inicializar tracking avanzado
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    
+    // Usar colores de la barbería
+    const successBg = 'linear-gradient(135deg, var(--color-accent, #b39656), var(--color-accent-hover, #c9aa6b))';
+    const errorBg = 'linear-gradient(135deg, #8b0000, #a52a2a)';
+    const infoBg = 'linear-gradient(135deg, var(--color-bg-card, #15130f), var(--color-bg-medium, #121111))';
+    
+    const bgColor = type === 'success' ? successBg : type === 'error' ? errorBg : infoBg;
+    const textColor = type === 'success' ? 'var(--color-bg-dark, #040404)' : 'var(--color-text-primary, #f5f0e6)';
+    const borderColor = type === 'success' ? 'var(--color-accent, #b39656)' : 
+                       type === 'error' ? '#a52a2a' : 'var(--color-border, #302c25)';
+    
+    toast.innerHTML = `
+        <div style="position: fixed; top: 20px; right: 20px; z-index: 10001;
+                    background: ${bgColor}; color: ${textColor}; 
+                    padding: 16px 24px; border-radius: 10px; 
+                    border: 1px solid ${borderColor};
+                    box-shadow: var(--shadow-medium, 0 6px 16px rgba(0, 0, 0, 0.6));
+                    backdrop-filter: blur(10px);
+                    font-family: 'Lora', serif; font-size: 0.9em; font-weight: 500;
+                    transform: translateX(100%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    max-width: 300px; word-wrap: break-word;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2em;">
+                    ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+                </span>
+                <span>${message}</span>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animar entrada con efecto suave
+    setTimeout(() => {
+        toast.firstElementChild.style.transform = 'translateX(0)';
+        toast.firstElementChild.style.boxShadow = 'var(--shadow-medium), 0 0 25px rgba(179, 150, 86, 0.3)';
+    }, 100);
+    
+    // Animar salida después de 4 segundos
+    setTimeout(() => {
+        toast.firstElementChild.style.transform = 'translateX(100%)';
+        toast.firstElementChild.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                document.body.removeChild(toast);
+            }
+        }, 400);
+    }, 4000);
+}
+</script>
+{% endmacro %}

@@ -1,15 +1,90 @@
 <!-- filepath: app/templates/admin/dashboard.html -->
 {% extends "admin/admin_base.html" %}
+
+{% block extra_head %}
+<!-- Configuraciones para JavaScript -->
+<script>
+    window.dashboardConfig = {{ (dashboard_config or {})|tojson }};
+    window.interfaceSettings = {{ (interface_settings or {})|tojson }};
+    window.metricsConfig = {{ (metrics_config or {})|tojson }};
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="panel-header">
     <h1 class="panel-title">{{ title }}</h1>
+    <!-- NUEVO: Controles de personalización -->
+    <div class="dashboard-controls">
+        <button class="btn btn-sm btn-outline dashboard-customize" title="Personalizar Dashboard">
+            ⚙️ Personalizar
+        </button>
+        <button class="btn btn-sm btn-outline refresh-metrics" title="Actualizar Métricas">
+            🔄 Actualizar
+        </button>
+        {% if interface_settings and interface_settings.compact_mode %}
+        <button class="btn btn-sm btn-outline compact-toggle" title="Modo Normal">
+            📖 Expandir
+        </button>
+        {% else %}
+        <button class="btn btn-sm btn-outline compact-toggle" title="Modo Compacto">
+            📱 Compacto
+        </button>
+        {% endif %}
+    </div>
 </div>
 
 {# Mostrar mensajes flash (si los hubiera en el dashboard) #}
 {% include 'admin/_flash_messages.html' %}
 
+<!-- NUEVO: KPIs Inteligentes -->
+{% if smart_kpis %}
+<section class="dashboard-stats smart-kpis" data-widget="smart_kpis">
+    <h2 class="section-title">📊 KPIs Personalizados</h2>
+    <div class="kpi-grid">
+        {% for kpi_key, kpi_data in smart_kpis.items() %}
+        <div class="kpi-card {% if kpi_data.alert %}kpi-alert{% endif %}" style="--animation-delay: {{ loop.index }};">
+            <div class="kpi-value" data-metric="{{ kpi_key }}">{{ kpi_data.value }}</div>
+            <div class="kpi-label">{{ kpi_data.label }}</div>
+            <div class="kpi-trend kpi-trend-{{ kpi_data.trend }}">
+                {% if kpi_data.trend == 'up' %}📈
+                {% elif kpi_data.trend == 'down' %}📉
+                {% else %}➡️{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- NUEVO: Métricas de Productividad -->
+{% if productivity_metrics and widgets_to_show and 'stats' in widgets_to_show %}
+<section class="dashboard-stats productivity-metrics" data-widget="productivity">
+    <h2 class="section-title">⚡ Métricas de Productividad</h2>
+    <div class="productivity-grid">
+        <div class="metric-card" style="--animation-delay: 1;">
+            <h3>📈 Confirmaciones</h3>
+            <p class="metric-value">{{ "%.1f"|format(productivity_metrics.confirmation_rate or 0) }}%</p>
+            <small>Tasa de confirmación semanal</small>
+        </div>
+        <div class="metric-card" style="--animation-delay: 2;">
+            <h3>👨‍💼 Barberos Activos</h3>
+            <p class="metric-value">{{ productivity_metrics.active_barbers or 0 }}</p>
+            <small>Disponibles para citas</small>
+        </div>
+        {% if productivity_metrics.low_stock_products and productivity_metrics.low_stock_products > 0 %}
+        <div class="metric-card alert-card" style="--animation-delay: 3;">
+            <h3>⚠️ Stock Bajo</h3>
+            <p class="metric-value">{{ productivity_metrics.low_stock_products }}</p>
+            <small>Productos requieren reposición</small>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
 <!-- A. Resumen Rápido (Estadísticas Clave) -->
-<section class="dashboard-stats">
+{% if widgets_to_show and 'stats' in widgets_to_show %}
+<section class="dashboard-stats" data-widget="stats">
     <div class="card">
         <h3>Productos Totales</h3>
         <p class="count">{{ product_count }}</p>
@@ -36,6 +111,7 @@
         <a href="#">Ver Mensajes</a> 
     </div>
 </section>
+{% endif %}
 
 <!-- Nuevas secciones para gráficos y métricas -->
 <div class="dashboard-charts-container">
@@ -239,5 +315,71 @@
         <a href="{{ url_for('admin.gestionar_citas') }}" class="btn">Ver todas las citas</a>
     </div>
 </section>
+
+<!-- NUEVO: Acceso Rápido -->
+<section class="dashboard-section quick-access-section" data-widget="quick_access">
+    <h2 class="section-title">🚀 Acceso Rápido</h2>
+    <div class="quick-access-grid">
+        <div class="quick-access-category">
+            <h3>📊 Datos Frecuentes</h3>
+            <div class="quick-items">
+                <a href="{{ url_for('admin.gestionar_productos') }}" class="quick-item">
+                    <span class="quick-icon">📦</span>
+                    <span>Gestionar Productos</span>
+                </a>
+                <a href="{{ url_for('admin.gestionar_citas') }}" class="quick-item">
+                    <span class="quick-icon">📅</span>
+                    <span>Gestionar Citas</span>
+                </a>
+                <a href="{{ url_for('admin.gestionar_clientes') }}" class="quick-item">
+                    <span class="quick-icon">👥</span>
+                    <span>Gestionar Clientes</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="quick-access-category">
+            <h3>⚡ Acciones Rápidas</h3>
+            <div class="quick-items">
+                <button class="quick-item refresh-metrics">
+                    <span class="quick-icon">🔄</span>
+                    <span>Actualizar Métricas</span>
+                </button>
+                <button class="quick-item export-metrics">
+                    <span class="quick-icon">📋</span>
+                    <span>Exportar Datos</span>
+                </button>
+                <button class="quick-item dashboard-customize">
+                    <span class="quick-icon">⚙️</span>
+                    <span>Personalizar</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="quick-access-category">
+            <h3>📈 Reportes</h3>
+            <div class="quick-items">
+                <a href="{{ url_for('admin.gestionar_clientes', segmento='nuevo') }}" class="quick-item">
+                    <span class="quick-icon">🆕</span>
+                    <span>Clientes Nuevos</span>
+                </a>
+                <a href="{{ url_for('admin.gestionar_productos') }}?low_stock=1" class="quick-item">
+                    <span class="quick-icon">⚠️</span>
+                    <span>Stock Bajo</span>
+                </a>
+                <a href="{{ url_for('admin.gestionar_citas', estado='pendiente_confirmacion') }}" class="quick-item">
+                    <span class="quick-icon">⏳</span>
+                    <span>Citas Pendientes</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/admin_dashboard.js') }}"></script>
+<script>
+    // Marcar el body como dashboard para inicialización del script
+    document.body.classList.add('admin-dashboard');
+</script>
 
 {% endblock %}

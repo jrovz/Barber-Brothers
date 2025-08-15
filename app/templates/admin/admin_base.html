@@ -9,7 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}"> 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard_custom.css') }}"> 
     
     <!-- Chart.js para visualización de datos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -387,6 +388,9 @@
     {% if request.endpoint == 'admin.dashboard' %}
     <script src="{{ url_for('static', filename='js/dashboard_charts.js') }}"></script>
     {% endif %}
+    
+    <!-- Script para gestión de filtros automáticos -->
+    <script src="{{ url_for('static', filename='js/admin_filters.js') }}"></script>
     
     <!-- Mobile Menu Script -->
     <script>

@@ -160,6 +160,18 @@ def create_app(config_name='default'):
             app.logger.error(f"Error during database initialization check: {e}")
     csrf.init_app(app)
     
+    # Inicializar middleware de cookies comerciales
+    from app.middleware.business_middleware import BusinessMiddleware
+    business_middleware = BusinessMiddleware()
+    business_middleware.init_app(app)
+    app.logger.info("Business middleware initialized for conversion optimization")
+    
+    # Inicializar middleware de administradores
+    from app.middleware.admin_middleware import AdminMiddleware
+    admin_middleware = AdminMiddleware()
+    admin_middleware.init_app(app)
+    app.logger.info("Admin middleware initialized for productivity optimization")
+    
     # Registrar blueprints
     from app.public import bp as public_bp
     app.register_blueprint(public_bp)

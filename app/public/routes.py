@@ -100,6 +100,15 @@ def home():
     fechas_disponibles = []
     sliders = []
     
+    # NUEVO: Cargar personalización comercial
+    from app.utils.business_cookies import BusinessCookieManager, ConversionOptimizer
+    from app.utils.cart_optimizer import CartOptimizer
+    from flask import g
+    
+    personalization_data = getattr(g, 'personalization', BusinessCookieManager.get_personalization_data())
+    smart_recommendations = getattr(g, 'smart_recommendations', ConversionOptimizer.get_smart_recommendations())
+    conversion_probability = getattr(g, 'conversion_probability', BusinessCookieManager.calculate_conversion_probability())
+    
     try:
         # Obtener sliders activos ordenados por orden
         if Slider is not None:
@@ -159,13 +168,51 @@ def home():
     # print("--- DEBUG HOME ---")
     # ... (eliminar bucles for anteriores) ...
     # print("--- FIN DEBUG HOME ---")
+    
+    # NUEVO: Personalizar contenido basado en cookies comerciales
+    # Reorganizar barberos si hay preferencias
+    if personalization_data.get('preferences', {}).get('barbero_favorito'):
+        fav_barbero_id = personalization_data['preferences']['barbero_favorito']
+        barbero_favorito = next((b for b in barberos if b.id == fav_barbero_id), None)
+        if barbero_favorito:
+            barberos = [barbero_favorito] + [b for b in barberos if b.id != fav_barbero_id]
+    
+    # Reorganizar servicios si hay preferencias
+    if personalization_data.get('preferences', {}).get('servicio_favorito'):
+        fav_servicio_id = personalization_data['preferences']['servicio_favorito']
+        servicio_favorito = next((s for s in servicios if s.id == fav_servicio_id), None)
+        if servicio_favorito:
+            servicios = [servicio_favorito] + [s for s in servicios if s.id != fav_servicio_id]
+    
+    # Productos recomendados basados en visualizaciones
+    productos_recomendados = []
+    if smart_recommendations.get('show_quick_booking'):
+        recommended_product_ids = CartOptimizer.get_smart_recommendations(limit=3)
+        if recommended_product_ids:
+            productos_recomendados = Producto.query.filter(
+                Producto.id.in_(recommended_product_ids[:3])
+            ).all()
+    
+    # Datos de personalización para el template
+    personalization_context = {
+        'is_returning_customer': personalization_data.get('client', {}).get('is_returning', False),
+        'conversion_probability': conversion_probability,
+        'show_quick_booking': smart_recommendations.get('show_quick_booking', False),
+        'suggested_barbero_id': smart_recommendations.get('suggested_barbero'),
+        'suggested_servicio_id': smart_recommendations.get('suggested_servicio'),
+        'suggested_time_slots': smart_recommendations.get('suggested_time_slots', []),
+        'total_reservas': personalization_data.get('preferences', {}).get('total_reservas', 0),
+        'client_name': personalization_data.get('client', {}).get('nombre', ''),
+    }
 
     return render_template('public/Home.html',
                           featured_products=featured_products,
                           barberos=barberos,
                           servicios=servicios,
                           fechas_disponibles=fechas_disponibles,
-                          sliders=sliders)
+                          sliders=sliders,
+                          productos_recomendados=productos_recomendados,
+                          personalization=personalization_context)
 
 
 @bp.route('/ads.txt')
@@ -302,8 +349,35 @@ def checkout():
                 nuevo_pedido.total = total_pedido
                 db.session.commit()
                 
+                # NUEVO: Procesar cookies comerciales para e-commerce
+                response = make_response(redirect(url_for('public.confirmacion_pedido', pedido_id=nuevo_pedido.id)))
+                
+                from app.utils.cart_optimizer import CartOptimizer
+                from app.utils.business_cookies import BusinessCookieManager
+                
+                # Limpiar carrito persistente después de compra exitosa
+                response.set_cookie('persistent_cart', '', expires=0)
+                
+                # Guardar datos del cliente para futuras compras
+                client_data = {
+                    'nombre': form.nombre.data,
+                    'email': form.email.data,
+                    'telefono': form.telefono.data
+                }
+                BusinessCookieManager.save_client_data_smart(response, client_data)
+                
+                # Tracking de conversión de compra
+                response = BusinessCookieManager.update_booking_step(
+                    response, 'purchase_completed', {
+                        'pedido_id': nuevo_pedido.id,
+                        'total_compra': float(total_pedido),
+                        'items_cantidad': len(cart_items),
+                        'conversion_time': datetime.now().isoformat()
+                    }
+                )
+                
                 flash('¡Pedido creado exitosamente!', 'success')
-                return redirect(url_for('public.confirmacion_pedido', pedido_id=nuevo_pedido.id))
+                return response
                 
             except Exception as e:
                 db.session.rollback()
@@ -586,11 +660,40 @@ def agendar_cita():
             token=token
         )
 
-        return jsonify({
+        # NUEVO: Crear respuesta con cookies comerciales optimizadas
+        response_data = {
             'success': True,
             'mensaje': 'Solicitud de cita recibida. Por favor, revisa tu correo electrónico para confirmar la cita en la próxima hora.',
             'cita_id': nueva_cita.id
-        })
+        }
+        
+        response = make_response(jsonify(response_data))
+        
+        # Actualizar cookies comerciales para maximizar futuras conversiones
+        from app.utils.business_cookies import BusinessCookieManager
+        
+        # Guardar datos del cliente para auto-completar futuras reservas
+        BusinessCookieManager.save_client_data_smart(response, data)
+        
+        # Guardar preferencias de barbero y servicio
+        BusinessCookieManager.save_preferences_smart(
+            response, 
+            int(data['barbero_id']), 
+            int(data['servicio_id']), 
+            data['hora']
+        )
+        
+        # Tracking de conversión exitosa
+        response = BusinessCookieManager.update_booking_step(
+            response, 'booking_completed', {
+                'cita_id': nueva_cita.id,
+                'conversion_time': datetime.now().isoformat(),
+                'barbero_seleccionado': data['barbero_id'],
+                'servicio_seleccionado': data['servicio_id']
+            }
+        )
+        
+        return response
 
     except ValueError as ve:
         current_app.logger.error(f"Error de formato en agendar_cita: {str(ve)}")

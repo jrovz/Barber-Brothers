@@ -18,7 +18,9 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <img src="/static/logo.png" alt="Barbería Clásica">
+                <a href="{{ url_for('public.home') }}" class="logo-link" id="logo-link">
+                    <img src="/static/logo.png" alt="Barbería Clásica">
+                </a>
             </div>
 
             <!-- Navegación Desktop -->
@@ -147,6 +149,80 @@
             
             // Ejecutar una vez al cargar para estado inicial
             handleScroll();
+        });
+    </script>
+    
+    <!-- Script para navegación del logo -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoLink = document.getElementById('logo-link');
+            
+            if (logoLink) {
+                logoLink.addEventListener('click', function(e) {
+                    // Si ya estamos en el home, no navegar sino hacer scroll
+                    if (window.location.pathname === '{{ url_for("public.home") }}' || 
+                        window.location.pathname === '/' || 
+                        window.location.pathname === '') {
+                        e.preventDefault();
+                        scrollToBookingSection();
+                    } else {
+                        // Si no estamos en home, navegar al home con parámetro para hacer scroll
+                        e.preventDefault();
+                        window.location.href = '{{ url_for("public.home") }}?scroll=booking';
+                    }
+                });
+                
+                // Agregar indicador visual de que es clickeable
+                logoLink.style.cursor = 'pointer';
+                logoLink.setAttribute('title', 'Ir al inicio y agendar cita');
+            }
+            
+            // Función para hacer scroll suave a la sección de agendar
+            function scrollToBookingSection() {
+                const bookingSection = document.getElementById('booking-section') || 
+                                     document.querySelector('.booking-section') ||
+                                     document.querySelector('[data-section="booking"]') ||
+                                     document.querySelector('.cita-section') ||
+                                     document.querySelector('#agendar-cita');
+                
+                if (bookingSection) {
+                    const headerHeight = document.querySelector('header').offsetHeight || 0;
+                    const targetPosition = bookingSection.offsetTop - headerHeight - 20;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Añadir efecto visual sutil
+                    bookingSection.style.transition = 'box-shadow 0.5s ease';
+                    bookingSection.style.boxShadow = '0 0 15px rgba(179, 150, 86, 0.3)';
+                    setTimeout(() => {
+                        bookingSection.style.boxShadow = '';
+                        setTimeout(() => {
+                            bookingSection.style.transition = '';
+                        }, 500);
+                    }, 1500);
+                } else {
+                    // Si no encuentra la sección, scroll al top
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            // Verificar si venimos de otra página y necesitamos hacer scroll
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('scroll') === 'booking') {
+                // Esperar un poco para que la página se cargue completamente
+                setTimeout(() => {
+                    scrollToBookingSection();
+                    // Limpiar el parámetro de la URL
+                    const newUrl = window.location.pathname;
+                    history.replaceState({}, document.title, newUrl);
+                }, 500);
+            }
         });
     </script>
     

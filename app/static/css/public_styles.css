@@ -30,6 +30,8 @@
     box-sizing: border-box;
 }
 
+
+
 body {
     background-color: var(--color-bg-main);
     color: var(--color-text-primary);
@@ -311,11 +313,32 @@ body.menu-open {
     text-align: left;
 }
 
+.logo-link {
+    display: block;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+    border-radius: 4px;
+    padding: 3px;
+}
+
+.logo-link:hover {
+    opacity: 0.85;
+}
+
 .logo img {
     height: 90px; 
     width: auto;
     display: block;
-    transition: height 0.3s ease;
+    transition: opacity 0.2s ease;
+}
+
+.logo-link:active {
+    opacity: 0.7;
+}
+
+.logo-link:focus {
+    outline: 1px solid rgba(179, 150, 86, 0.6);
+    outline-offset: 2px;
 }
 
 /* Logo más pequeño cuando se hace scroll */
@@ -2490,6 +2513,15 @@ footer p {
     
     .logo {
         text-align: center;
+    }
+    
+    .logo-link {
+        padding: 2px;
+        border-radius: 3px;
+    }
+    
+    .logo-link:hover {
+        opacity: 0.8;
     }
     
     .logo img {
