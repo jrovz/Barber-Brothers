@@ -72,7 +72,7 @@ Seguridad y notas
 - El modelo `Slider` es opcional: si no está disponible, se procede con lista
   vacía. Existen logs/prints de depuración en `home()` y APIs para diagnóstico.
 """
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
 from flask_login import login_required, current_user
 from app.public import bp
 from app.models.producto import Producto
@@ -516,17 +516,26 @@ def disponibilidad_barbero(barbero_id, fecha):
         barbero = Barbero.query.get_or_404(barbero_id)
 
         servicio_id = request.args.get('servicio_id', type=int)
+        validate_slot = request.args.get('validate_slot')  # Para validación en tiempo real
         duracion_servicio = 30 
 
         if servicio_id:
             servicio = Servicio.query.get(servicio_id)
             if servicio:
                 duracion_servicio = servicio.get_duracion_minutos()
-                print(f"Servicio '{servicio.nombre}': {duracion_servicio} minutos")
+                current_app.logger.info(f"Servicio '{servicio.nombre}': {duracion_servicio} minutos")
             else:
-                print(f"Warning: Servicio con ID {servicio_id} no encontrado. Usando duración por defecto.")
+                current_app.logger.warning(f"Servicio con ID {servicio_id} no encontrado. Usando duración por defecto.")
         else:
-             print("Warning: No se proporcionó servicio_id. Usando duración por defecto.")
+            current_app.logger.warning("No se proporcionó servicio_id. Usando duración por defecto.")
+
+        # Limpiar citas expiradas antes de obtener horarios para tener datos actualizados
+        try:
+            citas_limpiadas = Cita.limpiar_citas_expiradas()
+            if citas_limpiadas > 0:
+                current_app.logger.info(f"Limpieza automática: {citas_limpiadas} citas expiradas")
+        except Exception as e:
+            current_app.logger.warning(f"Error en limpieza automática de citas: {e}")
 
         horarios_obj_list = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
 
@@ -544,21 +553,29 @@ def disponibilidad_barbero(barbero_id, fecha):
              else:
                  mensaje_respuesta = f"No hay horarios disponibles para {barbero.nombre} el {fecha} con duración de {duracion_servicio} min."
 
+        # Logging mejorado para debugging
+        current_app.logger.info(f"Disponibilidad solicitada - Barbero: {barbero.nombre}, Fecha: {fecha}, "
+                               f"Servicio: {servicio_id}, Duración: {duracion_servicio}min, "
+                               f"Horarios encontrados: {len(horarios_disponibles_str)}")
+        
+        # Si se está validando un slot específico, verificar si está disponible
+        if validate_slot and validate_slot not in horarios_disponibles_str:
+            current_app.logger.warning(f"Slot {validate_slot} ya no disponible para {barbero.nombre} en {fecha}")
 
         return jsonify({
             'barbero': barbero.nombre,
             'fecha': fecha,
             'horarios': horarios_disponibles_str, # Usar la lista de strings de horas disponibles
-            'mensaje': mensaje_respuesta 
+            'mensaje': mensaje_respuesta,
+            'total_slots': len(horarios_disponibles_str),
+            'duracion_servicio': duracion_servicio
         })
 
     except ValueError as ve:
-         print(f"Error de formato en disponibilidad_barbero: {str(ve)}")
+         current_app.logger.error(f"Error de formato en disponibilidad_barbero: {str(ve)}")
          return jsonify({'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'}), 400
     except Exception as e:
-        print(f"Error en disponibilidad_barbero: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.error(f"Error en disponibilidad_barbero: {str(e)}", exc_info=True)
         return jsonify({'error': 'Error interno al obtener disponibilidad.'}), 500
 
 @bp.route('/api/agendar-cita', methods=['POST'])
@@ -611,8 +628,17 @@ def agendar_cita():
                 break
 
         if hay_solapamiento:
-            current_app.logger.warning(f"Intento de agendar cita con solapamiento: Barbero {data['barbero_id']} desde {fecha_hora} hasta {fin_nueva_cita}")
-            return jsonify({'error': 'Este horario se solapa con otra cita. Por favor, selecciona otro horario.'}), 409 # 409 Conflict
+            current_app.logger.warning(f"CONFLICTO DE HORARIO - Barbero {data['barbero_id']}, "
+                                      f"Cliente: {data['email']}, Horario solicitado: {fecha_hora} - {fin_nueva_cita}, "
+                                      f"Servicio: {data['servicio_id']} ({duracion_servicio}min)")
+            return jsonify({
+                'error': 'Este horario se solapa con otra cita. Por favor, selecciona otro horario.',
+                'conflict_details': {
+                    'barbero_id': data['barbero_id'],
+                    'horario_solicitado': fecha_hora.isoformat(),
+                    'duracion_servicio': duracion_servicio
+                }
+            }), 409 # 409 Conflict
 
         cliente = Cliente.query.filter_by(email=data['email']).first()
         if not cliente:
@@ -645,7 +671,10 @@ def agendar_cita():
         db.session.commit() # Commit para obtener el ID de nueva_cita
 
         token = nueva_cita.generate_confirmation_token()
-        current_app.logger.info(f"Cita ID {nueva_cita.id} creada, token generado. Enviando correo a {cliente.email}")
+        current_app.logger.info(f"CITA CREADA EXITOSAMENTE - ID: {nueva_cita.id}, "
+                               f"Cliente: {cliente.email}, Barbero: {data['barbero_id']}, "
+                               f"Fecha: {fecha_hora}, Servicio: {data['servicio_id']}, "
+                               f"Duración: {duracion_servicio}min. Token generado, enviando correo.")
 
         # Enviar correo de confirmación
         # Las relaciones barbero y servicio_rel se cargarán automáticamente al acceder a ellas

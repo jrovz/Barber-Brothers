@@ -92,6 +92,30 @@ class Cita(db.Model):
     def servicio(self, value):
         self.servicio_rel = value
     
+    @staticmethod
+    def limpiar_citas_expiradas():
+        """Marca como expiradas las citas pendientes de confirmación que han pasado 1 hora"""
+        from datetime import datetime, timedelta
+        from app import db
+        
+        limite_expiracion = datetime.utcnow() - timedelta(hours=1)
+        
+        citas_expiradas = Cita.query.filter(
+            Cita.estado == 'pendiente_confirmacion',
+            Cita.creado < limite_expiracion
+        ).all()
+        
+        for cita in citas_expiradas:
+            cita.estado = 'expirada'
+            current_app.logger.info(f"Cita ID {cita.id} marcada como expirada - "
+                                   f"Cliente: {cita.cliente.email}, Fecha cita: {cita.fecha}")
+        
+        if citas_expiradas:
+            db.session.commit()
+            current_app.logger.info(f"Se marcaron {len(citas_expiradas)} citas como expiradas")
+        
+        return len(citas_expiradas)
+
     def actualizar_segmentacion_cliente(self):
         """Actualiza la segmentación del cliente cuando se completa una cita"""
         if self.estado == 'completada' and self.cliente:

@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch(`/api/disponibilidad/${barberoId}/${fecha}?servicio_id=${servicioId}`);
             const data = await response.json();
             console.log("API Response Data:", data);
+            console.log(`Horarios disponibles recibidos: ${data.horarios ? data.horarios.length : 0}`);
             
             if (!response.ok) {
                 throw new Error(data.error || `Error ${response.status}: No se pudieron cargar los horarios`);
@@ -128,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.classList.add('selected');
                         currentSelectedTime = this.dataset.hora;
                         
+                        console.log(`Slot seleccionado: ${currentSelectedTime} para barbero ${barberoId} en fecha ${fecha}`);
+                        
                         const barberoName = barberoSelect.options[barberoSelect.selectedIndex].text;
                         const servicioName = servicioSelect.options[servicioSelect.selectedIndex].text.split(' - ')[0];
 
@@ -148,6 +151,44 @@ document.addEventListener('DOMContentLoaded', function() {
     function showConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora) {
         if (!bookingConfirmation) return;
 
+        // Validación en tiempo real antes de mostrar el panel
+        validateSlotAvailability(barberoId, servicioId, fecha, hora)
+            .then(isAvailable => {
+                if (!isAvailable) {
+                    alert('Lo sentimos, este horario ya no está disponible. Te mostraremos horarios actualizados.');
+                    loadAvailableTimes();
+                    return;
+                }
+                
+                // Continuar con la confirmación si está disponible
+                displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora);
+            })
+            .catch(error => {
+                console.error('Error validando disponibilidad:', error);
+                // Continuar con la confirmación en caso de error de validación
+                displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora);
+            });
+    }
+    
+    async function validateSlotAvailability(barberoId, servicioId, fecha, hora) {
+        try {
+            const response = await fetch(`/api/disponibilidad/${barberoId}/${fecha}?servicio_id=${servicioId}&validate_slot=${hora}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                console.warn('Error validando slot:', data.error);
+                return true; // En caso de error, permitir continuar
+            }
+            
+            // Verificar si el horario específico está en la lista de disponibles
+            return data.horarios && data.horarios.includes(hora);
+        } catch (error) {
+            console.error('Error en validación de slot:', error);
+            return true; // En caso de error, permitir continuar
+        }
+    }
+    
+    function displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora) {
         document.getElementById('confirm-barbero').textContent = barberoName;
         
         // Obtener la duración del servicio seleccionado
@@ -332,8 +373,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         // No ocultar clientInfoForm aquí, ya que el panel se reconstruye
                     }
                 } else {
-                    // Manejo de error existente
-                    alert(`Error al solicitar la cita: ${data.error || `Error ${status}` || 'Inténtalo de nuevo.'}`);
+                    // Manejo mejorado de errores específicos
+                    if (status === 409) {
+                        // Error de conflicto de horario
+                        alert('Lo sentimos, alguien más acaba de agendar este horario. Te mostraremos horarios actualizados.');
+                        // Recargar horarios automáticamente para mostrar disponibilidad actual
+                        console.log('Conflicto de horario detectado, recargando horarios disponibles...');
+                        loadAvailableTimes();
+                        // Ocultar panel de confirmación para que el usuario seleccione nuevo horario
+                        if (bookingConfirmation) bookingConfirmation.style.display = 'none';
+                    } else if (status === 400) {
+                        // Error de validación de datos
+                        alert(`Error en los datos proporcionados: ${data.error || 'Por favor, verifica tu información e inténtalo de nuevo.'}`);
+                    } else {
+                        // Otros errores
+                        alert(`Error al solicitar la cita: ${data.error || `Error ${status}` || 'Inténtalo de nuevo.'}`);
+                    }
                     confirmButton.disabled = false;
                     confirmButton.textContent = 'Confirmar Cita';
                 }

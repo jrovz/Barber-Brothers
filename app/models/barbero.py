@@ -195,7 +195,8 @@ class DisponibilidadBarbero(db.Model):
         current_time = datetime.combine(fecha, self.hora_inicio)
         end_time = datetime.combine(fecha, self.hora_fin)
         
-        # Obtener todas las citas confirmadas y pendientes para este día y barbero
+        # Obtener todas las citas que ocupan espacio para este día y barbero
+        # Incluimos 'expirada' porque puede que aún no se haya limpiado del sistema
         citas_del_dia = Cita.query.filter(
             Cita.barbero_id == self.barbero_id,
             Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
