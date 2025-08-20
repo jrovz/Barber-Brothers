@@ -128,6 +128,447 @@ class BusinessOptimizer {
         this.showCartBasedRecommendations();
     }
 
+    highlightRecommendedProducts() {
+        console.log('✨ Destacando productos recomendados...');
+        
+        // Obtener productos recomendados basados en comportamiento del usuario
+        const recommendedProducts = this.getRecommendedProducts();
+        
+        if (recommendedProducts.length === 0) return;
+        
+        // Aplicar estilos de destacado a productos recomendados
+        this.applyRecommendationHighlights(recommendedProducts);
+        
+        // Añadir badges de recomendación
+        this.addRecommendationBadges(recommendedProducts);
+        
+        // Mostrar sección de productos recomendados
+        this.createRecommendedSection(recommendedProducts);
+    }
+
+    getRecommendedProducts() {
+        const recommendations = [];
+        
+        // 1. Productos basados en el historial de visualización
+        const viewedProducts = this.getViewedProductsFromCookie();
+        if (viewedProducts.length > 0) {
+            recommendations.push(...this.getRelatedToViewed(viewedProducts));
+        }
+        
+        // 2. Productos basados en el carrito actual
+        const cartProducts = this.getCartProducts();
+        if (cartProducts.length > 0) {
+            recommendations.push(...this.getComplementaryProducts(cartProducts));
+        }
+        
+        // 3. Productos populares para usuarios nuevos
+        if (this.personalData.client.usage_count <= 1) {
+            recommendations.push(...this.getPopularProducts());
+        }
+        
+        // 4. Productos basados en preferencias guardadas
+        if (this.personalData.preferences.favorite_barbero) {
+            recommendations.push(...this.getBarberoFavoriteProducts());
+        }
+        
+        // Eliminar duplicados y limitar a 6 productos
+        const uniqueRecommendations = recommendations
+            .filter((product, index, self) => 
+                index === self.findIndex(p => p.id === product.id))
+            .slice(0, 6);
+        
+        return uniqueRecommendations;
+    }
+
+    getViewedProductsFromCookie() {
+        const viewedData = this.getCookie('viewed_products');
+        if (viewedData) {
+            try {
+                const data = JSON.parse(viewedData);
+                return data.timeline ? data.timeline.map(t => data.products[t.id]).filter(Boolean) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+        return [];
+    }
+
+    getCartProducts() {
+        try {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            return cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                category: item.category || 'general'
+            }));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    getRelatedToViewed(viewedProducts) {
+        // Simular productos relacionados basados en categorías vistas
+        const categories = [...new Set(viewedProducts.map(p => p.category))];
+        const relatedProducts = [];
+        
+        // En una implementación real, esto consultaría una API
+        categories.forEach(category => {
+            if (category && category !== 'general') {
+                relatedProducts.push({
+                    id: `related_${category}_${Date.now()}`,
+                    name: `Producto recomendado de ${category}`,
+                    price: Math.floor(Math.random() * 50000) + 10000,
+                    category: category,
+                    recommendation_reason: 'Basado en productos vistos'
+                });
+            }
+        });
+        
+        return relatedProducts.slice(0, 2);
+    }
+
+    getComplementaryProducts(cartProducts) {
+        // Productos que complementan los del carrito
+        const complementary = [];
+        
+        cartProducts.forEach(product => {
+            // Lógica simple de complementos
+            if (product.name.toLowerCase().includes('corte')) {
+                complementary.push({
+                    id: `complement_beard_${Date.now()}`,
+                    name: 'Arreglo de Barba',
+                    price: 25000,
+                    category: 'servicios',
+                    recommendation_reason: 'Perfecto con tu corte'
+                });
+            }
+            
+            if (product.category === 'productos') {
+                complementary.push({
+                    id: `complement_aftershave_${Date.now()}`,
+                    name: 'Aftershave Premium',
+                    price: 35000,
+                    category: 'productos',
+                    recommendation_reason: 'Complementa tu rutina'
+                });
+            }
+        });
+        
+        return complementary.slice(0, 2);
+    }
+
+    getPopularProducts() {
+        // Productos populares para usuarios nuevos
+        return [
+            {
+                id: 'popular_1',
+                name: 'Corte Clásico',
+                price: 30000,
+                category: 'servicios',
+                recommendation_reason: 'Más popular'
+            },
+            {
+                id: 'popular_2',
+                name: 'Kit de Cuidado Básico',
+                price: 45000,
+                category: 'productos',
+                recommendation_reason: 'Recomendado para principiantes'
+            }
+        ];
+    }
+
+    getBarberoFavoriteProducts() {
+        // Productos/servicios del barbero favorito
+        return [
+            {
+                id: 'barbero_special',
+                name: 'Servicio Especialidad',
+                price: 40000,
+                category: 'servicios',
+                recommendation_reason: `Especialidad de tu barbero favorito`
+            }
+        ];
+    }
+
+    applyRecommendationHighlights(recommendedProducts) {
+        recommendedProducts.forEach(product => {
+            // Buscar el elemento del producto en la página
+            const productElement = document.querySelector(
+                `[data-id="${product.id}"], [data-product-id="${product.id}"]`
+            );
+            
+            if (productElement) {
+                // Añadir clase de destacado
+                productElement.classList.add('recommended-product');
+                
+                // Aplicar estilos de destacado
+                productElement.style.cssText += `
+                    border: 2px solid #4CAF50 !important;
+                    box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3) !important;
+                    transform: scale(1.02);
+                    transition: all 0.3s ease;
+                `;
+                
+                // Añadir animación sutil
+                productElement.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.05)';
+                });
+                
+                productElement.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1.02)';
+                });
+            }
+        });
+    }
+
+    addRecommendationBadges(recommendedProducts) {
+        recommendedProducts.forEach(product => {
+            const productElement = document.querySelector(
+                `[data-id="${product.id}"], [data-product-id="${product.id}"]`
+            );
+            
+            if (productElement && !productElement.querySelector('.recommendation-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'recommendation-badge';
+                badge.innerHTML = '⭐ Recomendado';
+                badge.style.cssText = `
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    z-index: 10;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                `;
+                
+                // Asegurar que el contenedor tenga posición relativa
+                productElement.style.position = 'relative';
+                productElement.appendChild(badge);
+            }
+        });
+    }
+
+    createRecommendedSection(recommendedProducts) {
+        // Verificar si ya existe la sección
+        if (document.querySelector('.recommendations-section')) return;
+        
+        const productsContainer = document.querySelector('.productos-container, .products-grid, .main-content');
+        if (!productsContainer) return;
+        
+        const recommendationsSection = document.createElement('div');
+        recommendationsSection.className = 'recommendations-section';
+        recommendationsSection.innerHTML = `
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        color: white; padding: 25px; margin: 30px 0; border-radius: 15px;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                <h3 style="margin: 0 0 20px 0; text-align: center; font-size: 1.4em;">
+                    ✨ Recomendado Especialmente Para Ti
+                </h3>
+                <div class="recommendations-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+                                                          gap: 20px; margin-top: 20px;">
+                    ${recommendedProducts.map(product => `
+                        <div class="recommendation-card" style="background: rgba(255,255,255,0.1); 
+                                                               border-radius: 10px; padding: 20px; text-align: center;
+                                                               backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                            <h4 style="margin: 0 0 10px 0; color: white; font-size: 1.1em;">
+                                ${product.name}
+                            </h4>
+                            <p style="margin: 0 0 10px 0; font-size: 1.2em; font-weight: bold; color: #90EE90;">
+                                $${product.price.toLocaleString()} COP
+                            </p>
+                            <p style="margin: 0 0 15px 0; font-size: 0.9em; opacity: 0.8;">
+                                ${product.recommendation_reason}
+                            </p>
+                            <button onclick="businessOptimizer.addRecommendedProduct('${product.id}')" 
+                                    style="background: #4CAF50; color: white; border: none; 
+                                           padding: 10px 20px; border-radius: 25px; cursor: pointer;
+                                           font-weight: bold; transition: all 0.3s ease;"
+                                    onmouseover="this.style.background='#45a049'; this.style.transform='scale(1.05)'"
+                                    onmouseout="this.style.background='#4CAF50'; this.style.transform='scale(1)'">
+                                ${product.category === 'servicios' ? 'Agendar' : 'Añadir al Carrito'}
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        // Insertar al inicio del contenedor
+        productsContainer.insertBefore(recommendationsSection, productsContainer.firstChild);
+    }
+
+    addRecommendedProduct(productId) {
+        // Buscar el producto en las recomendaciones
+        const recommendedProducts = this.getRecommendedProducts();
+        const product = recommendedProducts.find(p => p.id === productId);
+        
+        if (!product) return;
+        
+        if (product.category === 'servicios') {
+            // Redirigir a la página de booking con el servicio preseleccionado
+            window.location.href = '/booking?servicio=' + encodeURIComponent(product.name);
+        } else {
+            // Añadir al carrito
+            this.addToCartFromRecommendation(product);
+        }
+        
+        // Tracking del evento
+        this.trackEvent('recommended_product_selected', {
+            product_id: productId,
+            product_name: product.name,
+            recommendation_reason: product.recommendation_reason
+        });
+    }
+
+    addToCartFromRecommendation(product) {
+        // Simular añadir al carrito
+        if (window.smartCart && window.smartCart.addToCartSilently) {
+            window.smartCart.addToCartSilently(product);
+            if (window.updateCart) window.updateCart();
+        } else {
+            // Fallback al localStorage directo
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                quantity: 1,
+                image: product.image || '/static/images/default-product.jpg'
+            });
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+        
+        // Mostrar mensaje de éxito
+        this.showSuccessMessage(`${product.name} añadido al carrito desde recomendaciones`);
+    }
+
+    showSuccessMessage(message) {
+        const toast = document.createElement('div');
+        toast.className = 'success-toast';
+        toast.innerHTML = `
+            <div style="position: fixed; top: 20px; right: 20px; z-index: 10001;
+                        background: #4CAF50; color: white; padding: 15px 20px; 
+                        border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                        transform: translateX(100%); transition: transform 0.3s ease;">
+                ✅ ${message}
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Animar entrada
+        setTimeout(() => {
+            toast.firstElementChild.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Animar salida y remover
+        setTimeout(() => {
+            toast.firstElementChild.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    highlightViewedProducts() {
+        // Destacar productos vistos recientemente
+        const viewedProducts = this.getViewedProductsFromCookie();
+        
+        viewedProducts.slice(0, 3).forEach(product => {
+            const productElement = document.querySelector(
+                `[data-id="${product.id}"], [data-product-id="${product.id}"]`
+            );
+            
+            if (productElement && !productElement.classList.contains('recently-viewed')) {
+                productElement.classList.add('recently-viewed');
+                
+                // Añadir badge de "visto recientemente"
+                const badge = document.createElement('div');
+                badge.className = 'recently-viewed-badge';
+                badge.innerHTML = '👁️ Visto recientemente';
+                badge.style.cssText = `
+                    position: absolute;
+                    top: 10px;
+                    left: 10px;
+                    background: rgba(33, 150, 243, 0.9);
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 15px;
+                    font-size: 11px;
+                    z-index: 10;
+                `;
+                
+                productElement.style.position = 'relative';
+                productElement.appendChild(badge);
+            }
+        });
+    }
+
+    showCartBasedRecommendations() {
+        const cartProducts = this.getCartProducts();
+        if (cartProducts.length === 0) return;
+        
+        const complementaryProducts = this.getComplementaryProducts(cartProducts);
+        
+        if (complementaryProducts.length > 0) {
+            this.createCartBasedRecommendationsWidget(complementaryProducts);
+        }
+    }
+
+    createCartBasedRecommendationsWidget(products) {
+        // Verificar si ya existe
+        if (document.querySelector('.cart-recommendations-widget')) return;
+        
+        const widget = document.createElement('div');
+        widget.className = 'cart-recommendations-widget';
+        widget.innerHTML = `
+            <div style="position: fixed; bottom: 20px; right: 20px; 
+                        background: white; border-radius: 15px; padding: 20px;
+                        box-shadow: 0 8px 25px rgba(0,0,0,0.15); max-width: 300px;
+                        z-index: 1000; border: 2px solid #4CAF50;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: #333;">💡 También podrías necesitar</h4>
+                    <button onclick="this.closest('.cart-recommendations-widget').remove()" 
+                            style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
+                </div>
+                <div>
+                    ${products.map(product => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; 
+                                    margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500; font-size: 0.9em;">${product.name}</div>
+                                <div style="color: #4CAF50; font-weight: bold; font-size: 0.8em;">
+                                    $${product.price.toLocaleString()} COP
+                                </div>
+                            </div>
+                            <button onclick="businessOptimizer.addRecommendedProduct('${product.id}')" 
+                                    style="background: #4CAF50; color: white; border: none; 
+                                           padding: 5px 10px; border-radius: 12px; cursor: pointer; font-size: 0.8em;">
+                                +
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(widget);
+        
+        // Auto-remover después de 15 segundos
+        setTimeout(() => {
+            if (widget.parentNode) {
+                widget.remove();
+            }
+        }, 15000);
+    }
+
     optimizeCheckoutPage() {
         // Auto-completar datos del cliente
         this.autofillCheckoutForm();

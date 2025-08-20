@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+# Permitir acceso a archivos de estilo y scripts
+Allow: /static/css/
+Allow: /static/js/
+Allow: /static/images/
+Allow: /static/favicon.svg
+Allow: /static/logo.png
+
+# Bloquear panel de administración
+Disallow: /admin/
+Disallow: /barbero/
+
+# Bloquear API interna
+Disallow: /api/
+
+# Bloquear archivos de configuración
+Disallow: /.env
+Disallow: /config/
+
+# Bloquear carpetas del sistema
+Disallow: /instance/
+Disallow: /logs/
+Disallow: /migrations/
+Disallow: /venv/
+
+# Sitemap
+Sitemap: {{ url_for('static', filename='sitemap.xml', _external=True) }}
+
+# Información de rastreo
+Crawl-delay: 1

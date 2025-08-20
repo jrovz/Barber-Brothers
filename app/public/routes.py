@@ -224,6 +224,105 @@ def ads_txt():
         current_app.logger.error(f"ads.txt no encontrado o error al servirlo: {e}")
         return ('Not Found', 404)
 
+@bp.route('/robots.txt')
+def robots_txt():
+    """Sirve el archivo robots.txt optimizado para SEO."""
+    try:
+        from flask import Response
+        
+        robots_content = f"""User-agent: *
+Allow: /
+
+# Permitir acceso a archivos de estilo y scripts
+Allow: /static/css/
+Allow: /static/js/
+Allow: /static/images/
+Allow: /static/favicon.svg
+Allow: /static/logo.png
+
+# Bloquear panel de administración
+Disallow: /admin/
+Disallow: /barbero/
+
+# Bloquear API interna
+Disallow: /api/
+
+# Bloquear archivos de configuración
+Disallow: /.env
+Disallow: /config/
+
+# Bloquear carpetas del sistema
+Disallow: /instance/
+Disallow: /logs/
+Disallow: /migrations/
+Disallow: /venv/
+
+# Sitemap
+Sitemap: {request.url_root}sitemap.xml
+
+# Información de rastreo
+Crawl-delay: 1"""
+
+        return Response(robots_content, mimetype='text/plain')
+    except Exception as e:
+        current_app.logger.error(f"Error al generar robots.txt: {e}")
+        return ('Error', 500)
+
+@bp.route('/sitemap.xml')
+def sitemap_xml():
+    """Genera sitemap.xml dinámico para mejor indexación SEO."""
+    try:
+        from flask import Response
+        from datetime import datetime
+        
+        # URLs estáticas principales
+        static_urls = [
+            {
+                'loc': url_for('public.home', _external=True),
+                'changefreq': 'daily',
+                'priority': '1.0',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            },
+            {
+                'loc': url_for('public.servicios', _external=True),
+                'changefreq': 'weekly',
+                'priority': '0.9',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            },
+            {
+                'loc': url_for('public.productos', _external=True),
+                'changefreq': 'weekly',
+                'priority': '0.8',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            },
+            {
+                'loc': url_for('public.contact', _external=True),
+                'changefreq': 'monthly',
+                'priority': '0.7',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            }
+        ]
+
+        # Construir XML del sitemap
+        sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        
+        for url_info in static_urls:
+            sitemap_xml += '  <url>\n'
+            sitemap_xml += f'    <loc>{url_info["loc"]}</loc>\n'
+            sitemap_xml += f'    <changefreq>{url_info["changefreq"]}</changefreq>\n'
+            sitemap_xml += f'    <priority>{url_info["priority"]}</priority>\n'
+            sitemap_xml += f'    <lastmod>{url_info["lastmod"]}</lastmod>\n'
+            sitemap_xml += '  </url>\n'
+        
+        sitemap_xml += '</urlset>'
+
+        return Response(sitemap_xml, mimetype='application/xml')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al generar sitemap.xml: {e}")
+        return ('Error', 500)
+
 @bp.route('/about')
 def about():
     return render_template("about.html")

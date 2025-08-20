@@ -3,12 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Barbería - Barber Brothers{% endblock %}</title>
+    <title>{% block title %}Barbería Barber Brothers - Cortes y Afeitados Profesionales en Arkambuco{% endblock %}</title>
+    
+    <!-- Meta Tags SEO -->
+    <meta name="description" content="{% block meta_description %}Barbería profesional Barber Brothers en Arkambuco. Cortes de cabello, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Más de 7 años de experiencia!{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}barbería Arkambuco, corte de cabello hombre, afeitado clásico, barber shop, barbero profesional, arreglo barba, citas online barbería{% endblock %}">
+    <meta name="author" content="Barber Brothers">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="es">
+    <meta name="geo.region" content="CO-BOY">
+    <meta name="geo.placename" content="Arkambuco, Boyacá, Colombia">
+    <meta name="geo.position" content="5.7619;-73.0515">
+    <meta name="ICBM" content="5.7619, -73.0515">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{% block og_type %}business.business{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
+    <meta property="og:site_name" content="Barber Brothers">
+    <meta property="og:locale" content="es_CO">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.url }}">
+    <meta property="twitter:title" content="{{ self.og_title() }}">
+    <meta property="twitter:description" content="{{ self.og_description() }}">
+    <meta property="twitter:image" content="{{ self.og_image() }}">
+    
+    <!-- Business Information -->
+    <meta name="business:contact_data:street_address" content="Manzana A casa N•5">
+    <meta name="business:contact_data:locality" content="Arkambuco">
+    <meta name="business:contact_data:region" content="Boyacá">
+    <meta name="business:contact_data:postal_code" content="">
+    <meta name="business:contact_data:country_name" content="Colombia">
+    <meta name="business:contact_data:phone_number" content="+573102160496">
+    
+    <!-- Favicon optimizado -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    
+    <!-- DNS Prefetch para recursos externos -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="dns-prefetch" href="//www.instagram.com">
+    <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
+    <link rel="dns-prefetch" href="//www.clarity.ms">
+    
+    <!-- Preconnect para fuentes críticas -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fuentes optimizadas con display=swap -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+    
+    <!-- Preload CSS crítico -->
+    <link rel="preload" href="{{ url_for('static', filename='css/public_styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}"></noscript>
+    
+    <!-- CSS optimizado para booking (solo en páginas que lo necesiten) -->
+    {% if request.endpoint == 'public.home' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
+    {% endif %}
+    
+    <!-- Preload imágenes críticas solo en home -->
+    {% if request.endpoint == 'public.home' %}
+    <link rel="preload" href="{{ url_for('static', filename='logo.png') }}" as="image">
+    <link rel="preload" href="{{ url_for('static', filename='images/foto1.jpg') }}" as="image">
+    {% endif %}
     {% block extra_head %}{% endblock %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5383695411527556"
      crossorigin="anonymous"></script>
@@ -107,11 +170,26 @@
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
 
-    <!-- Scripts Comunes -->
-    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+    <!-- Scripts Comunes con carga diferida -->
+    <script>
+    // Función para cargar scripts de forma diferida
+    function loadScript(src, callback) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        if (callback) script.onload = callback;
+        document.head.appendChild(script);
+    }
+    
+    // Cargar scripts no críticos después del DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        loadScript('{{ url_for("static", filename="js/cart.js") }}');
+        loadScript('{{ url_for("static", filename="js/menu.js") }}');
+    });
+    </script>
+    
     <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
     {% include 'public/includes/menu_conflict_fix.html' %}
-    <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
     
     <!-- Script para checkout -->
     <script>

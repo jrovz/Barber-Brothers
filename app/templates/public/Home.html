@@ -9,11 +9,98 @@
     tracking_scripts,
     cookie_consent_banner %}
 
-{% block title %}Barbería - Inicio{% endblock %}
+{% block title %}Barber Brothers - Barbería Profesional en Ibagué | Reserva tu Cita Online{% endblock %}
+
+{% block meta_description %}Barber Brothers - Barbería profesional en Ibagué con más de 7 años de experiencia. Cortes modernos, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Ubicados en Manzana A casa N•5!{% endblock %}
+
+{% block meta_keywords %}barbería Ibagué, Barber Brothers, corte cabello masculino, afeitado profesional, barbero Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios barbería, corte infantil{% endblock %}
+
+{% block og_type %}website{% endblock %}
 
 {% block extra_head %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{ personalization_meta_tags(personalization) }}
+    
+    <!-- Datos estructurados JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": "https://barberbrothers.com/#business",
+        "name": "Barber Brothers",
+        "description": "Barbería profesional con más de 7 años de experiencia en Arkambuco. Especialistas en cortes modernos, afeitado clásico y arreglo de barba.",
+        "url": "{{ request.url_root }}",
+        "telephone": "+573102160496",
+        "priceRange": "$$",
+        "image": "{{ url_for('static', filename='logo.png', _external=True) }}",
+        "logo": "{{ url_for('static', filename='logo.png', _external=True) }}",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Manzana A casa N•5",
+            "addressLocality": "Arkambuco",
+            "addressRegion": "Boyacá",
+            "addressCountry": "CO"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 5.7619,
+            "longitude": -73.0515
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "18:00"
+            },
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": "Saturday",
+                "opens": "08:00",
+                "closes": "16:00"
+            }
+        ],
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Servicios de Barbería",
+            "itemListElement": [
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Corte de Cabello",
+                        "description": "Cortes modernos y clásicos para hombre"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service", 
+                        "name": "Afeitado Clásico",
+                        "description": "Afeitado profesional con navaja"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Arreglo de Barba",
+                        "description": "Recorte y diseño profesional de barba"
+                    }
+                }
+            ]
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "reviewCount": "127"
+        },
+        "sameAs": [
+            "https://www.instagram.com/barberbrothers/",
+            "https://www.facebook.com/barberbrothers/"
+        ]
+    }
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -43,8 +130,8 @@
                     <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto1.jpg') }}')"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
-                            <h2>Cortes con estilo</h2>
-                            <p>Descubre la experiencia única de La Barber Brothers</p>
+                            <h2>Cortes de Cabello Profesionales en Arkambuco</h2>
+                            <p>Descubre la experiencia única de Barber Brothers - Tu barbería de confianza desde 2017</p>
                         </div>
                     </div>
                 </div>
@@ -53,8 +140,8 @@
                     <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto2.jpg') }}')"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
-                            <h2>Maestría en barbería</h2>
-                            <p>Profesionales dedicados a resaltar tu imagen</p>
+                            <h2>Afeitado Clásico y Moderno</h2>
+                            <p>Barberos expertos en Arkambuco dedicados a resaltar tu mejor imagen</p>
                         </div>
                     </div>
                 </div>
@@ -63,8 +150,8 @@
                     <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto3.jpg') }}')"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
-                            <h2>Arte y precisión</h2>
-                            <p>Cuidado facial y arreglos de barba profesionales</p>
+                            <h2>Arreglo de Barba Profesional</h2>
+                            <p>Servicios de barbería completos en Arkambuco - Cuidado facial y arreglos de barba con técnicas profesionales</p>
                         </div>
                     </div>
                 </div>
@@ -89,6 +176,8 @@
         </div>
     </section>
     
+  
+    
     <!-- Contenido personalizado basado en cookies -->
     {{ personalized_welcome(personalization) }}
     
@@ -97,7 +186,8 @@
     
     <section class="availability booking-section" id="booking-section">
         <h2>Agenda tu Cita</h2>
-        
+        <h4 class="booking-intro" style="margin-bottom: 25px;">Reserva tu cita online y disfruta de nuestros servicios premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en Ibagué.</h4>
+
         <!-- Selector de barbero y servicio -->
         <div class="booking-form">
             <div class="form-group">
@@ -197,8 +287,8 @@
             </div>
             
             <div class="about-content">
-                <h3>La historia de La Barber Brothers: un viaje de pasión y dedicación</h3>
-                <p>En el año 2017, dos hermanos apasionados por el arte de la barbería decidimos unirnos para crear un espacio donde los hombres pudieran sentirse orgullosos de su apariencia y relajados en un ambiente acogedor. Así nació La Barber Brothers, un lugar donde la tradición y la innovación se unen para ofrecer experiencias únicas.</p>
+                <h3>Barber Brothers Arkambuco: Más de 7 años de excelencia en barbería</h3>
+                <p>En el año 2017, dos hermanos apasionados por el arte de la barbería decidimos crear <strong>Barber Brothers</strong> en <strong>Arkambuco, Boyacá</strong>. Desde entonces, hemos sido la barbería de confianza para hombres que buscan cortes de cabello profesionales, afeitado clásico y arreglos de barba de la más alta calidad en la región.</p>
                 <p>Desde nuestros inicios, nos hemos esforzado por brindar servicios de alta calidad, desde cortes de pelo precisos hasta afeitados suaves y relajantes. Nuestros barberos han sido entrenados para entender las necesidades de cada cliente y ofrecer soluciones personalizadas.</p>
                 <p>A lo largo de los años, hemos visto a hombres de todas las edades y estilos pasar por nuestras puertas, cada uno con su propia historia y necesidades. Hemos sido testigos de momentos importantes, como bodas y graduaciones, y hemos ayudado a nuestros clientes a sentirse seguros y confiados en su apariencia.</p>
                 <p>La Barber Brothers no es solo un lugar para cortarse el pelo o afeitarse; es un espacio donde los hombres pueden relajarse, socializar y sentirse parte de una comunidad. Hemos creado un ambiente acogedor y masculino, donde se puede disfrutar de una buena conversación y un servicio de alta calidad.</p>

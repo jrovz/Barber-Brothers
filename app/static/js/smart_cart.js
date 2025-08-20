@@ -237,6 +237,180 @@ class SmartCart {
         return [];
     }
 
+    initProductTracking() {
+        console.log('🔍 Inicializando tracking de productos...');
+        
+        // Tracking de visualización de productos
+        this.setupProductViewTracking();
+        
+        // Tracking de interacciones con productos
+        this.setupProductInteractionTracking();
+        
+        // Tracking de tiempo en página de producto
+        this.setupProductTimeTracking();
+        
+        // Tracking de abandono de producto
+        this.setupProductAbandonmentTracking();
+    }
+
+    setupProductViewTracking() {
+        // Detectar cuando un producto entra en el viewport
+        const productElements = document.querySelectorAll('.producto-item, .product-card, [data-product-id]');
+        
+        if (productElements.length === 0) return;
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const productElement = entry.target;
+                    const productData = this.extractProductData(productElement);
+                    
+                    if (productData) {
+                        this.trackProductView(productData);
+                        observer.unobserve(entry.target); // Solo trackear una vez
+                    }
+                }
+            });
+        }, {
+            threshold: 0.5 // 50% del producto visible
+        });
+        
+        productElements.forEach(element => observer.observe(element));
+    }
+
+    setupProductInteractionTracking() {
+        // Tracking de clics en productos
+        document.addEventListener('click', (e) => {
+            const productElement = e.target.closest('.producto-item, .product-card, [data-product-id]');
+            if (productElement) {
+                const productData = this.extractProductData(productElement);
+                if (productData) {
+                    this.trackEvent('product_clicked', {
+                        product_id: productData.id,
+                        product_name: productData.name,
+                        product_price: productData.price,
+                        click_element: e.target.tagName.toLowerCase()
+                    });
+                }
+            }
+            
+            // Tracking específico de botones "add to cart"
+            if (e.target.closest('.add-to-cart')) {
+                const button = e.target.closest('.add-to-cart');
+                const productData = {
+                    id: button.dataset.id,
+                    name: button.dataset.name,
+                    price: parseFloat(button.dataset.price),
+                    image: button.dataset.image
+                };
+                
+                this.trackEvent('add_to_cart_clicked', productData);
+            }
+        });
+    }
+
+    setupProductTimeTracking() {
+        // Tracking de tiempo dedicado a cada producto
+        const productElements = document.querySelectorAll('.producto-item, .product-card, [data-product-id]');
+        const productTimes = new Map();
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const productId = this.getProductId(entry.target);
+                if (!productId) return;
+                
+                if (entry.isIntersecting) {
+                    // Producto entró en viewport
+                    productTimes.set(productId, Date.now());
+                } else {
+                    // Producto salió del viewport
+                    const startTime = productTimes.get(productId);
+                    if (startTime) {
+                        const timeSpent = Date.now() - startTime;
+                        if (timeSpent > 1000) { // Solo trackear si estuvo más de 1 segundo
+                            this.trackEvent('product_time_spent', {
+                                product_id: productId,
+                                time_spent_ms: timeSpent
+                            });
+                        }
+                        productTimes.delete(productId);
+                    }
+                }
+            });
+        });
+        
+        productElements.forEach(element => observer.observe(element));
+    }
+
+    setupProductAbandonmentTracking() {
+        // Detectar cuando el usuario abandona una página de producto
+        if (window.location.pathname.includes('producto')) {
+            let startTime = Date.now();
+            let maxScroll = 0;
+            
+            window.addEventListener('scroll', () => {
+                const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+                maxScroll = Math.max(maxScroll, scrollPercent);
+            });
+            
+            window.addEventListener('beforeunload', () => {
+                const timeOnProduct = Date.now() - startTime;
+                const productId = this.getCurrentProductId();
+                
+                if (productId && timeOnProduct > 5000) { // Más de 5 segundos
+                    this.trackEvent('product_page_abandoned', {
+                        product_id: productId,
+                        time_spent: timeOnProduct,
+                        max_scroll: Math.round(maxScroll),
+                        had_cart_interaction: this.cart.length > 0
+                    });
+                }
+            });
+        }
+    }
+
+    extractProductData(element) {
+        // Extraer datos del producto desde el elemento DOM
+        const productId = this.getProductId(element);
+        if (!productId) return null;
+        
+        // Intentar extraer datos de data-attributes
+        const name = element.dataset.name || 
+                    element.querySelector('.product-name, .producto-nombre')?.textContent?.trim() ||
+                    element.querySelector('h3, h4, h5')?.textContent?.trim();
+        
+        const priceElement = element.querySelector('.price, .precio, [data-price]');
+        const price = priceElement ? 
+                     parseFloat(priceElement.dataset.price) || 
+                     parseFloat(priceElement.textContent.replace(/[^\d.]/g, '')) : 0;
+        
+        const image = element.querySelector('img')?.src ||
+                     element.dataset.image;
+        
+        return {
+            id: productId,
+            name: name || 'Producto sin nombre',
+            price: price,
+            image: image,
+            category: element.dataset.category || 'general'
+        };
+    }
+
+    getProductId(element) {
+        return element.dataset.productId || 
+               element.dataset.id || 
+               element.getAttribute('data-product-id') ||
+               element.getAttribute('data-id');
+    }
+
+    getCurrentProductId() {
+        // Intentar extraer el ID del producto desde la URL o elementos de la página
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id') || 
+               document.querySelector('[data-current-product-id]')?.dataset.currentProductId ||
+               document.querySelector('.product-detail')?.dataset.productId;
+    }
+
     initRecommendations() {
         // Mostrar recomendaciones en la página de productos
         if (window.location.pathname.includes('productos')) {
