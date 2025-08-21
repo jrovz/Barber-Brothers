@@ -33,6 +33,7 @@ Disallow: /*.bak
 Allow: /sitemap.xml
 Allow: /robots.txt
 Allow: /favicon.ico
+Allow: /google17b126f9a1dae6ef.html
 
 # Sitemap - URL correcta para el sitemap dinámico
 Sitemap: https://tudominio.com/sitemap.xml

@@ -90,6 +90,7 @@ from app.models.email import send_appointment_confirmation_email # Importar la f
 from app import db
 from datetime import datetime, timedelta, time
 from flask import send_from_directory
+from flask import Response
 
 @bp.route('/')
 def home():
@@ -375,6 +376,16 @@ def sitemap_index():
         
     except Exception as e:
         current_app.logger.error(f"Error al generar sitemap index: {e}")
+        return ('Error', 500)
+
+@bp.route('/google17b126f9a1dae6ef.html')
+def google_verification():
+    """Sirve el archivo de verificación de Google Search Console."""
+    try:
+        verification_content = "google-site-verification: google17b126f9a1dae6ef.html"
+        return Response(verification_content, mimetype='text/plain')
+    except Exception as e:
+        current_app.logger.error(f"Error al servir archivo de verificación de Google: {e}")
         return ('Error', 500)
 
 @bp.route('/about')

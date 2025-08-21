@@ -70,8 +70,13 @@ Crawl-delay: 1
 # Verificar propiedad del sitio
 1. Ir a https://search.google.com/search-console
 2. Añadir tu dominio
-3. Verificar propiedad (recomendado: archivo HTML)
-4. Enviar sitemap: https://tudominio.com/sitemap.xml
+3. Seleccionar "Archivo HTML" como método de verificación
+4. Confirmar que el archivo sea accesible en: https://tudominio.com/google17b126f9a1dae6ef.html
+5. Haz clic en "Verificar"
+6. Una vez verificado, enviar sitemap: https://tudominio.com/sitemap.xml
+
+# Verificar configuración localmente
+./deployment/verify_google_console.sh tudominio.com
 ```
 
 ### **2. Configurar Google Analytics**
@@ -207,8 +212,30 @@ Tu proyecto Barber Brothers ahora tiene una configuración SEO completa y optimi
 
 1. **✅ robots.txt** - Correctamente ubicado y configurado
 2. **✅ sitemap.xml** - Generado dinámicamente con URLs importantes
-3. **✅ Configuración Nginx** - Optimizada para rendimiento y SEO
-4. **✅ Headers de seguridad** - Implementados correctamente
-5. **✅ Compresión y cache** - Configurados para mejor rendimiento
+3. **✅ Archivo de verificación de Google Search Console** - Configurado y accesible
+4. **✅ Configuración Nginx** - Optimizada para rendimiento y SEO
+5. **✅ Headers de seguridad** - Implementados correctamente
+6. **✅ Compresión y cache** - Configurados para mejor rendimiento
 
-**Próximo paso:** Configurar Google Search Console y comenzar a monitorear el rendimiento SEO de tu sitio.
+## 🔍 **Verificación de Google Search Console**
+
+### **Archivo de Verificación Configurado**
+- **URL:** `https://tudominio.com/google17b126f9a1dae6ef.html`
+- **Contenido:** `google-site-verification: google17b126f9a1dae6ef.html`
+- **Estado:** ✅ Configurado y accesible
+
+### **Pasos para Verificar tu Sitio**
+1. Ve a [Google Search Console](https://search.google.com/search-console)
+2. Haz clic en "Añadir propiedad"
+3. Introduce tu dominio: `https://tudominio.com`
+4. Selecciona "Archivo HTML" como método de verificación
+5. Confirma que el archivo sea accesible en la URL proporcionada
+6. Haz clic en "Verificar"
+
+### **Verificación Local**
+```bash
+# Ejecutar el script de verificación
+./deployment/verify_google_console.sh tudominio.com
+```
+
+**Próximo paso:** Una vez verificado, enviar tu sitemap y comenzar a monitorear el rendimiento SEO de tu sitio.
