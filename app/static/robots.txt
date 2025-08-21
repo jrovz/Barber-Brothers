@@ -7,26 +7,38 @@ Allow: /static/js/
 Allow: /static/images/
 Allow: /static/favicon.svg
 Allow: /static/logo.png
+Allow: /static/logo.jpg
 
-# Bloquear panel de administración
+# Bloquear panel de administración y áreas privadas
 Disallow: /admin/
 Disallow: /barbero/
-
-# Bloquear API interna
 Disallow: /api/
 
-# Bloquear archivos de configuración
+# Bloquear archivos de configuración y sistema
 Disallow: /.env
+Disallow: /.git/
 Disallow: /config/
-
-# Bloquear carpetas del sistema
 Disallow: /instance/
 Disallow: /logs/
 Disallow: /migrations/
 Disallow: /venv/
+Disallow: /deployment/
 
-# Sitemap
-Sitemap: {{ url_for('static', filename='sitemap.xml', _external=True) }}
+# Bloquear archivos temporales y de desarrollo
+Disallow: /*.log
+Disallow: /*.tmp
+Disallow: /*.bak
 
-# Información de rastreo
+# Permitir acceso a archivos importantes
+Allow: /sitemap.xml
+Allow: /robots.txt
+Allow: /favicon.ico
+
+# Sitemap - URL correcta para el sitemap dinámico
+Sitemap: https://tudominio.com/sitemap.xml
+
+# Configuración de rastreo
 Crawl-delay: 1
+
+# Información adicional para crawlers
+# Host: https://tudominio.com

@@ -274,6 +274,9 @@ def sitemap_xml():
     try:
         from flask import Response
         from datetime import datetime
+        from app.models.servicio import Servicio
+        from app.models.producto import Producto
+        from app.models.categoria import Categoria
         
         # URLs estáticas principales
         static_urls = [
@@ -303,6 +306,36 @@ def sitemap_xml():
             }
         ]
 
+        # URLs dinámicas de servicios
+        servicios = Servicio.query.filter_by(activo=True).all()
+        for servicio in servicios:
+            static_urls.append({
+                'loc': url_for('public.servicios', _external=True) + f'#servicio-{servicio.id}',
+                'changefreq': 'monthly',
+                'priority': '0.6',
+                'lastmod': servicio.fecha_actualizacion.strftime('%Y-%m-%d') if servicio.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
+            })
+
+        # URLs dinámicas de productos
+        productos = Producto.query.filter_by(activo=True).all()
+        for producto in productos:
+            static_urls.append({
+                'loc': url_for('public.productos', _external=True) + f'#producto-{producto.id}',
+                'changefreq': 'monthly',
+                'priority': '0.5',
+                'lastmod': producto.fecha_actualizacion.strftime('%Y-%m-%d') if hasattr(producto, 'fecha_actualizacion') and producto.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
+            })
+
+        # URLs dinámicas de categorías
+        categorias = Categoria.query.filter_by(activo=True).all()
+        for categoria in categorias:
+            static_urls.append({
+                'loc': url_for('public.productos', _external=True) + f'#categoria-{categoria.id}',
+                'changefreq': 'monthly',
+                'priority': '0.4',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            })
+
         # Construir XML del sitemap
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
         sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -321,6 +354,27 @@ def sitemap_xml():
         
     except Exception as e:
         current_app.logger.error(f"Error al generar sitemap.xml: {e}")
+        return ('Error', 500)
+
+@bp.route('/sitemap-index.xml')
+def sitemap_index():
+    """Genera un sitemap index para organizar múltiples sitemaps."""
+    try:
+        from flask import Response
+        from datetime import datetime
+        
+        sitemap_index_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        sitemap_index_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        sitemap_index_xml += '  <sitemap>\n'
+        sitemap_index_xml += f'    <loc>{url_for("public.sitemap_xml", _external=True)}</loc>\n'
+        sitemap_index_xml += f'    <lastmod>{datetime.now().strftime("%Y-%m-%d")}</lastmod>\n'
+        sitemap_index_xml += '  </sitemap>\n'
+        sitemap_index_xml += '</sitemapindex>'
+        
+        return Response(sitemap_index_xml, mimetype='application/xml')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al generar sitemap index: {e}")
         return ('Error', 500)
 
 @bp.route('/about')
