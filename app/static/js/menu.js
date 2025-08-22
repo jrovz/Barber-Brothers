@@ -32,14 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // No abrir el menú si el carrito está abierto
         if (isCartOpen()) return;
         
+        console.log('Opening mobile menu...');
         mobileMenu.classList.add('open');
         menuToggle.classList.add('open');
         menuOverlay.classList.add('open');
         document.body.classList.add('menu-open'); // Impide el scroll en el body
+        console.log('Mobile menu opened successfully');
     }
     
     // Función para cerrar el menú móvil
     function closeMobileMenu() {
+        console.log('Closing mobile menu...');
         mobileMenu.classList.remove('open');
         menuToggle.classList.remove('open');
         menuOverlay.classList.remove('open');
@@ -48,8 +51,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!isCartOpen()) {
             document.body.classList.remove('menu-open');
         }
+        console.log('Mobile menu closed successfully');
     }
-      if (menuToggle && mobileMenu) {
+    
+    if (menuToggle && mobileMenu) {
         // Alternar el menú al hacer clic en el botón
         menuToggle.addEventListener('click', function(e) {
             e.preventDefault(); // Prevenir comportamiento predeterminado

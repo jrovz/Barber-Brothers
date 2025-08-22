@@ -440,7 +440,7 @@ header nav ul li a:hover::after {
 }
 
 .mobile-menu {
-    display: none;
+    display: flex;
     flex-direction: column;
     align-items: flex-start;
     background-color: var(--color-bg-dark);
@@ -457,6 +457,7 @@ header nav ul li a:hover::after {
     transition: transform 0.3s ease-in-out;
     max-height: calc(100vh - 120px);
     overflow-y: auto;
+    visibility: hidden;
 }
 
 /* Botón para cerrar el menú móvil */
@@ -474,8 +475,8 @@ header nav ul li a:hover::after {
 }
 
 .mobile-menu.open {
-    display: flex;
     transform: translateX(0);
+    visibility: visible;
 }
 
 .mobile-menu ul {
@@ -2535,12 +2536,6 @@ footer p {
         height: 60px;
     }
     
-    /* Ajustar menú móvil para header fijo */
-    .mobile-menu {
-        top: 100px; /* Ajustado para móvil */
-        max-height: calc(100vh - 100px);
-    }
-    
     /* Navegación y menú móvil */
     header nav {
         display: none;
@@ -2554,6 +2549,7 @@ footer p {
         display: block; /* Mostrar hamburguesa en móvil */
     }
     
+    /* Ajustar menú móvil para móvil */
     .mobile-menu {
         position: fixed; /* menú anclado a la ventana */
         top: 0;
@@ -2569,6 +2565,7 @@ footer p {
         transform: translateX(100%);
         transition: transform 0.3s ease;
         overflow-y: auto; /* permitir scroll interno si el contenido excede */
+        visibility: hidden;
     }
     
     /* Estilos de overlay para el menú móvil */
@@ -2579,7 +2576,7 @@ footer p {
     
     .mobile-menu.open {
         transform: translateX(0);
-        display: flex !important;
+        visibility: visible;
     }
     
     .mobile-menu ul {
