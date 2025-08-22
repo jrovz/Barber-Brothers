@@ -133,15 +133,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Abrir panel del carrito
     function openCartPanel() {
         if (cartPanel && cartOverlay) {
-            // Cerrar el menú móvil si está abierto
-            const mobileMenu = document.getElementById('mobile-menu');
-            const menuToggle = document.getElementById('menu-toggle');
-            const menuOverlay = document.getElementById('menu-overlay');
+            console.log('Cart.js: Abriendo panel del carrito');
             
-            if (mobileMenu && mobileMenu.classList.contains('open')) {
-                mobileMenu.classList.remove('open');
-                if (menuToggle) menuToggle.classList.remove('open');
-                if (menuOverlay) menuOverlay.classList.remove('open');
+            // Cerrar el menú móvil si está abierto usando la función de menu.js
+            if (window.menuJS && window.menuJS.closeMenuForCart) {
+                console.log('Cart.js: Usando menuJS.closeMenuForCart()');
+                window.menuJS.closeMenuForCart();
+            } else {
+                console.log('Cart.js: menuJS no disponible, usando fallback');
+                // Fallback si menu.js no está disponible
+                const mobileMenu = document.getElementById('mobile-menu');
+                const menuToggle = document.getElementById('menu-toggle');
+                
+                if (mobileMenu && mobileMenu.classList.contains('open')) {
+                    mobileMenu.classList.remove('open');
+                    if (menuToggle) menuToggle.classList.remove('open');
+                }
             }
             
             // Abrir el carrito
@@ -161,9 +168,18 @@ document.addEventListener('DOMContentLoaded', function() {
             cartOverlay.classList.remove('open');
             
             // Restaurar scroll solo si el menú móvil no está abierto
-            const mobileMenu = document.getElementById('mobile-menu');
-            if (!mobileMenu || !mobileMenu.classList.contains('open')) {
-                document.body.classList.remove('menu-open');
+            if (window.menuJS && window.menuJS.isCartOpen) {
+                // Usar la función de menu.js para verificar si el menú está abierto
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (!mobileMenu || !mobileMenu.classList.contains('open')) {
+                    document.body.classList.remove('menu-open');
+                }
+            } else {
+                // Fallback si menu.js no está disponible
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (!mobileMenu || !mobileMenu.classList.contains('open')) {
+                    document.body.classList.remove('menu-open');
+                }
             }
         }
     }    // Event listeners principales
@@ -264,4 +280,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    console.log('Cart.js: Script cargado completamente');
 });

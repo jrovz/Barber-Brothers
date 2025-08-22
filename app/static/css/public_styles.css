@@ -395,16 +395,31 @@ header nav ul li a:hover::after {
 
 /* --- Menú Hamburguesa --- */
 .menu-toggle {
-    display: none;
+    display: none; /* Se muestra solo en móvil - modificado en media query */
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 10px;
-    z-index: 1100;
+    z-index: 1100; /* Mayor que el menú para estar por encima */
     position: absolute;
     right: 1rem;
     top: 50%;
     transform: translateY(-50%);
+    min-width: 44px; /* Tamaño mínimo para accesibilidad */
+    min-height: 44px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    outline: none;
+    -webkit-tap-highlight-color: transparent; /* Eliminar highlight en móviles */
+}
+
+.menu-toggle:hover {
+    background-color: rgba(179, 150, 86, 0.1);
+}
+
+.menu-toggle:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
 }
 
 .menu-toggle-icon,
@@ -417,6 +432,7 @@ header nav ul li a:hover::after {
     width: 25px;
     border-radius: 3px;
     transition: all 0.3s ease-in-out;
+    margin: 0 auto; /* Centrar líneas */
 }
 
 .menu-toggle-icon::before {
@@ -440,22 +456,22 @@ header nav ul li a:hover::after {
 }
 
 .mobile-menu {
-    display: flex;
+    display: flex !important; /* Forzar display flex */
     flex-direction: column;
     align-items: flex-start;
     background-color: var(--color-bg-dark);
     position: fixed;
-    top: 120px; /* Debajo del header fijo en desktop */
+    top: 0; /* Desde la parte superior de la pantalla */
     right: 0;
     width: 280px;
     max-width: 90%;
-    padding: 1.5rem;
-    border-top: 1px solid var(--color-border);
-    box-shadow: var(--shadow-medium);
+    height: 100vh; /* Altura completa */
+    padding: 4.5rem 1.5rem 1.5rem; /* Espacio superior para el botón hamburguesa */
+    border-left: 1px solid var(--color-border);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
     z-index: 1050;
     transform: translateX(100%);
-    transition: transform 0.3s ease-in-out;
-    max-height: calc(100vh - 120px);
+    transition: transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
     overflow-y: auto;
     visibility: hidden;
 }
@@ -477,6 +493,7 @@ header nav ul li a:hover::after {
 .mobile-menu.open {
     transform: translateX(0);
     visibility: visible;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada cuando está abierto */
 }
 
 .mobile-menu ul {
@@ -651,16 +668,18 @@ footer p {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.6); /* Más oscuro para mejor contraste */
+    z-index: 1040; /* Entre el header (1000) y el menú (1050) */
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none; /* Inicialmente no intercepta clics */
 }
 
 .menu-overlay.open {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto; /* Ahora intercepta clics cuando está abierto */
 }
 
 .cart-header {
@@ -2551,27 +2570,27 @@ footer p {
     
     /* Ajustar menú móvil para móvil */
     .mobile-menu {
-        position: fixed; /* menú anclado a la ventana */
+        position: fixed;
         top: 0;
         right: 0;
-        bottom: 0; /* asegurar que llegue al borde inferior */
-        width: 80%;
+        bottom: 0;
+        width: 80%; 
         max-width: 300px;
-        height: 100vh; /* ocupar toda la altura visible */
-        max-height: 100vh; /* evitar recortes por cálculos previos */
-        padding: 5rem 1.5rem 1.5rem; /* espacio superior para el botón hamburguesa */
+        height: 100vh;
+        max-height: 100vh;
+        padding: 5rem 1.5rem 1.5rem;
         background-color: var(--color-bg-dark);
-        z-index: 1000;
+        z-index: 1050;
         transform: translateX(100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto; /* permitir scroll interno si el contenido excede */
+        transition: transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        overflow-y: auto;
         visibility: hidden;
     }
     
     /* Estilos de overlay para el menú móvil */
     .menu-overlay {
         display: block;
-        z-index: 999;
+        z-index: 1040; /* Mantener coherencia con el z-index global */
     }
     
     .mobile-menu.open {

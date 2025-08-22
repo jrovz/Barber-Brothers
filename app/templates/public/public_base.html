@@ -183,13 +183,49 @@
     
     // Cargar scripts no críticos después del DOM
     document.addEventListener('DOMContentLoaded', function() {
-        loadScript('{{ url_for("static", filename="js/cart.js") }}');
-        loadScript('{{ url_for("static", filename="js/menu.js") }}');
+        console.log('DOM cargado, iniciando scripts...');
+        
+            // Cargar el script de menú directamente para evitar problemas de carga asíncrona
+    console.log('Cargando menu.js directamente...');
+    const menuScript = document.createElement('script');
+    menuScript.src = '{{ url_for("static", filename="js/menu.js") }}?v=' + new Date().getTime();
+    menuScript.onload = function() {
+        console.log('Menu.js cargado exitosamente');
+        // Cargar cart.js después de que menu.js esté completamente cargado
+        loadScript('{{ url_for("static", filename="js/cart.js") }}', function() {
+            console.log('Cart.js cargado después de menu.js');
+        });
+    };
+    document.head.appendChild(menuScript);
     });
     </script>
     
     <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
     {% include 'public/includes/menu_conflict_fix.html' %}
+    
+    <!-- Script de inicialización directa para el menú hamburguesa -->
+    <script>
+        // Este script se ejecuta inmediatamente y no depende de la carga asíncrona
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inicialización directa del menú hamburguesa');
+            const menuToggle = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (menuToggle && mobileMenu) {
+                menuToggle.addEventListener('click', function() {
+                    console.log('Click detectado en botón hamburguesa (inicialización directa)');
+                    mobileMenu.classList.toggle('open');
+                    menuToggle.classList.toggle('open');
+                    document.body.classList.toggle('menu-open');
+                    
+                    const isOpen = mobileMenu.classList.contains('open');
+                    menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                });
+            } else {
+                console.error('No se encontraron elementos necesarios para el menú hamburguesa');
+            }
+        });
+    </script>
     
     <!-- Script para checkout -->
     <script>
