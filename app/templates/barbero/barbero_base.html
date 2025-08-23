@@ -45,7 +45,15 @@
                         <a href="{{ url_for('barbero.perfil') }}">
                             👤 Mi Perfil
                             <small style="display: block; font-size: 0.7rem; color: var(--color-text-muted); margin-top: 0.2rem;">
-                                Información y horarios
+                                Información personal
+                            </small>
+                        </a>
+                    </li>
+                    <li class="{% if request.endpoint == 'barbero.ver_horarios' %}active{% endif %}">
+                        <a href="{{ url_for('barbero.ver_horarios') }}">
+                            🕒 Mis Horarios
+                            <small style="display: block; font-size: 0.7rem; color: var(--color-text-muted); margin-top: 0.2rem;">
+                                Gestionar disponibilidad
                             </small>
                         </a>
                     </li>

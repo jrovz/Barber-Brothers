@@ -53,6 +53,15 @@ def dashboard():
     if not hasattr(current_user, 'tiene_acceso_web') or not current_user.tiene_acceso_web:
         abort(403)
     
+    # Ejecutar limpieza de bloqueos pasados
+    try:
+        from app.models.tareas import limpiar_bloqueos_pasados
+        bloqueos_eliminados = limpiar_bloqueos_pasados()
+        if bloqueos_eliminados > 0:
+            print(f"Se han eliminado {bloqueos_eliminados} bloqueos de horario pasados.")
+    except Exception as e:
+        print(f"Error al limpiar bloqueos pasados: {str(e)}")
+    
     barbero = current_user
     
     # Manejar creación de nueva cita desde el dashboard
@@ -174,10 +183,23 @@ def mis_citas():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
+    # Fecha actual para filtro por defecto
+    today = date.today()
+    
     # Filtros
     estado = request.args.get('estado', '')
-    fecha_inicio = request.args.get('fecha_inicio', '')
-    fecha_fin = request.args.get('fecha_fin', '')
+    
+    # Verificar si se solicitó mostrar todas las citas (sin filtro por defecto)
+    mostrar_todo = request.args.get('mostrar_todo', '0') == '1'
+    
+    # Si no hay filtros de fecha y no se solicitó mostrar todo, usar la fecha actual por defecto
+    if not mostrar_todo and not any([request.args.get('fecha_inicio'), request.args.get('fecha_fin'), 
+                request.args.get('estado'), request.args.get('page')]):
+        fecha_inicio = today.strftime('%Y-%m-%d')
+        fecha_fin = today.strftime('%Y-%m-%d')
+    else:
+        fecha_inicio = request.args.get('fecha_inicio', '')
+        fecha_fin = request.args.get('fecha_fin', '')
     
     # Construir query
     query = Cita.query.filter_by(barbero_id=barbero.id)
@@ -210,7 +232,8 @@ def mis_citas():
                           barbero=barbero,
                           estado=estado,
                           fecha_inicio=fecha_inicio,
-                          fecha_fin=fecha_fin)
+                          fecha_fin=fecha_fin,
+                          mostrar_todo=mostrar_todo)
 
 @bp.route('/citas/nueva', methods=['GET', 'POST'])
 @login_required
@@ -312,18 +335,75 @@ def eliminar_cita(cita_id):
         return redirect(url_for('barbero.dashboard'))
     return redirect(url_for('barbero.mis_citas'))
 
-@bp.route('/horarios')
+@bp.route('/horarios', methods=['GET', 'POST'])
 @login_required
 def ver_horarios():
-    """Ver los horarios del barbero"""
+    """Ver los horarios del barbero y gestionar bloqueos temporales"""
     if not hasattr(current_user, 'tiene_acceso_web') or not current_user.tiene_acceso_web:
         abort(403)
     
+    from app.admin.forms import BloqueoHorarioForm
+    from app.models.barbero import BloqueoHorario
+    from datetime import datetime, time, date, timedelta
+    
     barbero = current_user
+    form = BloqueoHorarioForm()
+    
+    # Procesar el formulario de bloqueo
+    if form.validate_on_submit():
+        try:
+            # Convertir fecha y horas a objetos date y time
+            fecha = datetime.strptime(form.fecha.data, '%Y-%m-%d').date()
+            hora_inicio = datetime.strptime(form.hora_inicio.data, '%H:%M').time()
+            hora_fin = datetime.strptime(form.hora_fin.data, '%H:%M').time()
+            
+            # Crear el bloqueo
+            bloqueo, mensaje = barbero.crear_bloqueo_horario(
+                fecha=fecha,
+                hora_inicio=hora_inicio,
+                hora_fin=hora_fin,
+                motivo=form.motivo.data
+            )
+            
+            if bloqueo:
+                flash('Bloqueo de horario creado correctamente.', 'success')
+            else:
+                flash(mensaje, 'danger')
+                
+        except ValueError as e:
+            flash(f'Error en el formato de fecha u hora: {str(e)}', 'danger')
+        except Exception as e:
+            flash(f'Error al crear bloqueo: {str(e)}', 'danger')
+            
+        return redirect(url_for('barbero.ver_horarios'))
+    
+    # Obtener disponibilidades regulares
+    from app.models.barbero import DisponibilidadBarbero
     disponibilidades = barbero.disponibilidad.filter_by(activo=True).order_by(
-        barbero.disponibilidad.property.mapper.class_.dia_semana,
-        barbero.disponibilidad.property.mapper.class_.hora_inicio
+        DisponibilidadBarbero.dia_semana,
+        DisponibilidadBarbero.hora_inicio
     ).all()
+    
+    # Obtener bloqueos futuros
+    hoy = date.today()
+    try:
+        bloqueos_futuros = barbero.get_bloqueos_horario(fecha_inicio=hoy)
+    except Exception as e:
+        print(f"Error al obtener bloqueos: {str(e)}")
+        bloqueos_futuros = []
+    
+    # Eliminar un bloqueo si se solicita
+    if request.args.get('eliminar_bloqueo'):
+        try:
+            bloqueo_id = request.args.get('eliminar_bloqueo')
+            exito, mensaje = barbero.eliminar_bloqueo_horario(bloqueo_id)
+            if exito:
+                flash('Bloqueo eliminado correctamente.', 'success')
+            else:
+                flash(mensaje, 'danger')
+        except Exception as e:
+            flash(f'Error al eliminar bloqueo: {str(e)}', 'danger')
+        return redirect(url_for('barbero.ver_horarios'))
     
     dias_semana = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
     
@@ -331,7 +411,10 @@ def ver_horarios():
                           title='Mis Horarios',
                           barbero=barbero,
                           disponibilidades=disponibilidades,
-                          dias_semana=dias_semana)
+                          dias_semana=dias_semana,
+                          form=form,
+                          bloqueos_futuros=bloqueos_futuros,
+                          fecha_hoy=hoy.strftime('%Y-%m-%d'))
 
 @bp.route('/perfil')
 @login_required

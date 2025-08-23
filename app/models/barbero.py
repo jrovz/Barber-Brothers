@@ -1,6 +1,6 @@
 # filepath: app/models/barbero.py
 from app import db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from sqlalchemy.orm import validates
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -47,16 +47,27 @@ class Barbero(db.Model, UserMixin):
         if dia_semana > 5:  # domingo
             return False
             
+        # Verificar si hay un bloqueo temporal para esta fecha y hora
+        bloqueo = BloqueoHorario.query.filter(
+            BloqueoHorario.barbero_id == self.id,
+            BloqueoHorario.fecha == solo_fecha,
+            BloqueoHorario.hora_inicio <= solo_hora,
+            BloqueoHorario.hora_fin > solo_hora
+        ).first()
+        
+        if bloqueo:
+            return False
+            
         # Comprobar en cada bloque de disponibilidad
         for disp in self.disponibilidad.filter_by(dia_semana=dia_semana, activo=True).all():
             if disp.hora_inicio <= solo_hora < disp.hora_fin:
                 # Verificar si ya tiene una cita en ese horario
+                # Incluimos citas expiradas como ocupadas para mantener el horario bloqueado
                 from app.models.cliente import Cita
                 cita_existente = Cita.query.filter_by(
                     barbero_id=self.id,
-                    fecha=fecha_propuesta,
-                    estado='confirmada'
-                ).first()
+                    fecha=fecha_propuesta
+                ).filter(Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])).first()
                 return cita_existente is None
                 
         return False
@@ -97,6 +108,22 @@ class Barbero(db.Model, UserMixin):
             
         # Ordenar los slots por hora
         todos_los_slots.sort(key=lambda x: x['hora'])
+        
+        # Verificar bloqueos temporales para esta fecha
+        bloqueos = BloqueoHorario.query.filter(
+            BloqueoHorario.barbero_id == self.id,
+            BloqueoHorario.fecha == fecha
+        ).all()
+        
+        # Marcar como no disponibles los slots que coincidan con bloqueos
+        if bloqueos:
+            for slot in todos_los_slots:
+                hora_slot = datetime.strptime(slot['hora'], '%H:%M').time()
+                for bloqueo in bloqueos:
+                    if bloqueo.hora_inicio <= hora_slot < bloqueo.hora_fin:
+                        slot['disponible'] = False
+                        slot['bloqueado'] = True
+                        break
         
         return todos_los_slots
 
@@ -147,6 +174,107 @@ class Barbero(db.Model, UserMixin):
             query = query.filter(Cita.fecha <= fecha_fin)
             
         return query.order_by(Cita.fecha.desc()).all()
+    
+    def crear_bloqueo_horario(self, fecha, hora_inicio, hora_fin, motivo=None):
+        """
+        Crea un bloqueo temporal de horario para una fecha específica
+        
+        Args:
+            fecha (date): Fecha del bloqueo
+            hora_inicio (time): Hora de inicio del bloqueo
+            hora_fin (time): Hora de fin del bloqueo
+            motivo (str, optional): Motivo del bloqueo
+            
+        Returns:
+            BloqueoHorario: El objeto de bloqueo creado, o None si hubo un error
+        """
+        try:
+            # Verificar si la tabla existe
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if 'bloqueo_horario' not in inspector.get_table_names():
+                return None, "La funcionalidad de bloqueo de horarios no está disponible actualmente. Contacte al administrador."
+                
+            # Verificar que la fecha sea futura
+            if fecha < date.today():
+                return None, "No se pueden crear bloqueos para fechas pasadas"
+                
+            # Crear el bloqueo
+            bloqueo = BloqueoHorario(
+                barbero_id=self.id,
+                fecha=fecha,
+                hora_inicio=hora_inicio,
+                hora_fin=hora_fin,
+                motivo=motivo
+            )
+            
+            db.session.add(bloqueo)
+            db.session.commit()
+            return bloqueo, "Bloqueo creado correctamente"
+            
+        except Exception as e:
+            db.session.rollback()
+            return None, f"Error al crear bloqueo: {str(e)}"
+    
+    def eliminar_bloqueo_horario(self, bloqueo_id):
+        """
+        Elimina un bloqueo temporal de horario
+        
+        Args:
+            bloqueo_id (int): ID del bloqueo a eliminar
+            
+        Returns:
+            bool: True si se eliminó correctamente, False en caso contrario
+        """
+        try:
+            # Verificar si la tabla existe
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if 'bloqueo_horario' not in inspector.get_table_names():
+                return False, "La funcionalidad de bloqueo de horarios no está disponible actualmente. Contacte al administrador."
+                
+            bloqueo = BloqueoHorario.query.filter_by(id=bloqueo_id, barbero_id=self.id).first()
+            if not bloqueo:
+                return False, "Bloqueo no encontrado o no pertenece a este barbero"
+                
+            db.session.delete(bloqueo)
+            db.session.commit()
+            return True, "Bloqueo eliminado correctamente"
+            
+        except Exception as e:
+            db.session.rollback()
+            return False, f"Error al eliminar bloqueo: {str(e)}"
+    
+    def get_bloqueos_horario(self, fecha_inicio=None, fecha_fin=None):
+        """
+        Obtiene los bloqueos temporales de horario para un rango de fechas
+        
+        Args:
+            fecha_inicio (date, optional): Fecha de inicio del rango
+            fecha_fin (date, optional): Fecha de fin del rango
+            
+        Returns:
+            list: Lista de bloqueos de horario
+        """
+        try:
+            # Verificar si la tabla existe
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            if 'bloqueo_horario' not in inspector.get_table_names():
+                print("La tabla bloqueo_horario no existe en la base de datos")
+                return []
+                
+            query = self.bloqueos_horario
+            
+            if fecha_inicio:
+                query = query.filter(BloqueoHorario.fecha >= fecha_inicio)
+            if fecha_fin:
+                query = query.filter(BloqueoHorario.fecha <= fecha_fin)
+                
+            return query.order_by(BloqueoHorario.fecha.asc(), BloqueoHorario.hora_inicio.asc()).all()
+        except Exception as e:
+            print(f"Error en get_bloqueos_horario: {str(e)}")
+            return []
 
     def __repr__(self):
         return f'<Barbero {self.nombre}>'
@@ -196,12 +324,12 @@ class DisponibilidadBarbero(db.Model):
         end_time = datetime.combine(fecha, self.hora_fin)
         
         # Obtener todas las citas que ocupan espacio para este día y barbero
-        # Incluimos 'expirada' porque puede que aún no se haya limpiado del sistema
+        # Incluimos 'expirada' para mantener esos slots ocupados como solicitado por el cliente
         citas_del_dia = Cita.query.filter(
             Cita.barbero_id == self.barbero_id,
             Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
             Cita.fecha < datetime.combine(fecha + timedelta(days=1), self.hora_inicio),
-            Cita.estado.in_(['confirmada', 'pendiente_confirmacion'])
+            Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])
         ).all()
         
         # Crear lista de intervalos ocupados
@@ -239,6 +367,32 @@ class DisponibilidadBarbero(db.Model):
     def __repr__(self):
         dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
         return f'<Disponibilidad: {dias[self.dia_semana]} {self.hora_inicio}-{self.hora_fin}>'
+
+class BloqueoHorario(db.Model):
+    """
+    Modelo para gestionar bloqueos temporales de horarios de los barberos.
+    Permite a los barberos bloquear slots específicos en fechas concretas.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    barbero_id = db.Column(db.Integer, db.ForeignKey('barbero.id'), nullable=False)
+    fecha = db.Column(db.Date, nullable=False)
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fin = db.Column(db.Time, nullable=False)
+    motivo = db.Column(db.String(255), nullable=True)
+    creado = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relación con el barbero
+    barbero = db.relationship('Barbero', backref=db.backref('bloqueos_horario', lazy='dynamic'))
+    
+    @validates('hora_fin')
+    def validate_hora_fin(self, key, hora_fin):
+        if hasattr(self, 'hora_inicio') and self.hora_inicio and hora_fin <= self.hora_inicio:
+            raise ValueError("La hora de fin debe ser posterior a la hora de inicio")
+        return hora_fin
+    
+    def __repr__(self):
+        return f'<BloqueoHorario: {self.fecha.strftime("%d/%m/%Y")} {self.hora_inicio}-{self.hora_fin}>'
+
 
 def crear_disponibilidad_predeterminada(barbero_id):
     """

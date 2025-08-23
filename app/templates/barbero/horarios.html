@@ -1,0 +1,246 @@
+{% extends "barbero/barbero_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <p style="color: var(--color-text-muted);">Horarios de trabajo para {{ barbero.nombre }}</p>
+</div>
+
+<!-- Mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category or 'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="dashboard-section">
+    <h2 class="section-title">📅 Mi Horario Semanal</h2>
+    
+    {% if disponibilidades %}
+    <!-- Versión para escritorio -->
+    <div class="data-table-container desktop-only">
+        <div class="data-table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Hora Inicio</th>
+                    <th>Hora Fin</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for disponibilidad in disponibilidades %}
+                <tr>
+                    <td>
+                        <strong>
+                            {% if disponibilidad.dia_semana == 0 %}Lunes
+                            {% elif disponibilidad.dia_semana == 1 %}Martes
+                            {% elif disponibilidad.dia_semana == 2 %}Miércoles
+                            {% elif disponibilidad.dia_semana == 3 %}Jueves
+                            {% elif disponibilidad.dia_semana == 4 %}Viernes
+                            {% elif disponibilidad.dia_semana == 5 %}Sábado
+                            {% elif disponibilidad.dia_semana == 6 %}Domingo
+                            {% endif %}
+                        </strong>
+                    </td>
+                    <td>{{ disponibilidad.hora_inicio.strftime('%H:%M') }}</td>
+                    <td>{{ disponibilidad.hora_fin.strftime('%H:%M') }}</td>
+                    <td>
+                        {% if disponibilidad.activo %}
+                            <span class="badge badge-success">Activo</span>
+                        {% else %}
+                            <span class="badge badge-danger">Inactivo</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    
+    <!-- Versión para móviles -->
+    <div class="mobile-cards-container mobile-only">
+        {% for disponibilidad in disponibilidades %}
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <span class="mobile-card-title">
+                    {% if disponibilidad.dia_semana == 0 %}Lunes
+                    {% elif disponibilidad.dia_semana == 1 %}Martes
+                    {% elif disponibilidad.dia_semana == 2 %}Miércoles
+                    {% elif disponibilidad.dia_semana == 3 %}Jueves
+                    {% elif disponibilidad.dia_semana == 4 %}Viernes
+                    {% elif disponibilidad.dia_semana == 5 %}Sábado
+                    {% elif disponibilidad.dia_semana == 6 %}Domingo
+                    {% endif %}
+                </span>
+                {% if disponibilidad.activo %}
+                    <span class="badge badge-success">Activo</span>
+                {% else %}
+                    <span class="badge badge-danger">Inactivo</span>
+                {% endif %}
+            </div>
+            <div class="mobile-card-body">
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Hora Inicio</span>
+                    <span class="mobile-card-value">{{ disponibilidad.hora_inicio.strftime('%H:%M') }}</span>
+                </div>
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Hora Fin</span>
+                    <span class="mobile-card-value">{{ disponibilidad.hora_fin.strftime('%H:%M') }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
+        <p style="font-size: 1.2rem; margin-bottom: 1rem;">📅 No tienes horarios configurados</p>
+        <p>Contacta al administrador para configurar tu horario de trabajo.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Sección de bloqueos temporales -->
+<section class="dashboard-section">
+    <h2 class="section-title">🚫 Bloqueos Temporales</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--color-text-muted);">
+        Aquí puedes bloquear horarios específicos para fechas puntuales. Estos bloqueos son temporales y no afectan tu horario regular.
+    </p>
+    
+    <div class="admin-form" style="margin-bottom: 2rem;">
+        <h3 class="form-title">Crear Nuevo Bloqueo</h3>
+        <form method="POST" action="{{ url_for('barbero.ver_horarios') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-grid">
+                <div class="form-group">
+                    {{ form.fecha.label(class="form-label") }}
+                    {{ form.fecha(class="form-input", type="date", min=fecha_hoy) }}
+                    {% if form.fecha.errors %}
+                    <span class="error">{{ form.fecha.errors[0] }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.hora_inicio.label(class="form-label") }}
+                    {{ form.hora_inicio(class="form-input", type="time") }}
+                    {% if form.hora_inicio.errors %}
+                    <span class="error">{{ form.hora_inicio.errors[0] }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.hora_fin.label(class="form-label") }}
+                    {{ form.hora_fin(class="form-input", type="time") }}
+                    {% if form.hora_fin.errors %}
+                    <span class="error">{{ form.hora_fin.errors[0] }}</span>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.motivo.label(class="form-label") }}
+                    {{ form.motivo(class="form-input", placeholder="Ej: Cita médica, Asunto personal...") }}
+                    {% if form.motivo.errors %}
+                    <span class="error">{{ form.motivo.errors[0] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                {{ form.submit(class="btn") }}
+            </div>
+        </form>
+    </div>
+    
+    <!-- Lista de bloqueos activos -->
+    {% if bloqueos_futuros %}
+    <!-- Versión para escritorio -->
+    <div class="data-table-container desktop-only">
+        <h3 class="form-title">Mis Bloqueos Activos</h3>
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Horario</th>
+                        <th>Motivo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bloqueo in bloqueos_futuros %}
+                    <tr>
+                        <td>{{ bloqueo.fecha.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ bloqueo.hora_inicio.strftime('%H:%M') }} - {{ bloqueo.hora_fin.strftime('%H:%M') }}</td>
+                        <td>{{ bloqueo.motivo or 'No especificado' }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('barbero.ver_horarios', eliminar_bloqueo=bloqueo.id) }}" 
+                               class="btn btn-sm btn-danger" 
+                               onclick="return confirm('¿Estás seguro de eliminar este bloqueo?')">
+                                Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Versión para móviles -->
+    <div class="mobile-only">
+        <h3 class="form-title">Mis Bloqueos Activos</h3>
+        <div class="mobile-cards-container">
+            {% for bloqueo in bloqueos_futuros %}
+            <div class="mobile-card">
+                <div class="mobile-card-header">
+                    <span class="mobile-card-title">{{ bloqueo.fecha.strftime('%d/%m/%Y') }}</span>
+                    <span class="mobile-card-value">{{ bloqueo.hora_inicio.strftime('%H:%M') }} - {{ bloqueo.hora_fin.strftime('%H:%M') }}</span>
+                </div>
+                <div class="mobile-card-body">
+                    <div class="mobile-card-field full-width">
+                        <span class="mobile-card-label">Motivo</span>
+                        <span class="mobile-card-value">{{ bloqueo.motivo or 'No especificado' }}</span>
+                    </div>
+                </div>
+                <div class="mobile-card-actions">
+                    <a href="{{ url_for('barbero.ver_horarios', eliminar_bloqueo=bloqueo.id) }}" 
+                       class="btn btn-danger" 
+                       onclick="return confirm('¿Estás seguro de eliminar este bloqueo?')">
+                        🗑️ Eliminar
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div style="background: var(--color-bg-light); padding: 1.5rem; border-radius: 6px; text-align: center; color: var(--color-text-muted);">
+        <p>No tienes bloqueos temporales activos.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Información adicional -->
+<section class="dashboard-section">
+    <h2 class="section-title">ℹ️ Información</h2>
+    <div style="background: var(--color-bg-dark); padding: 1.5rem; border-radius: 6px; border-left: 4px solid var(--color-info);">
+        <h4 style="color: var(--color-info); margin-bottom: 1rem;">Sobre tu horario</h4>
+        <ul style="color: var(--color-text-secondary); line-height: 1.8;">
+            <li>Los horarios mostrados son tu disponibilidad general</li>
+            <li>Solo puedes recibir citas durante estos horarios</li>
+            <li>Para cambios permanentes en el horario, contacta al administrador</li>
+            <li>Los bloqueos temporales te permiten marcar horas como no disponibles para fechas específicas</li>
+            <li>Los bloqueos temporales no afectan tu horario regular en otras fechas</li>
+        </ul>
+    </div>
+</section>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('barbero.dashboard') }}" class="btn btn-outline">
+        🏠 Volver al Dashboard
+    </a>
+</div>
+
+{% endblock %}

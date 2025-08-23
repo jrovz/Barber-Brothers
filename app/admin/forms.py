@@ -252,3 +252,13 @@ class ClienteFilterForm(FlaskForm):
         ('ultima_visita', 'Última visita')
     ], validators=[Optional()])
     submit = SubmitField('Filtrar')
+
+class BloqueoHorarioForm(FlaskForm):
+    """
+    Formulario para que los barberos puedan bloquear horarios específicos
+    """
+    fecha = StringField('Fecha', validators=[DataRequired(message="La fecha es obligatoria")])
+    hora_inicio = StringField('Hora de Inicio (HH:MM)', validators=[DataRequired(message="La hora de inicio es obligatoria")])
+    hora_fin = StringField('Hora de Fin (HH:MM)', validators=[DataRequired(message="La hora de fin es obligatoria")])
+    motivo = StringField('Motivo (opcional)', validators=[Optional(), Length(max=255)])
+    submit = SubmitField('Guardar Bloqueo')

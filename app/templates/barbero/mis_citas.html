@@ -44,7 +44,7 @@
             </div>
         </div>
         <button type="submit" class="btn btn-outline">Filtrar</button>
-        <a href="{{ url_for('barbero.mis_citas') }}" class="btn btn-outline" style="margin-left: 1rem;">Limpiar Filtros</a>
+        <a href="{{ url_for('barbero.mis_citas', mostrar_todo=1) }}" class="btn btn-outline" style="margin-left: 1rem;">Limpiar Filtros</a>
     </form>
 </section>
 
@@ -52,8 +52,18 @@
 <section class="data-table-container">
     <h2 class="section-title">📋 Mis Citas ({{ citas.total }} total)</h2>
     
+    {% if not mostrar_todo and fecha_inicio == fecha_fin and fecha_inicio %}
+        <div class="alert alert-info" style="margin-bottom: 1rem;">
+            Mostrando citas del día {{ fecha_inicio|default('actual') }}. 
+            <a href="{{ url_for('barbero.mis_citas', mostrar_todo=1) }}" style="text-decoration: underline; color: inherit;">
+                Ver todas las citas
+            </a>
+        </div>
+    {% endif %}
+    
     {% if citas.items %}
-    <div class="data-table-wrapper">
+    <!-- Versión para escritorio -->
+    <div class="data-table-wrapper desktop-only">
     <table class="data-table">
         <thead>
             <tr>
@@ -77,6 +87,13 @@
                     <strong>{{ cita.cliente.nombre if cita.cliente else 'Cliente eliminado' }}</strong>
                     {% if cita.cliente and cita.cliente.email %}
                     <br><small style="color: var(--color-text-muted);">{{ cita.cliente.email }}</small>
+                    {% endif %}
+                    {% if cita.cliente and cita.cliente.telefono %}
+                    <br>
+                    <a href="https://wa.me/{{ cita.cliente.telefono|replace('+', '')|replace(' ', '')|replace('-', '') }}" 
+                       class="whatsapp-link" target="_blank">
+                        {{ cita.cliente.telefono }}
+                    </a>
                     {% endif %}
                 </td>
                 <td>{{ cita.servicio.nombre if cita.servicio else 'Servicio eliminado' }}</td>
@@ -132,11 +149,96 @@
     </table>
     </div>
     
+    <!-- Versión para móviles -->
+    <div class="mobile-cards-container mobile-only">
+        {% for cita in citas.items %}
+        <div class="mobile-card">
+            <div class="mobile-card-header">
+                <span class="mobile-card-title">
+                    {{ cita.fecha.strftime('%d/%m/%Y') if cita.fecha else 'Sin fecha' }}
+                    {{ cita.fecha.strftime('%H:%M') if cita.fecha else '--:--' }}
+                </span>
+                {% if cita.estado == 'pendiente' %}
+                    <span class="badge badge-warning">Pendiente</span>
+                {% elif cita.estado == 'confirmada' %}
+                    <span class="badge badge-info">Confirmada</span>
+                {% elif cita.estado == 'completada' %}
+                    <span class="badge badge-success">Completada</span>
+                {% elif cita.estado == 'cancelada' %}
+                    <span class="badge badge-danger">Cancelada</span>
+                {% endif %}
+            </div>
+            <div class="mobile-card-body">
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Cliente</span>
+                    <span class="mobile-card-value">{{ cita.cliente.nombre if cita.cliente else 'Cliente eliminado' }}</span>
+                </div>
+                <div class="mobile-card-field">
+                    <span class="mobile-card-label">Servicio</span>
+                    <span class="mobile-card-value">{{ cita.servicio.nombre if cita.servicio else 'Servicio eliminado' }}</span>
+                </div>
+                {% if cita.cliente and cita.cliente.telefono %}
+                <div class="mobile-card-field full-width">
+                    <span class="mobile-card-label">Teléfono</span>
+                    <span class="mobile-card-value">
+                        <a href="https://wa.me/{{ cita.cliente.telefono|replace('+', '')|replace(' ', '')|replace('-', '') }}" 
+                           class="whatsapp-link" target="_blank">
+                            {{ cita.cliente.telefono }}
+                        </a>
+                    </span>
+                </div>
+                {% endif %}
+                {% if cita.cliente and cita.cliente.email %}
+                <div class="mobile-card-field full-width">
+                    <span class="mobile-card-label">Email</span>
+                    <span class="mobile-card-value">{{ cita.cliente.email }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="mobile-card-actions">
+                <!-- Cambiar estado -->
+                {% if cita.estado in ['pendiente', 'confirmada'] %}
+                <form method="POST" action="{{ url_for('barbero.actualizar_estado_cita', cita_id=cita.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% if cita.estado == 'pendiente' %}
+                        <button type="submit" name="estado" value="confirmada" class="btn btn-info" title="Confirmar">
+                            ✓ Confirmar
+                        </button>
+                    {% elif cita.estado == 'confirmada' %}
+                        <button type="submit" name="estado" value="completada" class="btn btn-success" title="Completar">
+                            ✅ Completar
+                        </button>
+                    {% endif %}
+                </form>
+                {% endif %}
+                
+                <!-- Cancelar cita -->
+                {% if cita.estado not in ['completada', 'cancelada'] %}
+                <form method="POST" action="{{ url_for('barbero.actualizar_estado_cita', cita_id=cita.id) }}" onsubmit="return confirm('¿Estás seguro de cancelar esta cita?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" name="estado" value="cancelada" class="btn btn-secondary" title="Cancelar">
+                        ❌ Cancelar
+                    </button>
+                </form>
+                {% endif %}
+                
+                <!-- Eliminar cita -->
+                <form method="POST" action="{{ url_for('barbero.eliminar_cita', cita_id=cita.id) }}" onsubmit="return confirm('¿Estás seguro de eliminar esta cita? Esta acción no se puede deshacer.')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-delete" title="Eliminar">
+                        🗑️ Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
     <!-- Paginación -->
     {% if citas.pages > 1 %}
     <div style="display: flex; justify-content: center; align-items: center; margin-top: 1.5rem; gap: 1rem; flex-wrap: wrap;">
         {% if citas.has_prev %}
-            <a href="{{ url_for('barbero.mis_citas', page=citas.prev_num, estado=estado, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline">
+            <a href="{{ url_for('barbero.mis_citas', page=citas.prev_num, estado=estado, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, mostrar_todo=request.args.get('mostrar_todo', '0')) }}" class="btn btn-outline">
                 « Anterior
             </a>
         {% endif %}
@@ -147,7 +249,7 @@
         </span>
         
         {% if citas.has_next %}
-            <a href="{{ url_for('barbero.mis_citas', page=citas.next_num, estado=estado, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin) }}" class="btn btn-outline">
+            <a href="{{ url_for('barbero.mis_citas', page=citas.next_num, estado=estado, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, mostrar_todo=request.args.get('mostrar_todo', '0')) }}" class="btn btn-outline">
                 Siguiente »
             </a>
         {% endif %}
@@ -158,7 +260,7 @@
     <div style="text-align: center; padding: 3rem; color: var(--color-text-muted);">
         <p style="font-size: 1.2rem; margin-bottom: 1rem;">📅 No se encontraron citas con los filtros aplicados</p>
         {% if estado or fecha_inicio or fecha_fin %}
-            <a href="{{ url_for('barbero.mis_citas') }}" class="btn btn-outline" style="margin-right: 1rem;">
+            <a href="{{ url_for('barbero.mis_citas', mostrar_todo=1) }}" class="btn btn-outline" style="margin-right: 1rem;">
                 Limpiar Filtros
             </a>
         {% endif %}

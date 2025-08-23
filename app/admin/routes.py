@@ -240,6 +240,23 @@ def dashboard():
         Cita.estado != 'cancelada'
     ).order_by(Cita.fecha).limit(10).all()
     
+    # Citas expiradas (para notificación)
+    citas_expiradas = Cita.query.filter(
+        Cita.estado == 'expirada'
+    ).order_by(Cita.fecha.desc()).limit(10).all()
+    
+    # Citas pendientes de confirmación
+    citas_pendientes = Cita.query.filter_by(estado='pendiente_confirmacion').count()
+    
+    # Ejecutar limpieza de citas expiradas (aquellas pendientes que pasaron el tiempo límite)
+    try:
+        citas_limpiadas = Cita.limpiar_citas_expiradas()
+        if citas_limpiadas > 0:
+            flash(f'Se han detectado {citas_limpiadas} citas expiradas sin confirmar', 'warning')
+    except Exception as e:
+        current_app.logger.error(f"Error al limpiar citas expiradas: {str(e)}")
+        print(f"Error al limpiar citas expiradas: {str(e)}")
+    
     # Citas de hoy
     citas_hoy = Cita.query.filter(
         Cita.fecha >= datetime.combine(today, time.min),
@@ -339,6 +356,8 @@ def dashboard():
         unread_messages_count=unread_messages_count,
         recent_messages=recent_messages,
         proximas_citas=proximas_citas,
+        citas_expiradas=citas_expiradas,
+        citas_pendientes=citas_pendientes,
         citas_hoy=citas_hoy,
         citas_mes=citas_mes,
         stats_barberos=stats_barberos,
