@@ -72,7 +72,8 @@ Seguridad y notas
 - El modelo `Slider` es opcional: si no está disponible, se procede con lista
   vacía. Existen logs/prints de depuración en `home()` y APIs para diagnóstico.
 """
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response, Response
+from datetime import datetime
 from flask_login import login_required, current_user
 from app.public import bp
 from app.models.producto import Producto
@@ -91,6 +92,41 @@ from app import db
 from datetime import datetime, timedelta, time
 from flask import send_from_directory
 from flask import Response
+
+@bp.route('/privacidad')
+def privacidad():
+    """Renderiza la página de política de privacidad."""
+    return render_template('public/privacidad.html', now=datetime.utcnow())
+
+@bp.route('/terminos')
+def terminos():
+    """Renderiza la página de términos y condiciones."""
+    return render_template('public/terminos.html', now=datetime.utcnow())
+
+@bp.route('/cookies')
+def cookies():
+    """Renderiza la página de política de cookies."""
+    return render_template('public/cookies.html', now=datetime.utcnow())
+
+@bp.route('/sitemap.xml')
+def sitemap():
+    """Genera y sirve el sitemap.xml"""
+    try:
+        from app.utils.sitemap_generator import SitemapGenerator
+        
+        # Generar el contenido XML del sitemap
+        sitemap_xml = SitemapGenerator.generate_sitemap()
+        
+        # Crear respuesta con el tipo de contenido correcto
+        response = Response(sitemap_xml, mimetype='application/xml')
+        
+        # Registrar en logs la generación exitosa
+        current_app.logger.info("Sitemap.xml generado exitosamente")
+        
+        return response
+    except Exception as e:
+        current_app.logger.error(f"Error al generar sitemap.xml: {str(e)}")
+        return Response("Error generating sitemap", status=500)
 
 @bp.route('/')
 def home():

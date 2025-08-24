@@ -1,0 +1,438 @@
+{% extends "public/public_base.html" %}
+
+{% block title %}Política de Cookies - Barber Brothers{% endblock %}
+
+{% block meta_description %}Política de cookies de Barber Brothers. Información detallada sobre qué son las cookies, cómo las utilizamos y cómo controlarlas.{% endblock %}
+
+{% block meta_keywords %}política de cookies, cookies, web cookies, uso de cookies, cookies barber brothers, configuración cookies, gdpr cookies{% endblock %}
+
+{% block content %}
+<section class="legal-container">
+    <div class="legal-header">
+        <h1>Política de Cookies</h1>
+        <p class="last-updated">Última actualización: {{ now.strftime('%d/%m/%Y') }}</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>1. ¿Qué son las cookies?</h2>
+        <p>Las cookies son pequeños archivos de texto que los sitios web colocan en su dispositivo cuando los visita. Estos archivos permiten que el sitio web recuerde sus acciones y preferencias durante un período de tiempo, para que no tenga que volver a introducir cierta información cada vez que visite el sitio o navegue de una página a otra.</p>
+        <p>Las cookies pueden ser "propias" (establecidas por nuestro sitio web) o de "terceros" (establecidas por otros sitios web que tienen contenido en nuestras páginas).</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>2. ¿Cómo utilizamos las cookies?</h2>
+        <p>En Barber Brothers utilizamos cookies para diversos propósitos, incluyendo:</p>
+        <ul>
+            <li>Mejorar la funcionalidad y experiencia de nuestro sitio web</li>
+            <li>Recordar sus preferencias y elecciones</li>
+            <li>Personalizar el contenido y la publicidad basada en sus intereses</li>
+            <li>Analizar cómo los usuarios utilizan nuestro sitio web</li>
+            <li>Facilitar servicios esenciales como procesos de reserva y compras</li>
+        </ul>
+    </div>
+
+    <div class="legal-section">
+        <h2>3. Tipos de cookies que utilizamos</h2>
+        
+        <h3>3.1. Cookies esenciales (necesarias)</h3>
+        <p>Estas cookies son indispensables para el funcionamiento básico de nuestro sitio web. Le permiten navegar por nuestro sitio y utilizar sus funcionalidades esenciales, como el acceso a áreas seguras o realizar reservas. Sin estas cookies, no podríamos proporcionar los servicios que usted solicita.</p>
+        <table class="cookies-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>CSRF-Token</td>
+                    <td>Protección de seguridad contra ataques CSRF (Cross-Site Request Forgery)</td>
+                    <td>Sesión</td>
+                </tr>
+                <tr>
+                    <td>session</td>
+                    <td>Mantiene su sesión activa mientras navega por el sitio</td>
+                    <td>2 horas</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>3.2. Cookies de preferencias</h3>
+        <p>Estas cookies nos permiten recordar sus preferencias y configuraciones para mejorar su experiencia en futuras visitas.</p>
+        <table class="cookies-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>language</td>
+                    <td>Recuerda su preferencia de idioma</td>
+                    <td>1 año</td>
+                </tr>
+                <tr>
+                    <td>ui_settings</td>
+                    <td>Guarda preferencias de interfaz (modo oscuro/claro, tamaño de texto)</td>
+                    <td>1 año</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>3.3. Cookies de análisis y rendimiento</h3>
+        <p>Nos ayudan a entender cómo interactúan los visitantes con nuestro sitio web, recopilando y reportando información de forma anónima. Esto nos permite mejorar nuestro sitio web.</p>
+        <table class="cookies-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>_ga</td>
+                    <td>Utilizada por Google Analytics para distinguir usuarios únicos</td>
+                    <td>2 años</td>
+                </tr>
+                <tr>
+                    <td>_gid</td>
+                    <td>Utilizada por Google Analytics para identificar usuarios</td>
+                    <td>24 horas</td>
+                </tr>
+                <tr>
+                    <td>_gat</td>
+                    <td>Utilizada por Google Analytics para limitar la frecuencia de solicitudes</td>
+                    <td>1 minuto</td>
+                </tr>
+                <tr>
+                    <td>clarity_id</td>
+                    <td>Microsoft Clarity para análisis de comportamiento de usuarios</td>
+                    <td>1 año</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>3.4. Cookies de marketing y personalización</h3>
+        <p>Estas cookies se utilizan para rastrear a los visitantes en los sitios web. La intención es mostrar anuncios que sean relevantes y atractivos para el usuario individual.</p>
+        <table class="cookies-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>client_booking_data</td>
+                    <td>Guarda datos de reservas previas para personalizar la experiencia</td>
+                    <td>6 meses</td>
+                </tr>
+                <tr>
+                    <td>favorite_barber_service</td>
+                    <td>Almacena preferencias de barbero y servicios para personalizar sugerencias</td>
+                    <td>3 meses</td>
+                </tr>
+                <tr>
+                    <td>booking_session_tracker</td>
+                    <td>Seguimiento del proceso de reserva para optimizar conversiones</td>
+                    <td>24 horas</td>
+                </tr>
+                <tr>
+                    <td>persistent_cart</td>
+                    <td>Mantiene los productos en el carrito entre sesiones</td>
+                    <td>7 días</td>
+                </tr>
+                <tr>
+                    <td>viewed_products</td>
+                    <td>Registra productos vistos para recomendaciones personalizadas</td>
+                    <td>30 días</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>3.5. Cookies de redes sociales</h3>
+        <p>Establecidas por servicios de redes sociales que hemos agregado al sitio para permitirle compartir contenido con sus amigos y redes.</p>
+        <table class="cookies-table">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>_instagram</td>
+                    <td>Permite la integración y visualización de contenido de Instagram</td>
+                    <td>Sesión</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="legal-section highlight-section">
+        <h2>4. Control de cookies</h2>
+        <p>Usted tiene el derecho a decidir si acepta o rechaza las cookies. La primera vez que visite nuestro sitio web, le mostraremos un banner de cookies que le permitirá aceptar o rechazar las diferentes categorías de cookies.</p>
+        
+        <h3>4.1. Panel de configuración de cookies</h3>
+        <p>Puede gestionar sus preferencias de cookies en cualquier momento utilizando nuestro panel de configuración de cookies:</p>
+        <div class="cookies-btn-container">
+            <button id="open-cookie-settings" class="cookie-settings-btn">Configurar preferencias de cookies</button>
+        </div>
+        
+        <h3>4.2. Gestión a través del navegador</h3>
+        <p>También puede gestionar las cookies a través de la configuración de su navegador. A continuación, le mostramos cómo hacerlo en los navegadores más populares:</p>
+        
+        <h4>Google Chrome</h4>
+        <ol>
+            <li>Haga clic en el menú de Chrome en la parte superior derecha (tres puntos)</li>
+            <li>Seleccione "Configuración"</li>
+            <li>Haga clic en "Privacidad y seguridad"</li>
+            <li>Seleccione "Cookies y otros datos del sitio"</li>
+            <li>Aquí puede configurar distintas opciones de cookies o borrar cookies específicas</li>
+        </ol>
+        
+        <h4>Mozilla Firefox</h4>
+        <ol>
+            <li>Haga clic en el menú de Firefox en la parte superior derecha (tres líneas)</li>
+            <li>Seleccione "Opciones"</li>
+            <li>Vaya a la sección "Privacidad y seguridad"</li>
+            <li>En "Cookies y datos del sitio" puede configurar sus preferencias</li>
+        </ol>
+        
+        <h4>Safari</h4>
+        <ol>
+            <li>Haga clic en "Safari" en la barra de menú</li>
+            <li>Seleccione "Preferencias"</li>
+            <li>Vaya a la pestaña "Privacidad"</li>
+            <li>Aquí puede configurar si acepta cookies y de qué sitios web</li>
+        </ol>
+        
+        <h4>Microsoft Edge</h4>
+        <ol>
+            <li>Haga clic en el menú de Edge (tres puntos horizontales)</li>
+            <li>Seleccione "Configuración"</li>
+            <li>Haga clic en "Cookies y permisos del sitio"</li>
+            <li>Seleccione "Administrar y eliminar cookies y datos del sitio"</li>
+        </ol>
+        
+        <p><strong>Nota importante:</strong> Tenga en cuenta que bloquear todas las cookies puede afectar la funcionalidad de nuestro sitio web y limitar su capacidad para utilizar ciertas características, como la reserva de citas o realizar compras.</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>5. Cookies y datos personales</h2>
+        <p>Algunas cookies pueden recopilar información personal, especialmente cuando está vinculada a un perfil identificable. Toda la información personal recopilada a través de cookies se procesa de acuerdo con nuestra <a href="{{ url_for('public.privacidad') }}">Política de Privacidad</a>.</p>
+        <p>Tomamos medidas para proteger sus datos personales y solo compartimos información con terceros cuando es necesario para proporcionar un servicio solicitado por usted o cuando estamos legalmente obligados a hacerlo.</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>6. Cookies de terceros</h2>
+        <p>Algunos de nuestros socios comerciales (por ejemplo, anunciantes) utilizan cookies en nuestro sitio web. No tenemos acceso ni control sobre estas cookies. Esta política de cookies se aplica solo a las cookies de nuestro sitio web y no cubre las cookies de terceros para las que no somos responsables.</p>
+        <p>Los terceros cuyos servicios utilizamos incluyen:</p>
+        <ul>
+            <li>Google (Analytics, Ads)</li>
+            <li>Microsoft Clarity (análisis de comportamiento)</li>
+            <li>Instagram (contenido integrado)</li>
+        </ul>
+        <p>Le recomendamos que consulte las políticas de privacidad y cookies de estos terceros directamente en sus sitios web para obtener información más detallada.</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>7. Cambios en nuestra Política de Cookies</h2>
+        <p>Nos reservamos el derecho de modificar esta política de cookies en cualquier momento. Cualquier cambio entrará en vigor inmediatamente después de su publicación en el sitio web. Le recomendamos revisar periódicamente esta página para mantenerse informado sobre cualquier cambio.</p>
+        <p>La fecha de la última actualización se indica al principio de esta política.</p>
+    </div>
+
+    <div class="legal-section">
+        <h2>8. Contacto</h2>
+        <p>Si tiene alguna pregunta sobre nuestra política de cookies o cómo utilizamos las cookies, no dude en ponerse en contacto con nosotros:</p>
+        <p><strong>Email:</strong> cookies@barberbrothers.com</p>
+        <p><strong>Dirección:</strong> Manzana A casa N•5, Arkambuco, Boyacá, Colombia</p>
+        <p><strong>Teléfono:</strong> +573102160496</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .legal-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        color: #333;
+    }
+    
+    .legal-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #b39656;
+    }
+    
+    .legal-header h1 {
+        color: #333;
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .last-updated {
+        color: #666;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+    
+    .legal-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .legal-section:last-child {
+        border-bottom: none;
+    }
+    
+    .legal-section h2 {
+        color: #b39656;
+        font-family: 'Playfair Display', serif;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .legal-section h3 {
+        color: #666;
+        font-size: 1.2rem;
+        margin: 1.5rem 0 0.5rem;
+    }
+    
+    .legal-section h4 {
+        color: #444;
+        font-size: 1.1rem;
+        margin: 1rem 0 0.5rem;
+    }
+    
+    .legal-section ul, .legal-section ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .legal-section li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+    
+    .legal-section p {
+        line-height: 1.6;
+        margin-bottom: 0.8rem;
+    }
+    
+    .highlight-section {
+        background-color: #f9f7f2;
+        padding: 1.5rem;
+        border-radius: 6px;
+        border-left: 4px solid #b39656;
+    }
+    
+    strong {
+        color: #555;
+    }
+    
+    .cookies-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0 2rem;
+    }
+    
+    .cookies-table th, .cookies-table td {
+        border: 1px solid #ddd;
+        padding: 8px 12px;
+        text-align: left;
+    }
+    
+    .cookies-table th {
+        background-color: #f2efe6;
+        color: #333;
+    }
+    
+    .cookies-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    .cookies-btn-container {
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+    
+    .cookie-settings-btn {
+        background-color: #b39656;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+    
+    .cookie-settings-btn:hover {
+        background-color: #a0874c;
+    }
+    
+    a {
+        color: #b39656;
+        text-decoration: none;
+    }
+    
+    a:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+        .legal-container {
+            padding: 1rem;
+            margin: 1rem;
+        }
+        
+        .legal-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .legal-section h2 {
+            font-size: 1.3rem;
+        }
+        
+        .cookies-table th, .cookies-table td {
+            padding: 6px 8px;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cookieSettingsBtn = document.getElementById('open-cookie-settings');
+        
+        if (cookieSettingsBtn) {
+            cookieSettingsBtn.addEventListener('click', function() {
+                // Aquí iría el código para abrir el panel de configuración de cookies
+                // Por ahora, simulamos que se activa el banner de cookies
+                if (typeof showCookieConsentBanner === 'function') {
+                    showCookieConsentBanner();
+                } else {
+                    alert('El panel de configuración de cookies estará disponible próximamente.');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

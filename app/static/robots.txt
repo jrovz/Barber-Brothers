@@ -34,12 +34,27 @@ Allow: /sitemap.xml
 Allow: /robots.txt
 Allow: /favicon.ico
 Allow: /google17b126f9a1dae6ef.html
+Allow: /privacidad
+Allow: /terminos
+Allow: /cookies
 
 # Sitemap - URL correcta para el sitemap dinámico
-Sitemap: https://tudominio.com/sitemap.xml
+Sitemap: https://barberbrothers.com/sitemap.xml
 
 # Configuración de rastreo
 Crawl-delay: 1
 
 # Información adicional para crawlers
-# Host: https://tudominio.com
+Host: https://barberbrothers.com
+Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
+# Agrega información específica para Google
+User-agent: Googlebot
+Allow: /
+
+# Agrega información específica para Bing
+User-agent: Bingbot
+Allow: /
+
+# Velocidad de rastreo para AdSense
+User-agent: Mediapartners-Google
+Allow: /
