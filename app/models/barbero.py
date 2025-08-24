@@ -87,45 +87,73 @@ class Barbero(db.Model, UserMixin):
         Returns:
             list: Lista de diccionarios con la información de cada slot de tiempo disponible
         """
-        # Obtener el día de la semana (0-6)
-        dia_semana = fecha.weekday()
-        
-        # No hay atención los domingos
-        if dia_semana > 5:  # Domingo
+        try:
+            from flask import current_app
+            
+            # Obtener el día de la semana (0-6)
+            dia_semana = fecha.weekday()
+            
+            # Debug logs
+            current_app.logger.info(f"Barbero {self.id} ({self.nombre}): Obteniendo disponibilidad para fecha {fecha}, día semana {dia_semana}")
+            
+            # No hay atención los domingos
+            if dia_semana > 5:  # Domingo
+                current_app.logger.info(f"Barbero {self.id}: No hay atención en domingo")
+                return []
+                
+            # Obtener todos los bloques de disponibilidad para este día
+            disponibilidades = self.get_disponibilidad_por_dia(dia_semana)
+            
+            current_app.logger.info(f"Barbero {self.id}: Encontrados {len(disponibilidades)} bloques de disponibilidad para día {dia_semana}")
+            
+            if not disponibilidades:
+                current_app.logger.warning(f"Barbero {self.id}: No tiene configuración de disponibilidad para el día {dia_semana}")
+                return []
+                
+            # Generar todos los slots de tiempo para esas disponibilidades
+            todos_los_slots = []
+            for i, disp in enumerate(disponibilidades):
+                current_app.logger.debug(f"Barbero {self.id}: Procesando bloque {i+1}: {disp.hora_inicio}-{disp.hora_fin}")
+                slots = disp.generar_slots_disponibles(fecha, duracion)
+                todos_los_slots.extend(slots)
+                
+            # Ordenar los slots por hora
+            todos_los_slots.sort(key=lambda x: x['hora'])
+            
+            current_app.logger.info(f"Barbero {self.id}: Generados {len(todos_los_slots)} slots totales antes de filtrar bloqueos")
+            
+            # Verificar bloqueos temporales para esta fecha
+            try:
+                bloqueos = BloqueoHorario.query.filter(
+                    BloqueoHorario.barbero_id == self.id,
+                    BloqueoHorario.fecha == fecha
+                ).all()
+                
+                # Marcar como no disponibles los slots que coincidan con bloqueos
+                if bloqueos:
+                    current_app.logger.info(f"Barbero {self.id}: Encontrados {len(bloqueos)} bloqueos para fecha {fecha}")
+                    for slot in todos_los_slots:
+                        hora_slot = datetime.strptime(slot['hora'], '%H:%M').time()
+                        for bloqueo in bloqueos:
+                            if bloqueo.hora_inicio <= hora_slot < bloqueo.hora_fin:
+                                slot['disponible'] = False
+                                slot['bloqueado'] = True
+                                break
+            except Exception as bloqueo_error:
+                current_app.logger.error(f"Error al procesar bloqueos: {str(bloqueo_error)}")
+                # Continuar sin procesar bloqueos
+            
+            # Contar slots disponibles finales
+            slots_disponibles = sum(1 for slot in todos_los_slots if slot.get('disponible', False))
+            current_app.logger.info(f"Barbero {self.id}: {slots_disponibles} de {len(todos_los_slots)} slots están disponibles")
+            
+            return todos_los_slots
+            
+        except Exception as e:
+            from flask import current_app
+            current_app.logger.error(f"Error en obtener_horarios_disponibles para barbero {self.id}: {str(e)}", exc_info=True)
+            # En caso de error, devolver lista vacía para evitar errores en cascada
             return []
-            
-        # Obtener todos los bloques de disponibilidad para este día
-        disponibilidades = self.get_disponibilidad_por_dia(dia_semana)
-        
-        if not disponibilidades:
-            return []
-            
-        # Generar todos los slots de tiempo para esas disponibilidades
-        todos_los_slots = []
-        for disp in disponibilidades:
-            slots = disp.generar_slots_disponibles(fecha, duracion)
-            todos_los_slots.extend(slots)
-            
-        # Ordenar los slots por hora
-        todos_los_slots.sort(key=lambda x: x['hora'])
-        
-        # Verificar bloqueos temporales para esta fecha
-        bloqueos = BloqueoHorario.query.filter(
-            BloqueoHorario.barbero_id == self.id,
-            BloqueoHorario.fecha == fecha
-        ).all()
-        
-        # Marcar como no disponibles los slots que coincidan con bloqueos
-        if bloqueos:
-            for slot in todos_los_slots:
-                hora_slot = datetime.strptime(slot['hora'], '%H:%M').time()
-                for bloqueo in bloqueos:
-                    if bloqueo.hora_inicio <= hora_slot < bloqueo.hora_fin:
-                        slot['disponible'] = False
-                        slot['bloqueado'] = True
-                        break
-        
-        return todos_los_slots
 
     # Métodos de autenticación
     def set_password(self, password):
@@ -312,57 +340,83 @@ class DisponibilidadBarbero(db.Model):
         Returns:
             list: Lista de diccionarios con la información de cada slot
         """
-        # Verificar que sea el día de la semana correcto
-        if fecha.weekday() != self.dia_semana:
+        from flask import current_app
+        
+        try:
+            # Verificar que sea el día de la semana correcto
+            if fecha.weekday() != self.dia_semana:
+                current_app.logger.debug(f"Bloque {self.id}: Día de semana incorrecto {fecha.weekday()} != {self.dia_semana}")
+                return []
+                
+            from app.models.cliente import Cita
+            
+            current_app.logger.debug(f"Bloque {self.id}: Generando slots para {fecha}, horario {self.hora_inicio}-{self.hora_fin}, duración {duracion}min")
+            
+            slots = []
+            # Convertir la hora de inicio y fin a datetime para poder hacer operaciones
+            current_time = datetime.combine(fecha, self.hora_inicio)
+            end_time = datetime.combine(fecha, self.hora_fin)
+            
+            # Obtener todas las citas que ocupan espacio para este día y barbero
+            try:
+                # Incluimos 'expirada' para mantener esos slots ocupados como solicitado por el cliente
+                citas_del_dia = Cita.query.filter(
+                    Cita.barbero_id == self.barbero_id,
+                    Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
+                    Cita.fecha < datetime.combine(fecha + timedelta(days=1), self.hora_inicio),
+                    Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])
+                ).all()
+                
+                current_app.logger.debug(f"Bloque {self.id}: Encontradas {len(citas_del_dia)} citas para este día")
+                
+                # Crear lista de intervalos ocupados
+                intervalos_ocupados = []
+                for cita in citas_del_dia:
+                    inicio_cita = cita.fecha
+                    fin_cita = inicio_cita + timedelta(minutes=cita.duracion or 30)
+                    intervalos_ocupados.append((inicio_cita, fin_cita))
+                    current_app.logger.debug(f"Cita ID {cita.id} ocupa {inicio_cita.strftime('%H:%M')} - {fin_cita.strftime('%H:%M')}")
+            except Exception as e:
+                current_app.logger.error(f"Error al obtener citas del día: {str(e)}")
+                intervalos_ocupados = []  # Si hay error, asumir que no hay citas (mejor mostrar horarios de más que de menos)
+            
+            # Generar slots hasta la hora de fin
+            slot_count = 0
+            while current_time + timedelta(minutes=duracion) <= end_time:
+                hora_slot = current_time.time()
+                fecha_hora_inicio = datetime.combine(fecha, hora_slot)
+                fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion)
+                
+                # Verificar si este slot se solapa con alguna cita existente
+                disponible = True
+                for inicio_ocupado, fin_ocupado in intervalos_ocupados:
+                    # Verificar solapamiento: el slot no debe empezar antes de que termine una cita
+                    # ni terminar después de que empiece otra cita
+                    if not (fecha_hora_fin <= inicio_ocupado or fecha_hora_inicio >= fin_ocupado):
+                        disponible = False
+                        break
+                
+                slot_info = {
+                    'hora': hora_slot.strftime('%H:%M'),
+                    'disponible': disponible
+                }
+                
+                slots.append(slot_info)
+                slot_count += 1
+                
+                # Avanzar al siguiente slot (cada 15 minutos para mayor flexibilidad)
+                current_time += timedelta(minutes=15)
+                
+            # Log resumen de slots generados
+            slots_disponibles = sum(1 for s in slots if s['disponible'])
+            current_app.logger.debug(f"Bloque {self.id}: Generados {slot_count} slots, {slots_disponibles} disponibles")
+                
+            return slots
+            
+        except Exception as e:
+            current_app.logger.error(f"Error en generar_slots_disponibles: {str(e)}", exc_info=True)
+            # En caso de error, devolver lista vacía para evitar errores en cascada
             return []
-            
-        from app.models.cliente import Cita
-        
-        slots = []
-        # Convertir la hora de inicio y fin a datetime para poder hacer operaciones
-        current_time = datetime.combine(fecha, self.hora_inicio)
-        end_time = datetime.combine(fecha, self.hora_fin)
-        
-        # Obtener todas las citas que ocupan espacio para este día y barbero
-        # Incluimos 'expirada' para mantener esos slots ocupados como solicitado por el cliente
-        citas_del_dia = Cita.query.filter(
-            Cita.barbero_id == self.barbero_id,
-            Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
-            Cita.fecha < datetime.combine(fecha + timedelta(days=1), self.hora_inicio),
-            Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])
-        ).all()
-        
-        # Crear lista de intervalos ocupados
-        intervalos_ocupados = []
-        for cita in citas_del_dia:
-            inicio_cita = cita.fecha
-            fin_cita = inicio_cita + timedelta(minutes=cita.duracion or 30)
-            intervalos_ocupados.append((inicio_cita, fin_cita))
-        
-        # Generar slots hasta la hora de fin
-        while current_time + timedelta(minutes=duracion) <= end_time:
-            hora_slot = current_time.time()
-            fecha_hora_inicio = datetime.combine(fecha, hora_slot)
-            fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion)
-            
-            # Verificar si este slot se solapa con alguna cita existente
-            disponible = True
-            for inicio_ocupado, fin_ocupado in intervalos_ocupados:
-                # Verificar solapamiento: el slot no debe empezar antes de que termine una cita
-                # ni terminar después de que empiece otra cita
-                if not (fecha_hora_fin <= inicio_ocupado or fecha_hora_inicio >= fin_ocupado):
-                    disponible = False
-                    break
-            
-            slots.append({
-                'hora': hora_slot.strftime('%H:%M'),
-                'disponible': disponible
-            })
-            
-            # Avanzar al siguiente slot (cada 15 minutos para mayor flexibilidad)
-            current_time += timedelta(minutes=15)
-            
-        return slots
     
     def __repr__(self):
         dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']

@@ -701,13 +701,27 @@ def disponibilidad_barbero(barbero_id, fecha):
         except Exception as e:
             current_app.logger.warning(f"Error en limpieza automática de citas: {e}")
 
-        horarios_obj_list = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
-
-        horarios_disponibles_str = []
-        if horarios_obj_list:
-            for slot in horarios_obj_list:
-                if slot['disponible']:
-                    horarios_disponibles_str.append(slot['hora'])
+        # Debug detallado
+        current_app.logger.info(f"Solicitando horarios disponibles para barbero {barbero.id}, fecha {fecha_dt}, duración {duracion_servicio}min")
+        
+        try:
+            horarios_obj_list = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
+            current_app.logger.info(f"Horarios obtenidos: {len(horarios_obj_list)} slots")
+            
+            # Debug: Mostrar cada slot obtenido
+            for i, slot in enumerate(horarios_obj_list[:5]):  # Primeros 5 para no llenar el log
+                current_app.logger.debug(f"Slot {i+1}: {slot}")
+                
+            horarios_disponibles_str = []
+            if horarios_obj_list:
+                for slot in horarios_obj_list:
+                    if slot['disponible']:
+                        horarios_disponibles_str.append(slot['hora'])
+                        
+            current_app.logger.info(f"Slots disponibles finales: {len(horarios_disponibles_str)}")
+        except Exception as slot_error:
+            current_app.logger.error(f"Error procesando slots: {str(slot_error)}", exc_info=True)
+            raise
         
         mensaje_respuesta = f'Horarios disponibles para {barbero.nombre} el {fecha}'
         if not horarios_disponibles_str: # Comprobar la lista de strings filtrada
