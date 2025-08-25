@@ -1,0 +1,48 @@
+<script>
+// CSS Loader Helper - Carga diferida de estilos no críticos
+(function() {
+    // Función para cargar CSS de forma óptima
+    function loadCSS(href, media = 'all') {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = href;
+        link.media = media;
+        
+        // Estrategia de carga óptima
+        const refElement = document.getElementsByTagName('script')[0];
+        refElement.parentNode.insertBefore(link, refElement);
+        
+        // Registro para debug
+        console.log('CSS cargado:', href);
+    }
+    
+    // Función para cargar CSS después de carga crítica
+    function loadDeferredCSS() {
+            // Cargar CSS principal original con media=print, luego cambiar a 'all'
+    const mainStylesheet = document.createElement('link');
+    mainStylesheet.rel = 'stylesheet';
+    mainStylesheet.href = '{{ url_for("static", filename="css/public_styles.css") }}';
+    mainStylesheet.media = 'print';
+    mainStylesheet.onload = function() {
+        this.media = 'all';
+        this.onload = null;
+    };
+    document.head.appendChild(mainStylesheet);
+        
+        // Carga condicional para otras hojas de estilo según página
+        {% if request.endpoint == 'public.home' %}
+        loadCSS('{{ url_for("static", filename="css/slider-optimized.css") }}');
+        {% endif %}
+        
+        // Cargar footer styles (no crítico)
+        loadCSS('{{ url_for("static", filename="css/footer_styles.css") }}');
+    }
+    
+    // Ejecutar carga diferida en el momento oportuno
+    if (window.requestIdleCallback) {
+        requestIdleCallback(loadDeferredCSS);
+    } else {
+        setTimeout(loadDeferredCSS, 0);
+    }
+})();
+</script>

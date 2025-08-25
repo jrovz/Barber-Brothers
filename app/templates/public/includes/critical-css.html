@@ -1,0 +1,296 @@
+<style>
+/* CSS Crítico para carga inicial - Barber Brothers */
+/* Solo estilos esenciales para el renderizado inicial */
+
+/* Variables globales esenciales */
+:root {
+    --color-bg-main: #0a0908;
+    --color-bg-dark: #040404;
+    --color-bg-medium: #121111;
+    --color-bg-light: #1c1a19;
+    --color-bg-card: #15130f;
+    
+    --color-text-primary: #f5f0e6;
+    --color-text-secondary: #e3d9c6;
+    --color-text-muted: #c4b9a2;
+    --color-text-accent: #d2b883;
+    
+    --color-border: #302c25;
+    --color-accent: #b39656;
+    --color-accent-hover: #c9aa6b;
+}
+
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Base para móvil primero */
+body {
+    background-color: var(--color-bg-main);
+    color: var(--color-text-primary);
+    font-family: 'Lora', serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    padding-top: 100px; /* Altura ajustada para móvil */
+}
+
+body.menu-open {
+    overflow: hidden;
+}
+
+/* Header - crítico */
+header {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-accent);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Header scrolled */
+header.scrolled {
+    background-color: rgba(4, 4, 4, 0.95);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Container principal */
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+/* Logo - crítico */
+.logo {
+    text-align: center;
+}
+
+.logo-link {
+    display: block;
+    text-decoration: none;
+    border-radius: 3px;
+    padding: 2px;
+}
+
+.logo img {
+    height: 70px;
+    width: auto;
+    display: block;
+    transition: height 0.3s ease;
+}
+
+header.scrolled .logo img {
+    height: 60px;
+}
+
+/* Navegación - móvil primero */
+header nav, .desktop-menu {
+    display: none;
+}
+
+/* Menú hamburguesa - visible en móvil */
+.menu-toggle {
+    display: block;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 1100;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.menu-toggle-icon,
+.menu-toggle-icon::before,
+.menu-toggle-icon::after {
+    content: '';
+    display: block;
+    background-color: var(--color-text-accent);
+    height: 3px;
+    width: 25px;
+    border-radius: 3px;
+    transition: all 0.3s ease-in-out;
+    margin: 0 auto;
+}
+
+.menu-toggle-icon::before {
+    transform: translateY(-8px);
+}
+
+.menu-toggle-icon::after {
+    transform: translateY(5px);
+}
+
+/* Estado inicial del menú móvil - GARANTIZADO CERRADO */
+.mobile-menu {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: var(--color-bg-dark);
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 80%; 
+    max-width: 300px;
+    height: 100%;
+    padding: 5rem 1.5rem 1.5rem;
+    border-left: 1px solid var(--color-border);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    z-index: 1050;
+    transform: translateX(100%) !important; /* FORZAR ESTADO CERRADO */
+    transition: transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    visibility: hidden !important; /* FORZAR VISIBILIDAD OCULTA */
+    overflow-y: auto;
+}
+
+/* Estado abierto del menú */
+.mobile-menu.open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+}
+
+/* Overlay del menú - estado inicial */
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1040;
+    opacity: 0 !important; /* FORZAR OPACIDAD 0 */
+    visibility: hidden !important; /* FORZAR VISIBILIDAD OCULTA */
+    transition: opacity 0.3s;
+    pointer-events: none !important; /* FORZAR SIN INTERACCIÓN */
+}
+
+/* Estado abierto del overlay */
+.menu-overlay.open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Estilos del menú móvil */
+.mobile-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-menu ul li {
+    margin: 0;
+    width: 100%;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-menu ul li a {
+    display: block;
+    padding: 1rem 0.5rem;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: background-color 0.2s;
+}
+
+.mobile-menu ul li a:active {
+    background-color: var(--color-bg-medium);
+    color: var(--color-accent);
+}
+
+/* Hero slider - solo estructura básica */
+.hero-slider {
+    position: relative;
+    height: 400px; /* Reducido para móvil */
+    overflow: hidden;
+    background-color: #111;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s;
+}
+
+.slide.active {
+    opacity: 1;
+    z-index: 2;
+}
+
+/* Contenedor de imagen básico */
+.slide-bg-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.slide-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+}
+
+/* Media queries mínimas para tablets/desktop */
+@media (min-width: 769px) {
+    body {
+        padding-top: 120px;
+    }
+    
+    header {
+        padding: 1rem;
+    }
+    
+    .logo img {
+        height: 90px;
+    }
+    
+    .menu-toggle {
+        display: none;
+    }
+    
+    .desktop-menu {
+        display: block;
+    }
+    
+    .hero-slider {
+        height: 600px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .hero-slider {
+        height: 740px;
+    }
+}
+</style>

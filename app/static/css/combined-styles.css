@@ -1,0 +1,286 @@
+/* ARCHIVO CSS CONSOLIDADO - COMBINACIÓN DE PUBLIC_STYLES Y FOOTER_STYLES */
+/* Para reducir solicitudes HTTP y mejorar el rendimiento */
+
+/*********************
+ * ESTILOS PÚBLICOS *
+ *********************/
+
+/* Variables globales importadas desde public_styles.css */
+:root {
+    /* Fondos (negros con profundidad) */
+    --color-bg-main: #0a0908; /* Negro profundo con un toque cálido */
+    --color-bg-dark: #040404; /* Negro casi absoluto para áreas de máximo contraste */
+    --color-bg-medium: #121111; /* Negro intermedio con un toque de calidez */
+    --color-bg-light: #1c1a19; /* Negro suavizado para áreas secundarias */
+    --color-bg-card: #15130f; /* Negro con matiz vintage para elementos destacados */
+    
+    /* Tipografía (tonos crema y marfil) */
+    --color-text-primary: #f5f0e6; /* Marfil suave para textos principales */
+    --color-text-secondary: #e3d9c6; /* Crema cálido para textos secundarios */
+    --color-text-muted: #c4b9a2; /* Tono beige apagado para textos menos importantes */
+    --color-text-accent: #d2b883; /* Dorado antiguo suave para acentos textuales */
+    
+    /* Acentos y bordes (tonos dorados antiguo) */
+    --color-border: #302c25; /* Borde sutil con toque sépia */
+    --color-accent: #b39656; /* Dorado antiguo para elementos interactivos */
+    --color-accent-hover: #c9aa6b; /* Dorado cálido para estados hover */
+    
+    /* Sombras (con toque vintage) */
+    --shadow-soft: 0 4px 8px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(179, 150, 86, 0.15);
+    --shadow-medium: 0 6px 16px rgba(0, 0, 0, 0.6), 0 2px 5px rgba(179, 150, 86, 0.2);
+}
+
+/* Estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-bg-main);
+    color: var(--color-text-primary);
+    font-family: 'Lora', serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    padding-top: 120px; /* Ajusta según la altura del header */
+}
+
+body.menu-open {
+    overflow: hidden;
+}
+
+/* Componentes Comunes */
+.btn, 
+.slide-btn, 
+.book-button, 
+.buy-button, 
+.checkout-button, 
+.submit-btn {
+    display: inline-block;
+    padding: 0.8rem 1.8rem;
+    background-color: var(--color-accent);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-family: 'Lora', serif;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn:hover, 
+.slide-btn:hover, 
+.book-button:hover, 
+.buy-button:hover, 
+.checkout-button:hover, 
+.submit-btn:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* Botón de WhatsApp */
+.whatsapp-float {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 1.8rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    transition: all 0.3s;
+}
+
+.whatsapp-float:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.whatsapp-icon {
+    font-size: 2rem;
+}
+
+/* Animación de entrada para elementos */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animated-entry {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+/* Clases de utilidad */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+
+/* Sección principal de contenido */
+main {
+    min-height: calc(100vh - 120px - 100px); /* 120px header, 100px footer approx */
+}
+
+/* Ajustes responsive generales */
+@media (max-width: 768px) {
+    body {
+        padding-top: 80px; /* Altura reducida en móvil */
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/*******************
+ * ESTILOS FOOTER *
+ *******************/
+
+/* Estilos para el footer */
+footer {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-secondary);
+    padding: 2.5rem 0;
+    margin-top: 3rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.footer-info {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.footer-info p {
+    margin: 0.4rem 0;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem 2rem;
+    margin-top: 0.5rem;
+}
+
+.footer-links a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.3s;
+    position: relative;
+}
+
+.footer-links a:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--color-accent);
+    transition: width 0.3s;
+}
+
+.footer-links a:hover {
+    color: var(--color-text-accent);
+}
+
+.footer-links a:hover:after {
+    width: 100%;
+}
+
+.footer-social {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.footer-social a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--color-bg-medium);
+    color: var(--color-text-primary);
+    transition: all 0.3s;
+    font-size: 1.2rem;
+    text-decoration: none;
+}
+
+.footer-social a:hover {
+    background-color: var(--color-accent);
+    transform: translateY(-3px);
+}
+
+@media (min-width: 768px) {
+    .footer-content {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .footer-links {
+        justify-content: flex-end;
+    }
+}
+
+/* Créditos del desarrollador */
+.developer-credits {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+/* Efecto de hover elegante para todos los enlaces del footer */
+footer a {
+    position: relative;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--color-accent);
+}
+
+/* Estilos de onda decorativa (opcional) */
+.footer-wave {
+    width: 100%;
+    height: 50px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23121111' fill-opacity='1' d='M0,64L48,80C96,96,192,128,288,128C384,128,480,96,576,96C672,96,768,128,864,138.7C960,149,1056,139,1152,122.7C1248,107,1344,85,1392,74.7L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-size: cover;
+    background-position: center;
+    margin-top: -50px;
+    pointer-events: none;
+}
+
