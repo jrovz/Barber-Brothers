@@ -21,6 +21,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     {{ personalization_meta_tags(personalization) }}
     
+    <!-- CSS optimizado para el slider -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/slider-optimized.css') }}">
+    
     <!-- Datos estructurados JSON-LD -->
     <script type="application/ld+json">
     {
@@ -110,7 +113,7 @@
                 {% for slider in sliders %}
                 <div class="slide {% if loop.first %}active{% endif %} {% if slider.tipo == 'instagram' %}instagram-embed-slide{% endif %}">
                     {% if slider.tipo == 'imagen' and slider.imagen_url %}
-                        <div class="slide-bg" style="background-image: url('{{ slider.imagen_url }}')"></div>
+                        <div class="slide-bg" data-img="{{ slider.imagen_url }}"></div>
                         <div class="slide-content">
                             <div class="product-highlight">
                                 <h2>{{ slider.titulo }}</h2>
@@ -127,7 +130,7 @@
             {% else %}
                 <!-- Slides por defecto si no hay sliders configurados -->
                 <div class="slide active">
-                    <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto1.jpg') }}')"></div>
+                    <div class="slide-bg" data-img="{{ url_for('static', filename='images/foto1.jpg') }}"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
                             <h2>Cortes de Cabello Profesionales en Arkambuco</h2>
@@ -137,7 +140,7 @@
                 </div>
                 
                 <div class="slide">
-                    <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto2.jpg') }}')"></div>
+                    <div class="slide-bg" data-img="{{ url_for('static', filename='images/foto2.jpg') }}"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
                             <h2>Afeitado Clásico y Moderno</h2>
@@ -147,7 +150,7 @@
                 </div>
                 
                 <div class="slide">
-                    <div class="slide-bg" style="background-image: url('{{ url_for('static', filename='images/foto3.jpg') }}')"></div>
+                    <div class="slide-bg" data-img="{{ url_for('static', filename='images/foto3.jpg') }}"></div>
                     <div class="slide-content">
                         <div class="product-highlight">
                             <h2>Arreglo de Barba Profesional</h2>
@@ -304,9 +307,9 @@
                     <div class="team-member">
                         <div class="member-img">
                             {% if barbero.imagen_url %}
-                            <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}">
+                            <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" width="200" height="200" loading="lazy">
                             {% else %}
-                            <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850" alt="{{ barbero.nombre }}">
+                            <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop" alt="{{ barbero.nombre }}" width="200" height="200" loading="lazy">
                             {% endif %}
                         </div>
                         <h4>{{ barbero.nombre }}</h4>
@@ -339,202 +342,21 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <!-- Script de Instagram -->
-    <script async src="//www.instagram.com/embed.js"></script>
-    
-    <!-- Scripts específicos del slider -->
+    <!-- Script de Instagram - cargado condicionalmente -->
     <script>
+        // Cargar Instagram embed script solo si hay slides de Instagram
         document.addEventListener('DOMContentLoaded', function() {
-            // Slider configuration
-            const SLIDE_DURATION = 6000; // 6 segundos entre slides
-            const TRANSITION_DURATION = 800; // 0.8 segundos de transición
-            
-            // DOM elements
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.dot');
-            const prevArrow = document.querySelector('.prev-arrow');
-            const nextArrow = document.querySelector('.next-arrow');
-            const sliderContainer = document.querySelector('.hero-slider');
-            
-            // State variables
-            let currentSlide = 0;
-            let slideInterval = null;
-            let isTransitioning = false;
-            
-            // Early return if no slider elements found
-            if (!slides.length || !sliderContainer) {
-                console.log('Slider: No slides found, skipping initialization');
-                return;
+            if (document.querySelector('.instagram-embed-slide')) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = "//www.instagram.com/embed.js";
+                document.head.appendChild(script);
             }
-            
-            console.log('Slider: Initialized with ' + slides.length + ' slides');
-            
-            // Function to safely change slides
-            function showSlide(index, skipTransition = false) {
-                // Prevent rapid consecutive transitions
-                if (isTransitioning && !skipTransition) {
-                    console.log('Slider: Transition in progress, skipping');
-                    return;
-                }
-                
-                // Validate index
-                if (index < 0 || index >= slides.length) {
-                    console.error('Slider: Invalid slide index ' + index);
-                    return;
-                }
-                
-                // Set transition flag
-                if (!skipTransition) {
-                    isTransitioning = true;
-                }
-                
-                const previousSlide = currentSlide;
-                currentSlide = index;
-                
-                console.log('Slider: Transitioning from slide ' + previousSlide + ' to ' + currentSlide);
-                
-                // Update slides
-                slides.forEach((slide, idx) => {
-                    const isActive = idx === currentSlide;
-                    
-                    if (isActive) {
-                        slide.classList.add('active');
-                    } else {
-                        slide.classList.remove('active');
-                    }
-                });
-                
-                // Update dots if they exist
-                if (dots.length) {
-                    dots.forEach((dot, idx) => {
-                        const isActive = idx === currentSlide;
-                        
-                        if (isActive) {
-                            dot.classList.add('active');
-                        } else {
-                            dot.classList.remove('active');
-                        }
-                    });
-                }
-                
-                // Clear transition flag after animation completes
-                if (!skipTransition) {
-                    setTimeout(() => {
-                        isTransitioning = false;
-                    }, TRANSITION_DURATION);
-                }
-            }
-            
-            // Navigation functions
-            function nextSlide() {
-                const newIndex = (currentSlide + 1) % slides.length;
-                showSlide(newIndex);
-            }
-            
-            function prevSlide() {
-                const newIndex = (currentSlide - 1 + slides.length) % slides.length;
-                showSlide(newIndex);
-            }
-            
-            function goToSlide(index) {
-                if (index >= 0 && index < slides.length && index !== currentSlide) {
-                    showSlide(index);
-                }
-            }
-            
-            // Interval management
-            function startSlideInterval() {
-                // Clear any existing interval
-                if (slideInterval) {
-                    clearInterval(slideInterval);
-                }
-                
-                slideInterval = setInterval(() => {
-                    if (!isTransitioning) {
-                        nextSlide();
-                    }
-                }, SLIDE_DURATION);
-                
-                console.log('Slider: Auto-advance started');
-            }
-            
-            function stopSlideInterval() {
-                if (slideInterval) {
-                    clearInterval(slideInterval);
-                    slideInterval = null;
-                    console.log('Slider: Auto-advance stopped');
-                }
-            }
-            
-            function resetSlideInterval() {
-                stopSlideInterval();
-                startSlideInterval();
-            }
-            
-            // Event listeners with null checks
-            if (prevArrow) {
-                prevArrow.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    prevSlide();
-                    resetSlideInterval();
-                });
-            }
-            
-            if (nextArrow) {
-                nextArrow.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    nextSlide();
-                    resetSlideInterval();
-                });
-            }
-            
-            if (dots.length) {
-                dots.forEach((dot, index) => {
-                    dot.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const slideIndex = parseInt(this.dataset.slide);
-                        if (!isNaN(slideIndex)) {
-                            goToSlide(slideIndex);
-                            resetSlideInterval();
-                        }
-                    });
-                });
-            }
-            
-            // Pause on hover
-            if (sliderContainer) {
-                sliderContainer.addEventListener('mouseenter', stopSlideInterval);
-                sliderContainer.addEventListener('mouseleave', startSlideInterval);
-                
-                // Handle focus events for accessibility
-                sliderContainer.addEventListener('focusin', stopSlideInterval);
-                sliderContainer.addEventListener('focusout', startSlideInterval);
-            }
-            
-            // Handle visibility change (pause when tab is not active)
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    stopSlideInterval();
-                } else {
-                    startSlideInterval();
-                }
-            });
-            
-            // Initialize slider
-            console.log('Slider: Setting initial state');
-            showSlide(0, true); // Initialize without transition
-            
-            // Start auto-advance only if we have multiple slides
-            if (slides.length > 1) {
-                startSlideInterval();
-            }
-            
-            // Cleanup on page unload
-            window.addEventListener('beforeunload', function() {
-                stopSlideInterval();
-            });
         });
     </script>
+    
+    <!-- Script optimizado del slider -->
+    <script defer src="{{ url_for('static', filename='js/slider.js') }}"></script>
     
     <!-- Scripts para scroll suave -->
     <script>
@@ -555,9 +377,10 @@
         });
     </script>
     
-    <!-- Función para ocultar panel de confirmación -->
+    <!-- Función para ocultar panel de confirmación - Movido a booking.js -->
     <script>
-        function hideConfirmationPanel() {
+        // Definimos la función de forma global para mantener compatibilidad
+        window.hideConfirmationPanel = function() {
             const bookingConfirmation = document.getElementById('booking-confirmation');
             if (bookingConfirmation) {
                 bookingConfirmation.style.display = 'none';
