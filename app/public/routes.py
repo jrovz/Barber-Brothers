@@ -128,8 +128,21 @@ def sitemap():
         current_app.logger.error(f"Error al generar sitemap.xml: {str(e)}")
         return Response("Error generating sitemap", status=500)
 
+# Redirecciones 301 para canonicalización SEO
+@bp.route('/index')
+@bp.route('/index.html')
+@bp.route('/home')
+@bp.route('/inicio')
+def redirect_to_home():
+    """Redirecciona variantes de URL a la página home canónica"""
+    return redirect(url_for('public.home'), code=301)
+
 @bp.route('/')
 def home():
+    # Verificar canonicalización - redireccionar si hay trailing slash
+    if request.path != '/' and request.path.endswith('/'):
+        return redirect(url_for('public.home'), code=301)
+    
     # Inicializar todas las variables al principio para evitar errores
     featured_products = []
     barberos = []
@@ -294,8 +307,22 @@ Disallow: /logs/
 Disallow: /migrations/
 Disallow: /venv/
 
-# Sitemap
-Sitemap: {request.url_root}sitemap.xml
+# Bloquear variantes de URL para evitar contenido duplicado
+Disallow: /index
+Disallow: /index.html
+Disallow: /home
+Disallow: /inicio
+Disallow: /service
+Disallow: /services
+Disallow: /servicio
+Disallow: /product
+Disallow: /products
+Disallow: /producto
+Disallow: /tienda
+Disallow: /shop
+
+# Sitemap - URL canónica
+Sitemap: {request.url_root.rstrip('/')}/sitemap.xml
 
 # Información de rastreo
 Crawl-delay: 1"""
@@ -315,28 +342,28 @@ def sitemap_xml():
         from app.models.producto import Producto
         from app.models.categoria import Categoria
         
-        # URLs estáticas principales
+        # URLs estáticas principales - OPTIMIZADAS para canonicalización
         static_urls = [
             {
-                'loc': url_for('public.home', _external=True),
+                'loc': url_for('public.home', _external=True).rstrip('/'),
                 'changefreq': 'daily',
                 'priority': '1.0',
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
             },
             {
-                'loc': url_for('public.servicios', _external=True),
+                'loc': url_for('public.servicios', _external=True).rstrip('/'),
                 'changefreq': 'weekly',
                 'priority': '0.9',
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
             },
             {
-                'loc': url_for('public.productos', _external=True),
+                'loc': url_for('public.productos', _external=True).rstrip('/'),
                 'changefreq': 'weekly',
                 'priority': '0.8',
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
             },
             {
-                'loc': url_for('public.contact', _external=True),
+                'loc': url_for('public.contact', _external=True).rstrip('/'),
                 'changefreq': 'monthly',
                 'priority': '0.7',
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
@@ -453,9 +480,23 @@ def contact():
         return 'Formulario enviado correctamente', 201
     return render_template("contacto.html")
 
+# Redirecciones para productos
+@bp.route('/product')
+@bp.route('/products')
+@bp.route('/producto')
+@bp.route('/tienda')
+@bp.route('/shop')
+def redirect_to_productos():
+    """Redirecciona variantes de URL a la página productos canónica"""
+    return redirect(url_for('public.productos'), code=301)
+
 @bp.route('/productos')
 def productos():
     """Página de productos agrupados por categoría."""
+    
+    # Verificar canonicalización - redireccionar si hay trailing slash
+    if request.path.endswith('/'):
+        return redirect(url_for('public.productos'), code=301)
     
     categorias_con_productos = [] # Nueva estructura para pasar a la plantilla
 
@@ -591,8 +632,20 @@ def confirmacion_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     return render_template('public/confirmacion_pedido.html', pedido=pedido)
 
+# Redirecciones para servicios
+@bp.route('/service')
+@bp.route('/services')
+@bp.route('/servicio')
+def redirect_to_servicios():
+    """Redirecciona variantes de URL a la página servicios canónica"""
+    return redirect(url_for('public.servicios'), code=301)
+
 @bp.route('/servicios')
 def servicios():
+    # Verificar canonicalización - redireccionar si hay trailing slash
+    if request.path.endswith('/'):
+        return redirect(url_for('public.servicios'), code=301)
+    
     try:
         # Inicializar servicios con una lista vacía por si acaso falla
         servicios_activos = []

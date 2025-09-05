@@ -269,29 +269,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const input = document.querySelector(selector);
                 if (input && !input.value) {
                     input.value = value;
+                    // Auto-completado silencioso - sin notificación visual
                     input.style.backgroundColor = '#f0f8ff';
                     input.style.borderColor = '#4CAF50';
                     
-                    // Tooltip de auto-completado
-                    const tooltip = document.createElement('div');
-                    tooltip.textContent = '✓ Auto-completado';
-                    tooltip.style.cssText = `
-                        position: absolute; background: #4CAF50; color: white; 
-                        padding: 4px 8px; border-radius: 4px; font-size: 11px; 
-                        z-index: 1000; opacity: 0; transition: opacity 0.3s;
-                        pointer-events: none;
-                    `;
-                    document.body.appendChild(tooltip);
-                    
-                    const rect = input.getBoundingClientRect();
-                    tooltip.style.left = rect.right + 10 + 'px';
-                    tooltip.style.top = rect.top + 'px';
-                    
-                    setTimeout(() => tooltip.style.opacity = '1', 100);
+                    // Remover estilos después de un breve momento
                     setTimeout(() => {
-                        tooltip.style.opacity = '0';
-                        setTimeout(() => document.body.removeChild(tooltip), 300);
-                    }, 2000);
+                        input.style.backgroundColor = '';
+                        input.style.borderColor = '';
+                    }, 1000);
                     
                     break;
                 }
