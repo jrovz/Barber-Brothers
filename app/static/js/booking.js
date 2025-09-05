@@ -200,7 +200,8 @@ document.addEventListener('DOMContentLoaded', function() {
         isLoading: false,
         lastRequestTime: 0,
         cache: new Map(),
-        retryCount: 0
+        retryCount: 0,
+        bookingCompleted: false  // Flag para indicar si el booking se completó exitosamente
     };
 
     // ==================== UTILIDADES ====================
@@ -672,6 +673,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Resetear selecciones dependientes
                 appState.selectedDate = null;
                 appState.selectedTime = null;
+                appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
             document.querySelectorAll('.date-option.selected').forEach(el => el.classList.remove('selected'));
             
                 // Invalidar cache relacionado
@@ -698,6 +700,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Resetear selecciones dependientes
                 appState.selectedDate = null;
                 appState.selectedTime = null;
+                appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
             document.querySelectorAll('.date-option.selected').forEach(el => el.classList.remove('selected'));
             
                 // Invalidar cache relacionado
@@ -853,6 +856,21 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
+        // Marcar booking como completado para detener validaciones
+        appState.bookingCompleted = true;
+        
+        // Detener validación en tiempo real
+        if (validationInterval) {
+            clearInterval(validationInterval);
+            validationInterval = null;
+        }
+        
+        // Limpiar estado de selección para evitar validaciones futuras
+        appState.selectedBarberoId = null;
+        appState.selectedServicioId = null;
+        appState.selectedDate = null;
+        appState.selectedTime = null;
+        
         utils.showError('¡Cita solicitada exitosamente! Revisa tu correo para confirmar.', 'success');
         
         // Limpiar cache para refrescar horarios
@@ -889,6 +907,9 @@ document.addEventListener('DOMContentLoaded', function() {
         [elements.clientNameInput, elements.clientEmailInput, elements.clientPhoneInput].forEach(input => {
             if (input) input.value = '';
         });
+        
+        // Resetear flag de booking completado para permitir nuevas validaciones
+        appState.bookingCompleted = false;
     };
 
     // Función global para reintentar desde botones de error
@@ -901,6 +922,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         validationInterval = setInterval(() => {
+            // Verificar si el booking ya se completó exitosamente
+            if (appState.bookingCompleted) {
+                clearInterval(validationInterval);
+                validationInterval = null;
+                return;
+            }
+            
             if (appState.selectedTime && appState.selectedDate && appState.selectedBarberoId && appState.selectedServicioId) {
                 validateSlotAvailability(
                     appState.selectedBarberoId, 
