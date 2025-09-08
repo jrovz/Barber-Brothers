@@ -17,7 +17,7 @@
     <meta name="ICBM" content="5.7619, -73.0515">
     
     <!-- Canonical URL - CRÍTICO para SEO -->
-    <link rel="canonical" href="{% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ request.path }}{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{% endblock %}">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% block og_type %}business.business{% endblock %}">

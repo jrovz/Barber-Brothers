@@ -108,29 +108,10 @@ def cookies():
     """Renderiza la página de política de cookies."""
     return render_template('public/cookies.html', now=datetime.utcnow())
 
-@bp.route('/sitemap.xml')
-def sitemap():
-    """Genera y sirve el sitemap.xml"""
-    try:
-        from app.utils.sitemap_generator import SitemapGenerator
-        
-        # Generar el contenido XML del sitemap
-        sitemap_xml = SitemapGenerator.generate_sitemap()
-        
-        # Crear respuesta con el tipo de contenido correcto
-        response = Response(sitemap_xml, mimetype='application/xml')
-        
-        # Registrar en logs la generación exitosa
-        current_app.logger.info("Sitemap.xml generado exitosamente")
-        
-        return response
-    except Exception as e:
-        current_app.logger.error(f"Error al generar sitemap.xml: {str(e)}")
-        return Response("Error generating sitemap", status=500)
+# Sitemap duplicado eliminado - usando sitemap_xml() en su lugar
 
-# Redirecciones 301 para canonicalización SEO
+# Redirecciones 301 para canonicalización SEO - Simplificadas
 @bp.route('/index')
-@bp.route('/index.html')
 @bp.route('/home')
 @bp.route('/inicio')
 def redirect_to_home():
@@ -321,7 +302,7 @@ Disallow: /producto
 Disallow: /tienda
 Disallow: /shop
 
-# Sitemap - URL canónica
+# Sitemap - URL canónica (usando sitemap_xml)
 Sitemap: {request.url_root.rstrip('/')}/sitemap.xml
 
 # Información de rastreo
@@ -338,9 +319,6 @@ def sitemap_xml():
     try:
         from flask import Response
         from datetime import datetime
-        from app.models.servicio import Servicio
-        from app.models.producto import Producto
-        from app.models.categoria import Categoria
         
         # URLs estáticas principales - OPTIMIZADAS para canonicalización
         static_urls = [
@@ -370,35 +348,47 @@ def sitemap_xml():
             }
         ]
 
-        # URLs dinámicas de servicios
-        servicios = Servicio.query.filter_by(activo=True).all()
-        for servicio in servicios:
-            static_urls.append({
-                'loc': url_for('public.servicios', _external=True) + f'#servicio-{servicio.id}',
-                'changefreq': 'monthly',
-                'priority': '0.6',
-                'lastmod': servicio.fecha_actualizacion.strftime('%Y-%m-%d') if servicio.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
-            })
+        # URLs dinámicas de servicios (con manejo de errores)
+        try:
+            from app.models.servicio import Servicio
+            servicios = Servicio.query.filter_by(activo=True).all()
+            for servicio in servicios:
+                static_urls.append({
+                    'loc': url_for('public.servicios', _external=True) + f'#servicio-{servicio.id}',
+                    'changefreq': 'monthly',
+                    'priority': '0.6',
+                    'lastmod': servicio.fecha_actualizacion.strftime('%Y-%m-%d') if hasattr(servicio, 'fecha_actualizacion') and servicio.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
+                })
+        except Exception as e:
+            current_app.logger.warning(f"No se pudieron cargar servicios para sitemap: {e}")
 
-        # URLs dinámicas de productos
-        productos = Producto.query.filter_by(activo=True).all()
-        for producto in productos:
-            static_urls.append({
-                'loc': url_for('public.productos', _external=True) + f'#producto-{producto.id}',
-                'changefreq': 'monthly',
-                'priority': '0.5',
-                'lastmod': producto.fecha_actualizacion.strftime('%Y-%m-%d') if hasattr(producto, 'fecha_actualizacion') and producto.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
-            })
+        # URLs dinámicas de productos (con manejo de errores)
+        try:
+            from app.models.producto import Producto
+            productos = Producto.query.filter_by(activo=True).all()
+            for producto in productos:
+                static_urls.append({
+                    'loc': url_for('public.productos', _external=True) + f'#producto-{producto.id}',
+                    'changefreq': 'monthly',
+                    'priority': '0.5',
+                    'lastmod': producto.fecha_actualizacion.strftime('%Y-%m-%d') if hasattr(producto, 'fecha_actualizacion') and producto.fecha_actualizacion else datetime.now().strftime('%Y-%m-%d')
+                })
+        except Exception as e:
+            current_app.logger.warning(f"No se pudieron cargar productos para sitemap: {e}")
 
-        # URLs dinámicas de categorías
-        categorias = Categoria.query.filter_by(activo=True).all()
-        for categoria in categorias:
-            static_urls.append({
-                'loc': url_for('public.productos', _external=True) + f'#categoria-{categoria.id}',
-                'changefreq': 'monthly',
-                'priority': '0.4',
-                'lastmod': datetime.now().strftime('%Y-%m-%d')
-            })
+        # URLs dinámicas de categorías (con manejo de errores)
+        try:
+            from app.models.categoria import Categoria
+            categorias = Categoria.query.filter_by(activo=True).all()
+            for categoria in categorias:
+                static_urls.append({
+                    'loc': url_for('public.productos', _external=True) + f'#categoria-{categoria.id}',
+                    'changefreq': 'monthly',
+                    'priority': '0.4',
+                    'lastmod': datetime.now().strftime('%Y-%m-%d')
+                })
+        except Exception as e:
+            current_app.logger.warning(f"No se pudieron cargar categorías para sitemap: {e}")
 
         # Construir XML del sitemap
         sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -418,7 +408,33 @@ def sitemap_xml():
         
     except Exception as e:
         current_app.logger.error(f"Error al generar sitemap.xml: {e}")
-        return ('Error', 500)
+        # Fallback: sitemap básico solo con URLs estáticas
+        try:
+            basic_sitemap = '''<?xml version="1.0" encoding="UTF-8"?>
+                                    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+                                    <url>
+                                        <loc>''' + url_for('public.home', _external=True).rstrip('/') + '''</loc>
+                                        <changefreq>daily</changefreq>
+                                        <priority>1.0</priority>
+                                        <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
+                                    </url>
+                                    <url>
+                                        <loc>''' + url_for('public.servicios', _external=True).rstrip('/') + '''</loc>
+                                        <changefreq>weekly</changefreq>
+                                        <priority>0.9</priority>
+                                        <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
+                                    </url>
+                                    <url>
+                                        <loc>''' + url_for('public.productos', _external=True).rstrip('/') + '''</loc>
+                                        <changefreq>weekly</changefreq>
+                                        <priority>0.8</priority>
+                                        <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
+                                    </url>
+                                    </urlset>'''
+            return Response(basic_sitemap, mimetype='application/xml')
+        except Exception as e2:
+            current_app.logger.error(f"Error en sitemap fallback: {e2}")
+            return Response("Error generating sitemap", status=500)
 
 @bp.route('/sitemap-index.xml')
 def sitemap_index():
@@ -440,6 +456,19 @@ def sitemap_index():
     except Exception as e:
         current_app.logger.error(f"Error al generar sitemap index: {e}")
         return ('Error', 500)
+
+@bp.route('/favicon.ico')
+def favicon():
+    """Sirve el archivo favicon.ico desde la carpeta static."""
+    try:
+        return send_from_directory(current_app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
+    except Exception as e:
+        current_app.logger.error(f"Error al servir favicon: {e}")
+        # Fallback: intentar con favicon.ico si existe
+        try:
+            return send_from_directory(current_app.static_folder, 'favicon.ico', mimetype='image/x-icon')
+        except:
+            return ('Favicon not found', 404)
 
 @bp.route('/google17b126f9a1dae6ef.html')
 def google_verification():
@@ -480,12 +509,11 @@ def contact():
         return 'Formulario enviado correctamente', 201
     return render_template("contacto.html")
 
-# Redirecciones para productos
+# Redirecciones para productos - Simplificadas
 @bp.route('/product')
 @bp.route('/products')
 @bp.route('/producto')
 @bp.route('/tienda')
-@bp.route('/shop')
 def redirect_to_productos():
     """Redirecciona variantes de URL a la página productos canónica"""
     return redirect(url_for('public.productos'), code=301)
@@ -632,10 +660,9 @@ def confirmacion_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     return render_template('public/confirmacion_pedido.html', pedido=pedido)
 
-# Redirecciones para servicios
+# Redirecciones para servicios - Simplificadas
 @bp.route('/service')
 @bp.route('/services')
-@bp.route('/servicio')
 def redirect_to_servicios():
     """Redirecciona variantes de URL a la página servicios canónica"""
     return redirect(url_for('public.servicios'), code=301)
