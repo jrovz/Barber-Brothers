@@ -182,7 +182,7 @@ def home():
         
         # Generar fechas para el calendario
         hoy = datetime.now().date()
-        fechas_disponibles = [hoy + timedelta(days=i) for i in range(14)]
+        fechas_disponibles = [hoy + timedelta(days=i) for i in range(60)]
         
     except Exception as e:
         print(f"Error in home(): {str(e)}")

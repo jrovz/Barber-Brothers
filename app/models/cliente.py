@@ -94,7 +94,7 @@ class Cita(db.Model):
     
     @staticmethod
     def limpiar_citas_expiradas():
-        """Marca como expiradas las citas pendientes de confirmación que han pasado 1 hora"""
+        """Registra citas que han expirado pero NO las marca como expiradas para mantener horarios cerrados"""
         from datetime import datetime, timedelta
         from app import db
         
@@ -105,14 +105,14 @@ class Cita(db.Model):
             Cita.creado < limite_expiracion
         ).all()
         
+        # Solo registrar en logs, NO cambiar estado
         for cita in citas_expiradas:
-            cita.estado = 'expirada'
-            current_app.logger.info(f"Cita ID {cita.id} marcada como expirada - "
-                                   f"Cliente: {cita.cliente.email}, Fecha cita: {cita.fecha}")
+            current_app.logger.info(f"Cita ID {cita.id} ha expirado pero mantiene horario ocupado - "
+                                f"Cliente: {cita.cliente.email}, Fecha cita: {cita.fecha}")
         
         if citas_expiradas:
-            db.session.commit()
-            current_app.logger.info(f"Se marcaron {len(citas_expiradas)} citas como expiradas")
+            # NO hacer commit - no hay cambios que guardar
+            current_app.logger.info(f"Se detectaron {len(citas_expiradas)} citas expiradas (horarios mantenidos cerrados)")
         
         return len(citas_expiradas)
 
