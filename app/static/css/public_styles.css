@@ -950,6 +950,14 @@ footer p {
 }
 
 /* Estilos para Slides de Instagram */
+.hero-slider.initial .product-highlight,
+.hero-slider.initial .product-highlight h2 {
+    /* LCP: forzar pintado inmediato del título en el primer render */
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
 .hero-slider .slide.instagram-embed-slide {
     background-color: #181818 !important;
     padding: 30px !important;

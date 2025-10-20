@@ -55,6 +55,14 @@
         
         // Manejar cambios de visibilidad
         handleVisibilityChanges();
+
+        // LCP: eliminar la clase 'initial' tras el primer frame para permitir animaciones posteriores
+        requestAnimationFrame(() => {
+            const hero = document.querySelector('.hero-slider.initial');
+            if (hero) {
+                hero.classList.remove('initial');
+            }
+        });
     }
     
     // Inicializar lazy loading para imágenes de fondo

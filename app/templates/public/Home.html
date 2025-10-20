@@ -109,7 +109,7 @@
 {% endblock %}
 
 {% block content %}
-    <section class="hero-slider">
+    <section class="hero-slider initial">
         <div class="slider-container">
             {% if sliders %}
                 {% for slider in sliders %}
@@ -186,8 +186,7 @@
     <!-- Contenido personalizado basado en cookies -->
     <!--{{ personalized_welcome(personalization) }}-->
     
-    <!-- Productos recomendados para usuarios recurrentes -->
-    {{ recommended_products(productos_recomendados) }}
+    
     
     <section class="availability booking-section" id="booking-section">
         <h2>Agenda tu Cita</h2>
