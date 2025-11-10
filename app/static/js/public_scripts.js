@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function calculateTotal() {
         if (cartTotal) { // Verificar si el elemento existe
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cartTotal.textContent = `€${total.toFixed(2)}`;
+            cartTotal.textContent = `COP ${total.toFixed(2)}`;
         }
     }
     
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <img src="${item.image || '/static/placeholder.png'}" alt="${item.name}" class="cart-item-img">
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">€${item.price.toFixed(2)}</div>
+                        <div class="cart-item-price">COP ${item.price.toFixed(2)}</div>
                         <div class="cart-item-quantity">
                             <button class="quantity-btn decrease" aria-label="Disminuir cantidad">-</button>
                             <input type="text" class="quantity-input" value="${item.quantity}" readonly aria-label="Cantidad">
