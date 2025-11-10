@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             cartItems.innerHTML = cart.map(item => `
                 <div class="cart-item" data-id="${item.id}">
-                    <img src="${item.image || '/static/placeholder.png'}" alt="${item.name}" class="cart-item-img"> {/* Añadir placeholder si no hay imagen */}
+                    <img src="${item.image || '/static/placeholder.png'}" alt="${item.name}" class="cart-item-img">
                     <div class="cart-item-details">
                         <div class="cart-item-name">${item.name}</div>
                         <div class="cart-item-price">€${item.price.toFixed(2)}</div>

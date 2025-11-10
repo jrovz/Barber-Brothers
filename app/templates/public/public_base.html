@@ -140,7 +140,7 @@
     <footer>
         <div class="footer-content">
             <div class="footer-info">
-                <p>Barber Brothers &copy; 2025</p>
+                <p>BarberPRo &copy; 2025</p>
                 <p>Manzana A casa N•5 Arkambuco | Tel: 3102160496</p>
             </div>
             <div class="footer-links">
@@ -152,7 +152,7 @@
     </footer>
 
     <!-- Botón flotante de WhatsApp -->
-    <a href="https://wa.me/573102160496" class="whatsapp-float" target="_blank">
+    <a href="https://wa.me/573143782855" class="whatsapp-float" target="_blank">
         <i class="whatsapp-icon">💬</i>
     </a>
 
@@ -177,6 +177,7 @@
     <div class="cart-overlay" id="cart-overlay"></div>
 
     <!-- Scripts Comunes con carga diferida -->
+    <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
     <script>
     // Función para cargar scripts de forma diferida
     function loadScript(src, callback) {
@@ -197,9 +198,9 @@
     menuScript.src = '{{ url_for("static", filename="js/menu.js") }}?v=' + new Date().getTime();
     menuScript.onload = function() {
         console.log('Menu.js cargado exitosamente');
-        // Cargar cart.js después de que menu.js esté completamente cargado
-        loadScript('{{ url_for("static", filename="js/cart.js") }}', function() {
-            console.log('Cart.js cargado después de menu.js');
+        // Cargar public_scripts.js después de que menu.js esté completamente cargado
+        loadScript('{{ url_for("static", filename="js/public_scripts.js") }}', function() {
+            console.log('public_scripts.js cargado después de menu.js');
         });
     };
     document.head.appendChild(menuScript);
