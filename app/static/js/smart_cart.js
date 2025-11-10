@@ -32,11 +32,7 @@ class SmartCart {
         // Inicializar recomendaciones
         this.initRecommendations();
         
-        // Inicializar incentivos de envío
-        this.initShippingIncentives();
-        
-        // Anti-abandono del carrito
-        this.initAbandonmentPrevention();
+        // Anti-abandono del carrito (eliminado)
     }
 
     enhanceExistingCart() {
@@ -58,7 +54,6 @@ class SmartCart {
             originalUpdateCart();
             this.savePersistentCart();
             this.updateRecommendations();
-            this.checkShippingIncentives();
         };
     }
 
@@ -176,9 +171,6 @@ class SmartCart {
         
         // Actualizar recomendaciones
         this.updateRecommendations();
-        
-        // Verificar incentivos
-        this.checkShippingIncentives();
         
         // Mostrar productos relacionados
         this.showRelatedProducts(productData);
@@ -551,183 +543,6 @@ class SmartCart {
         localStorage.setItem('cart', JSON.stringify(this.cart));
     }
 
-    initShippingIncentives() {
-        this.freeShippingThreshold = 100000; // 100k COP
-        this.checkShippingIncentives();
-    }
-
-    checkShippingIncentives() {
-        const cartTotal = this.cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
-        const remaining = this.freeShippingThreshold - cartTotal;
-        
-        if (remaining > 0 && cartTotal > 0) {
-            this.showShippingIncentive(remaining, cartTotal);
-        } else if (cartTotal >= this.freeShippingThreshold) {
-            this.showFreeShippingAchieved();
-        }
-    }
-
-    showShippingIncentive(remaining, current) {
-        // Remover incentivo anterior
-        const existingIncentive = document.querySelector('.shipping-incentive');
-        if (existingIncentive) existingIncentive.remove();
-        
-        const progress = (current / this.freeShippingThreshold) * 100;
-        
-        const incentive = document.createElement('div');
-        incentive.className = 'shipping-incentive';
-        incentive.innerHTML = `
-            <div style="background: linear-gradient(135deg, #FF9A8B, #A8E6CF); 
-                        color: white; padding: 15px; margin: 15px; border-radius: 10px;
-                        text-align: center; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; height: 100%; 
-                           background: rgba(255,255,255,0.2); width: ${progress}%; 
-                           transition: width 0.5s ease;"></div>
-                <div style="position: relative; z-index: 1;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 1.1em;">🚚 ¡Envío GRATIS te espera!</h4>
-                    <p style="margin: 0; font-size: 0.9em;">
-                        Añade $${remaining.toLocaleString()} COP más y obtén envío gratuito
-                    </p>
-                    <div style="background: rgba(255,255,255,0.3); height: 4px; 
-                               border-radius: 2px; margin: 10px 20px 0 20px;">
-                        <div style="background: white; height: 100%; width: ${progress}%; 
-                                   border-radius: 2px; transition: width 0.5s ease;"></div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Insertarlo antes del carrito o en la parte superior
-        const cartSection = document.querySelector('.cart-section, .checkout-section') || document.body;
-        cartSection.insertBefore(incentive, cartSection.firstChild);
-    }
-
-    showFreeShippingAchieved() {
-        const celebration = document.createElement('div');
-        celebration.className = 'free-shipping-achieved';
-        celebration.innerHTML = `
-            <div style="background: linear-gradient(135deg, #4CAF50, #45a049); 
-                        color: white; padding: 15px; margin: 15px; border-radius: 10px;
-                        text-align: center; animation: celebration 0.5s ease;">
-                <h4 style="margin: 0; font-size: 1.2em;">🎉 ¡Felicitaciones!</h4>
-                <p style="margin: 5px 0 0 0;">Tienes envío GRATIS en tu pedido</p>
-            </div>
-        `;
-        
-        document.body.insertBefore(celebration, document.body.firstChild);
-        
-        // Auto-remove después de 5 segundos
-        setTimeout(() => {
-            if (celebration.parentNode) {
-                celebration.remove();
-            }
-        }, 5000);
-        
-        // Tracking
-        this.trackEvent('free_shipping_achieved');
-    }
-
-    initAbandonmentPrevention() {
-        // Detectar cuando el usuario está a punto de abandonar el carrito
-        let cartInteractionTimer;
-        
-        // Resetear timer en cada interacción con el carrito
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('#cart-panel') || e.target.closest('.cart-related')) {
-                clearTimeout(cartInteractionTimer);
-                cartInteractionTimer = setTimeout(() => {
-                    this.handleCartAbandonment();
-                }, 30000); // 30 segundos sin interacción
-            }
-        });
-        
-        // Detectar cuando el carrito está abierto pero no hay actividad
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.target.id === 'cart-panel' && 
-                    mutation.target.classList.contains('open')) {
-                    cartInteractionTimer = setTimeout(() => {
-                        this.handleCartAbandonment();
-                    }, 30000);
-                }
-            });
-        });
-        
-        const cartPanel = document.getElementById('cart-panel');
-        if (cartPanel) {
-            observer.observe(cartPanel, { attributes: true, attributeFilter: ['class'] });
-        }
-    }
-
-    handleCartAbandonment() {
-        if (this.cart.length === 0) return;
-        
-        const cartValue = this.cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
-        
-        // Solo mostrar para carritos con valor significativo
-        if (cartValue < 30000) return; // Menos de 30k COP
-        
-        this.showCartAbandonmentPopup(cartValue);
-    }
-
-    showCartAbandonmentPopup(cartValue) {
-        const popup = document.createElement('div');
-        popup.className = 'cart-abandonment-popup';
-        popup.innerHTML = `
-            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                        background: rgba(0,0,0,0.7); z-index: 10000; display: flex; 
-                        justify-content: center; align-items: center;">
-                <div style="background: white; padding: 30px; border-radius: 15px; 
-                           max-width: 400px; text-align: center; position: relative;">
-                    <button onclick="this.closest('.cart-abandonment-popup').remove()" 
-                            style="position: absolute; top: 10px; right: 15px; 
-                                   background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
-                    <h3 style="color: #333; margin-bottom: 15px;">🛒 ¡Tu carrito te espera!</h3>
-                    <p style="color: #666; margin-bottom: 20px;">
-                        Tienes $${cartValue.toLocaleString()} COP en productos seleccionados.
-                        ¡No los pierdas!
-                    </p>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <button onclick="smartCart.finishPurchase(); this.closest('.cart-abandonment-popup').remove();"
-                                style="background: #4CAF50; color: white; border: none; 
-                                       padding: 12px 20px; border-radius: 25px; cursor: pointer;">
-                            Finalizar Compra
-                        </button>
-                        <button onclick="smartCart.saveForLater(); this.closest('.cart-abandonment-popup').remove();"
-                                style="background: #2196F3; color: white; border: none; 
-                                       padding: 12px 20px; border-radius: 25px; cursor: pointer;">
-                            Guardar para Después
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(popup);
-        
-        // Tracking
-        this.trackEvent('cart_abandonment_popup_shown', {
-            cart_value: cartValue,
-            items_count: this.cart.length
-        });
-    }
-
-    finishPurchase() {
-        // Redirigir al checkout
-        window.location.href = '/checkout';
-        
-        // Tracking
-        this.trackEvent('cart_abandonment_popup_checkout');
-    }
-
-    saveForLater() {
-        // Guardar carrito y mostrar mensaje
-        this.savePersistentCart();
-        this.showSuccessMessage('Carrito guardado. Te esperamos pronto! 😊');
-        
-        // Tracking
-        this.trackEvent('cart_abandonment_popup_saved');
-    }
 
     // Utility functions
     getConversionData() {

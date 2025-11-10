@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const elements = {
         barberoSelect: document.getElementById('barbero-select'),
         servicioSelect: document.getElementById('servicio-select'),
-        dateOptions: document.querySelectorAll('.date-option'),
+        dateOptionsContainer: document.querySelector('[data-date-options-container]') || document.querySelector('.date-options-container') || null,
         horariosContainer: document.getElementById('horarios-container'),
         bookingConfirmation: document.getElementById('booking-confirmation'),
         confirmButton: document.getElementById('confirm-booking'),
@@ -190,6 +190,25 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedDateInput: document.getElementById('selected-date'),
         selectedTimeInput: document.getElementById('selected-time')
     };
+
+    if (!elements.dateOptionsContainer) {
+        const firstDateOption = document.querySelector('.date-option');
+        if (firstDateOption) {
+            elements.dateOptionsContainer = firstDateOption.parentElement;
+        }
+    }
+
+    const getDateOptions = () => Array.from(
+        elements.dateOptionsContainer
+            ? elements.dateOptionsContainer.querySelectorAll('.date-option')
+            : document.querySelectorAll('.date-option')
+    );
+
+    const getTimeSlotButtons = () => Array.from(
+        elements.horariosContainer
+            ? elements.horariosContainer.querySelectorAll('.time-slot-btn')
+            : []
+    );
 
     // ==================== ESTADO DE LA APLICACIÓN ====================
     const appState = {
@@ -348,9 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
             elements.bookingConfirmation.style.display = 'none';
         }
         
-        elements.dateOptions.forEach(option => {
-            option.classList.add('disabled');
-        });
+        getDateOptions().forEach(option => option.classList.add('disabled'));
 
         if (elements.barberoSelect && elements.barberoSelect.options.length <= 1) {
             console.warn("No hay barberos activos disponibles.");
@@ -495,8 +512,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function createTimeSlotButton(horaString, fecha) {
-                    const slotButton = document.createElement('button');
-                    slotButton.type = 'button';
+        const slotButton = document.createElement('button');
+        slotButton.type = 'button';
         slotButton.className = 'time-slot-btn';
         slotButton.textContent = utils.formatTime12h(horaString);
         slotButton.dataset.hora = horaString;
@@ -505,31 +522,34 @@ document.addEventListener('DOMContentLoaded', function() {
         slotButton.setAttribute('role', 'radio');
         slotButton.setAttribute('aria-checked', 'false');
         slotButton.setAttribute('aria-label', `Horario ${utils.formatTime12h(horaString)}`);
-        
-        // Event listeners optimizados
-        slotButton.addEventListener('click', handleTimeSlotClick);
-        slotButton.addEventListener('keydown', handleTimeSlotKeydown);
-        
+
         return slotButton;
     }
 
-    function handleTimeSlotClick(event) {
-        const button = event.currentTarget;
-        
-        // Deseleccionar otros botones
-                        document.querySelectorAll('.time-slot-btn.selected').forEach(el => {
-                            el.classList.remove('selected');
-            el.setAttribute('aria-checked', 'false');
+    function onTimeSlotClick(event) {
+        const button = event.target.closest('.time-slot-btn');
+        if (!button || (elements.horariosContainer && !elements.horariosContainer.contains(button))) return;
+        event.preventDefault();
+        handleTimeSlotSelection(button);
+    }
+
+    function handleTimeSlotSelection(button) {
+        if (!button || button.classList.contains('disabled')) return;
+
+        getTimeSlotButtons().forEach(el => {
+            if (el !== button && el.classList.contains('selected')) {
+                el.classList.remove('selected');
+                el.setAttribute('aria-checked', 'false');
+            }
         });
-        
-        // Seleccionar botón actual
+
         button.classList.add('selected');
         button.setAttribute('aria-checked', 'true');
-        
+
         appState.selectedTime = button.dataset.hora;
-        
+
         console.log(`Slot seleccionado: ${appState.selectedTime}`);
-        
+
         const barberoName = elements.barberoSelect.options[elements.barberoSelect.selectedIndex].text;
         const servicioName = elements.servicioSelect.options[elements.servicioSelect.selectedIndex].text.split(' - ')[0];
 
@@ -543,27 +563,37 @@ document.addEventListener('DOMContentLoaded', function() {
         );
     }
 
-    function handleTimeSlotKeydown(event) {
-        const buttons = Array.from(document.querySelectorAll('.time-slot-btn'));
-        const currentIndex = buttons.indexOf(event.currentTarget);
-        
+    function onTimeSlotKeydown(event) {
+        const button = event.target.closest('.time-slot-btn');
+        if (!button || (elements.horariosContainer && !elements.horariosContainer.contains(button))) return;
+
+        const buttons = getTimeSlotButtons();
+        const currentIndex = buttons.indexOf(button);
         switch (event.key) {
             case 'ArrowLeft':
             case 'ArrowUp':
                 event.preventDefault();
-                const prevIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
-                buttons[prevIndex].focus();
+                if (buttons.length) {
+                    const prevIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
+                    if (buttons[prevIndex]) {
+                        buttons[prevIndex].focus();
+                    }
+                }
                 break;
             case 'ArrowRight':
             case 'ArrowDown':
                 event.preventDefault();
-                const nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
-                buttons[nextIndex].focus();
+                if (buttons.length) {
+                    const nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
+                    if (buttons[nextIndex]) {
+                        buttons[nextIndex].focus();
+                    }
+                }
                 break;
             case 'Enter':
             case ' ':
                 event.preventDefault();
-                handleTimeSlotClick(event);
+                handleTimeSlotSelection(button);
                 break;
         }
     }
@@ -674,17 +704,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 appState.selectedDate = null;
                 appState.selectedTime = null;
                 appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-            document.querySelectorAll('.date-option.selected').forEach(el => el.classList.remove('selected'));
+            getDateOptions().forEach(el => el.classList.remove('selected'));
             
                 // Invalidar cache relacionado
                 clearRelatedCache();
                 
                                 if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" && 
                     appState.selectedServicioId && appState.selectedServicioId !== "0") {
-                    elements.dateOptions.forEach(option => option.classList.remove('disabled'));
+                    getDateOptions().forEach(option => option.classList.remove('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
             } else {
-                    elements.dateOptions.forEach(option => option.classList.add('disabled'));
+                    getDateOptions().forEach(option => option.classList.add('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
                 }
                 if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
@@ -701,17 +731,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 appState.selectedDate = null;
                 appState.selectedTime = null;
                 appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-            document.querySelectorAll('.date-option.selected').forEach(el => el.classList.remove('selected'));
+            getDateOptions().forEach(el => el.classList.remove('selected'));
             
                 // Invalidar cache relacionado
                 clearRelatedCache();
                 
                 if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" && 
                     appState.selectedServicioId && appState.selectedServicioId !== "0") {
-                    elements.dateOptions.forEach(option => option.classList.remove('disabled'));
+                    getDateOptions().forEach(option => option.classList.remove('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
             } else {
-                    elements.dateOptions.forEach(option => option.classList.add('disabled'));
+                    getDateOptions().forEach(option => option.classList.add('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
             }
                 if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
@@ -719,29 +749,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
         // Date options
-        console.log(`Configurando ${elements.dateOptions.length} opciones de fecha`);
-        elements.dateOptions.forEach((option, index) => {
-        option.addEventListener('click', function() {
-                console.log(`Click en fecha ${index}, disabled: ${this.classList.contains('disabled')}`);
-            if (this.classList.contains('disabled')) return;
-            
-            document.querySelectorAll('.date-option.selected').forEach(el => el.classList.remove('selected'));
-            this.classList.add('selected');
-                appState.selectedDate = this.dataset.fecha;
-                console.log(`Fecha seleccionada: ${appState.selectedDate}`);
-                appState.selectedTime = null;
-                
-                console.log('Llamando a loadAvailableTimes...');
-                loadAvailableTimes();
-                
-                if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
-            });
-        });
+        const dateOptionsCount = getDateOptions().length;
+        console.log(`Configurando ${dateOptionsCount} opciones de fecha`);
+        if (elements.dateOptionsContainer) {
+            elements.dateOptionsContainer.addEventListener('click', onDateOptionClick);
+        } else {
+            document.addEventListener('click', onDateOptionClick);
+        }
+
+        if (elements.horariosContainer) {
+            elements.horariosContainer.addEventListener('click', onTimeSlotClick);
+            elements.horariosContainer.addEventListener('keydown', onTimeSlotKeydown);
+        }
 
         // Confirm booking button
         if (elements.confirmButton) {
             elements.confirmButton.addEventListener('click', handleBookingConfirmation);
         }
+    }
+
+    function onDateOptionClick(event) {
+        const option = event.target.closest('.date-option');
+        if (!option) return;
+        if (elements.dateOptionsContainer && !elements.dateOptionsContainer.contains(option)) return;
+
+        const options = getDateOptions();
+        const index = options.indexOf(option);
+        const isDisabled = option.classList.contains('disabled');
+        console.log(`Click en fecha ${index}, disabled: ${isDisabled}`);
+        if (isDisabled) return;
+
+        options.forEach(el => el.classList.remove('selected'));
+        option.classList.add('selected');
+
+        appState.selectedDate = option.dataset.fecha;
+        console.log(`Fecha seleccionada: ${appState.selectedDate}`);
+        appState.selectedTime = null;
+
+        console.log('Llamando a loadAvailableTimes...');
+        loadAvailableTimes();
+
+        if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
     }
 
     function clearRelatedCache() {
