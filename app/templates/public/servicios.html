@@ -18,7 +18,7 @@
                 {% if servicios %}
                     <!-- Loop through the services passed from the route -->
                     {% for servicio in servicios %}
-                    <div class="service-item" data-service-id="{{ servicio.id }}" onclick="openServiceModal({{ servicio.id }})">
+                    <div class="service-item" data-service-id="{{ servicio.id }}">
                         <!-- Imagen del servicio -->
                         {% set imagen_principal = servicio.get_imagen_principal() %}
                         {% if imagen_principal %}
