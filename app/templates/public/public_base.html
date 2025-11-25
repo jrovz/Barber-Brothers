@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Barbería Barber Brothers - Cortes y Afeitados Profesionales en Arkambuco{% endblock %}</title>
-    
+    <title>{% block title %}Barbería Barber Brothers - Cortes y Afeitados Profesionales en Arkambuco{% endblock %}
+    </title>
+
     <!-- Meta Tags SEO -->
-    <meta name="description" content="{% block meta_description %}Barbería profesional Barber Brothers en Arkambuco. Cortes de cabello, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Más de 7 años de experiencia!{% endblock %}">
-    <meta name="keywords" content="{% block meta_keywords %}barbería Arkambuco, corte de cabello hombre, afeitado clásico, barber shop, barbero profesional, arreglo barba, citas online barbería{% endblock %}">
+    <meta name="description"
+        content="{% block meta_description %}Barbería profesional Barber Brothers en Arkambuco. Cortes de cabello, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Más de 7 años de experiencia!{% endblock %}">
+    <meta name="keywords"
+        content="{% block meta_keywords %}barbería Arkambuco, corte de cabello hombre, afeitado clásico, barber shop, barbero profesional, arreglo barba, citas online barbería{% endblock %}">
     <meta name="author" content="Barber Brothers">
     <meta name="robots" content="index, follow">
     <meta name="language" content="es">
@@ -15,26 +19,27 @@
     <meta name="geo.placename" content="Arkambuco, Boyacá, Colombia">
     <meta name="geo.position" content="5.7619;-73.0515">
     <meta name="ICBM" content="5.7619, -73.0515">
-    
+
     <!-- Canonical URL - CRÍTICO para SEO -->
     <link rel="canonical" href="{% block canonical_url %}{% endblock %}">
-    
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% block og_type %}business.business{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
+    <meta property="og:image"
+        content="{% block og_image %}{{ url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
     <meta property="og:site_name" content="Barber Brothers">
     <meta property="og:locale" content="es_CO">
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="{{ request.url }}">
     <meta property="twitter:title" content="{{ self.og_title() }}">
     <meta property="twitter:description" content="{{ self.og_description() }}">
     <meta property="twitter:image" content="{{ self.og_image() }}">
-    
+
     <!-- Business Information -->
     <meta name="business:contact_data:street_address" content="Manzana A casa N•5">
     <meta name="business:contact_data:locality" content="Arkambuco">
@@ -42,35 +47,36 @@
     <meta name="business:contact_data:postal_code" content="">
     <meta name="business:contact_data:country_name" content="Colombia">
     <meta name="business:contact_data:phone_number" content="+573102160496">
-    
+
     <!-- Favicon optimizado -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
-    
+
     <!-- DNS Prefetch para recursos externos -->
-    <link rel="dns-prefetch" href="//fonts.googleapis.com">
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="dns-prefetch" href="//www.instagram.com">
     <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
     <link rel="dns-prefetch" href="//www.clarity.ms">
-    
-    <!-- Preconnect para fuentes críticas -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Fuentes optimizadas con display=swap -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    
+
+    <!-- Fuentes locales con preload para mejor rendimiento -->
+    <link rel="preload" href="{{ url_for('static', filename='fonts/0QIvMX1D_JOuMwr7Iw.woff2') }}" as="font"
+        type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ url_for('static', filename='fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2') }}"
+        as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+
     <!-- Preload CSS crítico -->
-    <link rel="preload" href="{{ url_for('static', filename='css/public_styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}"></noscript>
+    <link rel="preload" href="{{ url_for('static', filename='css/public_styles.css') }}" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+    </noscript>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/footer_styles.css') }}">
-    
+
     <!-- CSS optimizado para booking (solo en páginas que lo necesiten) -->
     {% if request.endpoint == 'public.home' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
     {% endif %}
-    
+
     <!-- Preload imágenes críticas solo en home -->
     {% if request.endpoint == 'public.home' %}
     <link rel="preload" href="{{ url_for('static', filename='logo.png') }}" as="image">
@@ -78,8 +84,9 @@
     {% endif %}
     {% block extra_head %}{% endblock %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5383695411527556"
-     crossorigin="anonymous"></script>
+        crossorigin="anonymous"></script>
 </head>
+
 <body>
     <!-- Header Común -->
     <header>
@@ -95,9 +102,9 @@
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
                     <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
+                    <li class="cart-icon">
                         <a href="#" id="cart-button">
                             <i class="cart-symbol">🛒</i>
                             <span class="cart-count">0</span>
@@ -116,9 +123,9 @@
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
                     <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
-                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>                    
+                    <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon"> 
+                    <li class="cart-icon">
                         <a href="#" id="cart-button-mobile">
                             <i class="cart-symbol">🛒</i>
                             <span class="cart-count">0</span>
@@ -179,52 +186,52 @@
     <!-- Scripts Comunes con carga diferida -->
     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
     <script>
-    // Función para cargar scripts de forma diferida
-    function loadScript(src, callback) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        if (callback) script.onload = callback;
-        document.head.appendChild(script);
-    }
-    
-    // Cargar scripts no críticos después del DOM
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM cargado, iniciando scripts...');
-        
+        // Función para cargar scripts de forma diferida
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            if (callback) script.onload = callback;
+            document.head.appendChild(script);
+        }
+
+        // Cargar scripts no críticos después del DOM
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('DOM cargado, iniciando scripts...');
+
             // Cargar el script de menú directamente para evitar problemas de carga asíncrona
-    console.log('Cargando menu.js directamente...');
-    const menuScript = document.createElement('script');
-    menuScript.src = '{{ url_for("static", filename="js/menu.js") }}?v=' + new Date().getTime();
-    menuScript.onload = function() {
-        console.log('Menu.js cargado exitosamente');
-        // Cargar public_scripts.js después de que menu.js esté completamente cargado
-        loadScript('{{ url_for("static", filename="js/public_scripts.js") }}', function() {
-            console.log('public_scripts.js cargado después de menu.js');
+            console.log('Cargando menu.js directamente...');
+            const menuScript = document.createElement('script');
+            menuScript.src = '{{ url_for("static", filename="js/menu.js") }}?v=' + new Date().getTime();
+            menuScript.onload = function () {
+                console.log('Menu.js cargado exitosamente');
+                // Cargar public_scripts.js después de que menu.js esté completamente cargado
+                loadScript('{{ url_for("static", filename="js/public_scripts.js") }}', function () {
+                    console.log('public_scripts.js cargado después de menu.js');
+                });
+            };
+            document.head.appendChild(menuScript);
         });
-    };
-    document.head.appendChild(menuScript);
-    });
     </script>
-    
+
     <!-- Script para evitar conflictos entre public_scripts.js y menu.js -->
     {% include 'public/includes/menu_conflict_fix.html' %}
-    
+
     <!-- Script de inicialización directa para el menú hamburguesa -->
     <script>
         // Este script se ejecuta inmediatamente y no depende de la carga asíncrona
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             console.log('Inicialización directa del menú hamburguesa');
             const menuToggle = document.getElementById('menu-toggle');
             const mobileMenu = document.getElementById('mobile-menu');
-            
+
             if (menuToggle && mobileMenu) {
-                menuToggle.addEventListener('click', function() {
+                menuToggle.addEventListener('click', function () {
                     console.log('Click detectado en botón hamburguesa (inicialización directa)');
                     mobileMenu.classList.toggle('open');
                     menuToggle.classList.toggle('open');
                     document.body.classList.toggle('menu-open');
-                    
+
                     const isOpen = mobileMenu.classList.contains('open');
                     menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
                 });
@@ -233,7 +240,7 @@
             }
         });
     </script>
-    
+
     <!-- Script para checkout -->
     <script>
         function goToCheckout() {
@@ -245,51 +252,51 @@
             window.location.href = "{{ url_for('public.checkout') }}";
         }
     </script>
-    
+
     <!-- Script para header con scroll -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const header = document.querySelector('header');
             let lastScrollTop = 0;
             let isScrolling = false;
-            
+
             function handleScroll() {
                 if (!isScrolling) {
-                    window.requestAnimationFrame(function() {
+                    window.requestAnimationFrame(function () {
                         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                        
+
                         // Agregar clase 'scrolled' cuando se hace scroll hacia abajo
                         if (scrollTop > 50) {
                             header.classList.add('scrolled');
                         } else {
                             header.classList.remove('scrolled');
                         }
-                        
+
                         lastScrollTop = scrollTop;
                         isScrolling = false;
                     });
                 }
                 isScrolling = true;
             }
-            
+
             // Escuchar evento de scroll con throttling
             window.addEventListener('scroll', handleScroll, { passive: true });
-            
+
             // Ejecutar una vez al cargar para estado inicial
             handleScroll();
         });
     </script>
-    
+
     <!-- Script para navegación del logo -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const logoLink = document.getElementById('logo-link');
-            
+
             if (logoLink) {
-                logoLink.addEventListener('click', function(e) {
+                logoLink.addEventListener('click', function (e) {
                     // Si ya estamos en el home, no navegar sino hacer scroll
-                    if (window.location.pathname === '{{ url_for("public.home") }}' || 
-                        window.location.pathname === '/' || 
+                    if (window.location.pathname === '{{ url_for("public.home") }}' ||
+                        window.location.pathname === '/' ||
                         window.location.pathname === '') {
                         e.preventDefault();
                         scrollToBookingSection();
@@ -299,29 +306,29 @@
                         window.location.href = '{{ url_for("public.home") }}?scroll=booking';
                     }
                 });
-                
+
                 // Agregar indicador visual de que es clickeable
                 logoLink.style.cursor = 'pointer';
                 logoLink.setAttribute('title', 'Ir al inicio y agendar cita');
             }
-            
+
             // Función para hacer scroll suave a la sección de agendar
             function scrollToBookingSection() {
-                const bookingSection = document.getElementById('booking-section') || 
-                                     document.querySelector('.booking-section') ||
-                                     document.querySelector('[data-section="booking"]') ||
-                                     document.querySelector('.cita-section') ||
-                                     document.querySelector('#agendar-cita');
-                
+                const bookingSection = document.getElementById('booking-section') ||
+                    document.querySelector('.booking-section') ||
+                    document.querySelector('[data-section="booking"]') ||
+                    document.querySelector('.cita-section') ||
+                    document.querySelector('#agendar-cita');
+
                 if (bookingSection) {
                     const headerHeight = document.querySelector('header').offsetHeight || 0;
                     const targetPosition = bookingSection.offsetTop - headerHeight - 20;
-                    
+
                     window.scrollTo({
                         top: targetPosition,
                         behavior: 'smooth'
                     });
-                    
+
                     // Añadir efecto visual sutil
                     bookingSection.style.transition = 'box-shadow 0.5s ease';
                     bookingSection.style.boxShadow = '0 0 15px rgba(179, 150, 86, 0.3)';
@@ -339,7 +346,7 @@
                     });
                 }
             }
-            
+
             // Verificar si venimos de otra página y necesitamos hacer scroll
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('scroll') === 'booking') {
@@ -353,17 +360,18 @@
             }
         });
     </script>
-    
+
     <!-- Bloque para scripts específicos de cada página -->
     {% block extra_scripts %}{% endblock %}
 
     <!-- Microsoft Clarity - Movido al final del body para mejor rendimiento -->
     <script type="text/javascript">
-        (function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
         })(window, document, "clarity", "script", "svqje921sx");
     </script>
 </body>
-</html> 
+
+</html>
