@@ -1,5 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
+<style>
+    :root {
+        --color-bg-main: #0a0908;
+        --color-bg-dark: #040404;
+        --color-text-primary: #f5f0e6;
+        --color-text-secondary: #e3d9c6;
+        --color-accent: #b39656;
+        --color-accent-hover: #c9aa6b;
+        --color-border: #302c25;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: var(--color-bg-main);
+        color: var(--color-text-primary);
+        font-family: Georgia, serif;
+        line-height: 1.6;
+        padding-top: 120px;
+        overflow-x: hidden;
+    }
+
+    header {
+        background-color: var(--color-bg-dark);
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+    }
+
+    .header-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo img {
+        height: 90px;
+        width: auto;
+    }
+
+    .hero-slider {
+        min-height: 400px;
+        position: relative;
+        background: var(--color-bg-dark);
+    }
+</style>
 
 <head>
     <meta charset="UTF-8">
@@ -53,16 +109,19 @@
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
 
     <!-- DNS Prefetch para recursos externos -->
-    <link rel="dns-prefetch" href="//www.instagram.com">
     <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
     <link rel="dns-prefetch" href="//www.clarity.ms">
 
-    <!-- Fuentes locales con preload para mejor rendimiento -->
+    <!-- Solo preload de Lora regular -->
     <link rel="preload" href="{{ url_for('static', filename='fonts/0QIvMX1D_JOuMwr7Iw.woff2') }}" as="font"
         type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ url_for('static', filename='fonts/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgA.woff2') }}"
-        as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+
+    <!-- Diferir fonts-optimized.css -->
+    <link rel="preload" href="{{ url_for('static', filename='css/fonts-optimized.css') }}" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts-optimized.css') }}">
+    </noscript>
 
     <!-- Preload CSS crítico -->
     <link rel="preload" href="{{ url_for('static', filename='css/public_styles.css') }}" as="style"
@@ -70,11 +129,19 @@
     <noscript>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
     </noscript>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer_styles.css') }}">
+    <!-- Diferir footer_styles.css -->
+    <link rel="preload" href="{{ url_for('static', filename='css/footer_styles.css') }}" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/footer_styles.css') }}">
+    </noscript>
 
-    <!-- CSS optimizado para booking (solo en páginas que lo necesiten) -->
     {% if request.endpoint == 'public.home' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
+    <link rel="preload" href="{{ url_for('static', filename='css/booking-optimized.css') }}" as="style"
+        onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
+    </noscript>
     {% endif %}
 
     <!-- Preload imágenes críticas solo en home -->
