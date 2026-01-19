@@ -104,7 +104,9 @@ from app.models.admin import User # Assuming User model is in admin.py
 from app.models.cliente import Mensaje, Cliente, Cita # Assuming Mensaje, Cliente, Cita are in cliente.py
 from app.models.servicio import Servicio
 from app.models.barbero import Barbero, DisponibilidadBarbero
+from app.models.barbero_servicio import BarberoServicio
 from app.models.categoria import Categoria # Correctly import Categoria
+from decimal import Decimal
 try:
     from app.models.slider import Slider
 except Exception as e:
@@ -671,6 +673,103 @@ def eliminar_barbero(id):
         db.session.rollback()
         flash(f'Error al eliminar barbero: {str(e)}', 'danger')
     return redirect(url_for('admin.gestionar_barberos'))
+
+# --- Gestión de Servicios y Precios por Barbero ---
+@bp.route('/barberos/<int:barbero_id>/servicios', methods=['GET', 'POST'])
+@login_required
+def gestionar_servicios_barbero(barbero_id):
+    """
+    Gestionar qué servicios ofrece un barbero y sus precios personalizados.
+    
+    GET: Muestra tabla con todos los servicios y configuración del barbero
+    POST: Guarda la configuración de servicios y precios
+    """
+    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
+        abort(403)
+    
+    barbero = Barbero.query.get_or_404(barbero_id)
+    servicios = Servicio.query.filter_by(activo=True).order_by(Servicio.orden, Servicio.nombre).all()
+    
+    if request.method == 'POST':
+        try:
+            # Procesar formulario de servicios
+            for servicio in servicios:
+                # Verificar si el checkbox está marcado
+                activo = request.form.get(f'servicio_{servicio.id}_activo') == 'on'
+                precio_str = request.form.get(f'servicio_{servicio.id}_precio', '').strip()
+                
+                # Buscar configuración existente
+                config = BarberoServicio.query.filter_by(
+                    barbero_id=barbero_id,
+                    servicio_id=servicio.id
+                ).first()
+                
+                if activo:
+                    # Si está activo, crear o actualizar configuración
+                    if not config:
+                        config = BarberoServicio(
+                            barbero_id=barbero_id,
+                            servicio_id=servicio.id
+                        )
+                        db.session.add(config)
+                    
+                    config.activo = True
+                    
+                    # Procesar precio personalizado
+                    if precio_str:
+                        try:
+                            precio_nuevo = Decimal(precio_str)
+                            # Solo guardar si es diferente al precio base
+                            if precio_nuevo != servicio.precio:
+                                config.precio_personalizado = precio_nuevo
+                            else:
+                                config.precio_personalizado = None
+                        except:
+                            config.precio_personalizado = None
+                    else:
+                        config.precio_personalizado = None
+                else:
+                    # Si está desactivado
+                    if config:
+                        config.activo = False
+            
+            db.session.commit()
+            flash(f'Servicios de {barbero.nombre} actualizados correctamente.', 'success')
+            return redirect(url_for('admin.gestionar_servicios_barbero', barbero_id=barbero_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error al actualizar servicios del barbero: {str(e)}")
+            flash(f'Error al guardar cambios: {str(e)}', 'danger')
+    
+    # Preparar datos para la vista
+    servicios_config = {}
+    for servicio in servicios:
+        config = BarberoServicio.query.filter_by(
+            barbero_id=barbero_id,
+            servicio_id=servicio.id
+        ).first()
+        
+        if config:
+            servicios_config[servicio.id] = {
+                'servicio': servicio,
+                'activo': config.activo,
+                'precio_personalizado': config.precio_personalizado,
+                'precio_final': config.get_precio_final()
+            }
+        else:
+            # Por defecto, todos los servicios están activos al precio base
+            servicios_config[servicio.id] = {
+                'servicio': servicio,
+                'activo': True,
+                'precio_personalizado': None,
+                'precio_final': servicio.precio
+            }
+    
+    return render_template('admin/barbero_servicios.html',
+                          title=f'Servicios de {barbero.nombre}',
+                          barbero=barbero,
+                          servicios_config=servicios_config)
 
 # --- Gestión de Disponibilidad de Barberos ---
 @bp.route('/barberos/<int:barbero_id>/disponibilidad', methods=['GET', 'POST'])

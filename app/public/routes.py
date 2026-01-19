@@ -700,7 +700,11 @@ def servicios():
 
 @bp.route('/api/servicio/<int:servicio_id>')
 def get_servicio_data(servicio_id):
-    """API endpoint para obtener datos de un servicio específico"""
+    """API endpoint para obtener datos de un servicio específico.
+    
+    Query params:
+        barbero_id (int, optional): ID del barbero para obtener precio personalizado
+    """
     try:
         servicio = Servicio.query.filter_by(id=servicio_id, activo=True).first()
         if not servicio:
@@ -708,6 +712,27 @@ def get_servicio_data(servicio_id):
         
         # Formatear el precio usando la función format_cop
         from app.utils import format_cop
+        from app.utils.pricing import obtener_precio_servicio
+        
+        # Obtener barbero_id del query parameter (opcional)
+        barbero_id = request.args.get('barbero_id', type=int)
+        
+        # Calcular precio según el barbero seleccionado
+        if barbero_id:
+            precio_info = obtener_precio_servicio(barbero_id, servicio_id)
+            if precio_info:
+                precio_valor = float(precio_info['precio'])
+                precio_base = float(precio_info['precio_base'])
+                es_personalizado = precio_info['es_personalizado']
+            else:
+                precio_valor = float(servicio.precio)
+                precio_base = float(servicio.precio)
+                es_personalizado = False
+        else:
+            # Sin barbero seleccionado, usar precio base
+            precio_valor = float(servicio.precio)
+            precio_base = float(servicio.precio)
+            es_personalizado = False
         
         # Obtener todas las imágenes del servicio
         imagenes_galeria = servicio.get_imagenes_activas()
@@ -721,9 +746,12 @@ def get_servicio_data(servicio_id):
             'id': servicio.id,
             'nombre': servicio.nombre,
             'descripcion': servicio.descripcion or 'Sin descripción disponible',
-            'precio_formateado': format_cop(servicio.precio),
-            'precio_valor': float(servicio.precio),
+            'precio_formateado': format_cop(precio_valor),
+            'precio_valor': precio_valor,
+            'precio_base': precio_base,
+            'es_precio_personalizado': es_personalizado,
             'duracion_estimada': servicio.duracion_estimada,
+            'duracion_minutos': servicio.get_duracion_minutos(),
             'imagen_url': servicio.get_imagen_principal(),  # Imagen principal para compatibilidad
             'imagenes': imagenes_urls,  # Array de todas las imágenes
             'total_imagenes': len(imagenes_urls),
@@ -735,6 +763,50 @@ def get_servicio_data(servicio_id):
     except Exception as e:
         current_app.logger.error(f"Error al obtener datos del servicio {servicio_id}: {e}")
         return jsonify({'error': 'Error interno del servidor'}), 500
+
+@bp.route('/api/barbero/<int:barbero_id>/servicios')
+def get_servicios_barbero(barbero_id):
+    """API endpoint para obtener todos los servicios con precios para un barbero específico.
+    
+    Retorna lista de servicios activos con el precio correspondiente al barbero.
+    Si el barbero tiene precio personalizado, se usa ese; de lo contrario, precio base.
+    """
+    try:
+        from app.utils import format_cop
+        from app.utils.pricing import obtener_servicios_barbero
+        
+        barbero = Barbero.query.get(barbero_id)
+        if not barbero or not barbero.activo:
+            return jsonify({'error': 'Barbero no encontrado o inactivo'}), 404
+        
+        servicios_info = obtener_servicios_barbero(barbero_id)
+        
+        servicios_data = []
+        for item in servicios_info:
+            if item['activo']:  # Solo incluir servicios activos para este barbero
+                servicio = item['servicio']
+                servicios_data.append({
+                    'id': servicio.id,
+                    'nombre': servicio.nombre,
+                    'precio_valor': float(item['precio_final']),
+                    'precio_formateado': format_cop(item['precio_final']),
+                    'precio_base': float(servicio.precio),
+                    'es_precio_personalizado': item['precio_personalizado'] is not None,
+                    'duracion_estimada': servicio.duracion_estimada,
+                    'duracion_minutos': servicio.get_duracion_minutos()
+                })
+        
+        return jsonify({
+            'barbero_id': barbero_id,
+            'barbero_nombre': barbero.nombre,
+            'servicios': servicios_data,
+            'total': len(servicios_data)
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al obtener servicios del barbero {barbero_id}: {e}")
+        return jsonify({'error': 'Error interno del servidor'}), 500
+
 
 # @bp.route('/barberos/<int:id>/disponibilidad', methods=['GET', 'POST'])
 # @login_required
@@ -952,6 +1024,18 @@ def agendar_cita():
         servicio = Servicio.query.get(int(data['servicio_id']))
         duracion_servicio = servicio.get_duracion_minutos() if servicio else 30
         
+        # Obtener el precio que se cobrará al cliente según el barbero seleccionado
+        from app.utils.pricing import obtener_precio_servicio
+        precio_info = obtener_precio_servicio(int(data['barbero_id']), int(data['servicio_id']))
+        
+        if precio_info:
+            precio_cobrado = precio_info['precio']
+            es_precio_personalizado = precio_info['es_personalizado']
+        else:
+            # Fallback al precio base del servicio
+            precio_cobrado = servicio.precio if servicio else 0
+            es_precio_personalizado = False
+        
         nueva_cita = Cita(
             cliente_id=cliente.id,
             barbero_id=int(data['barbero_id']),
@@ -959,6 +1043,8 @@ def agendar_cita():
             fecha=fecha_hora,
             estado='pendiente_confirmacion', # Estado inicial
             duracion=duracion_servicio,  # Guardar la duración del servicio
+            precio_cobrado=precio_cobrado,  # Guardar el precio al momento de reserva
+            es_precio_personalizado=es_precio_personalizado,  # Indicar si es precio personalizado
             notas=data.get('notas', '')
         )
         db.session.add(nueva_cita)

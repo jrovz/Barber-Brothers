@@ -1,0 +1,371 @@
+{% extends "admin/admin_base.html" %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+    <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-sm btn-secondary">← Volver a barberos</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Información del barbero -->
+<section class="admin-form" style="margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1.5rem;">
+        {% if barbero.imagen_url %}
+        <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}"
+            style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--color-primary);">
+        {% else %}
+        <div
+            style="width: 80px; height: 80px; border-radius: 50%; background: var(--color-primary); display: flex; align-items: center; justify-content: center; color: var(--color-bg-dark); font-size: 2rem; font-weight: bold;">
+            {{ barbero.nombre[0].upper() }}
+        </div>
+        {% endif %}
+
+        <div>
+            <h2 style="margin: 0 0 0.5rem 0; color: var(--color-text-primary);">{{ barbero.nombre }}</h2>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span class="badge {% if barbero.activo %}badge-success{% else %}badge-danger{% endif %}">
+                    {% if barbero.activo %}✅ Activo{% else %}❌ Inactivo{% endif %}
+                </span>
+                {% if barbero.especialidad %}
+                <span style="color: var(--color-text-muted);">Especialidad: {{ barbero.especialidad }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Formulario de Servicios y Precios -->
+<section class="data-table-container">
+    <h2 class="section-title">💈 Servicios y Precios Personalizados</h2>
+    <p style="color: var(--color-text-muted); margin-bottom: 1.5rem;">
+        Configure qué servicios ofrece este barbero y establezca precios personalizados si es necesario.
+        <br><small>Deje el precio personalizado vacío para usar el precio base del servicio.</small>
+    </p>
+
+    <form method="POST" id="serviciosForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        <table class="services-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px; text-align: center;">Activo</th>
+                    <th>Servicio</th>
+                    <th style="width: 140px; text-align: right;">Precio Base</th>
+                    <th style="width: 180px;">Precio Personalizado</th>
+                    <th style="width: 140px; text-align: right;">Precio Final</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servicio_id, config in servicios_config.items() %}
+                <tr class="service-row {% if not config.activo %}inactive{% endif %}"
+                    data-servicio-id="{{ servicio_id }}">
+                    <td style="text-align: center;">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="servicio_{{ servicio_id }}_activo"
+                                id="activo_{{ servicio_id }}" {% if config.activo %}checked{% endif %}
+                                onchange="toggleRow(this, {{ servicio_id }})">
+                            <span class="checkmark"></span>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="service-name">{{ config.servicio.nombre }}</div>
+                        {% if config.servicio.duracion_estimada %}
+                        <small class="duration">⏱️ {{ config.servicio.duracion_estimada }}</small>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;" class="precio-base">
+                        ${{ "{:,.0f}".format(config.servicio.precio|float).replace(",", ".") }}
+                    </td>
+                    <td>
+                        <div class="precio-input-container">
+                            <span class="currency-prefix">$</span>
+                            <input type="number" name="servicio_{{ servicio_id }}_precio" id="precio_{{ servicio_id }}"
+                                class="form-input precio-input" step="100" min="0"
+                                value="{% if config.precio_personalizado %}{{ config.precio_personalizado|int }}{% endif %}"
+                                placeholder="Usar precio base" data-precio-base="{{ config.servicio.precio }}"
+                                onchange="updatePrecioFinal({{ servicio_id }})">
+                        </div>
+                    </td>
+                    <td style="text-align: right;">
+                        <span class="precio-final {% if config.precio_personalizado %}personalizado{% endif %}"
+                            id="final_{{ servicio_id }}">
+                            ${{ "{:,.0f}".format(config.precio_final|float).replace(",", ".") }}
+                        </span>
+                        {% if config.precio_personalizado %}
+                        <span class="badge-custom" title="Precio personalizado">✨</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="form-actions" style="margin-top: 2rem; display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
+            <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="button" class="btn btn-outline" onclick="resetAllPrices()">🔄 Restablecer Precios</button>
+        </div>
+    </form>
+</section>
+
+<!-- Enlace a disponibilidad -->
+<section class="admin-form"
+    style="margin-top: 2rem; background: linear-gradient(135deg, var(--color-bg-light), var(--color-bg-medium)); border-left: 4px solid var(--color-info);">
+    <h3 style="color: var(--color-info); margin-bottom: 1rem;">📅 Gestión de Horarios</h3>
+    <p style="color: var(--color-text-secondary); margin-bottom: 1rem;">
+        Configure los horarios de trabajo de este barbero para que los clientes puedan agendar citas.
+    </p>
+    <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-info">
+        ⏰ Gestionar Disponibilidad
+    </a>
+</section>
+
+<style>
+    /* Estilos específicos para la tabla de servicios */
+    .services-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--color-bg-light);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .services-table th {
+        background: var(--color-bg-dark);
+        color: var(--color-primary);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+    }
+
+    .services-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        vertical-align: middle;
+    }
+
+    .service-row {
+        transition: all 0.2s ease;
+    }
+
+    .service-row:hover {
+        background: var(--color-bg-medium);
+    }
+
+    .service-row.inactive {
+        opacity: 0.5;
+        background: var(--color-bg-medium);
+    }
+
+    .service-row.inactive .service-name,
+    .service-row.inactive .precio-base,
+    .service-row.inactive .precio-final {
+        text-decoration: line-through;
+        color: var(--color-text-muted);
+    }
+
+    .service-name {
+        font-weight: 600;
+        color: var(--color-text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .duration {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+    }
+
+    .precio-base {
+        color: var(--color-text-secondary);
+        font-family: monospace;
+        font-size: 1rem;
+    }
+
+    .precio-input-container {
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+
+    .currency-prefix {
+        position: absolute;
+        left: 10px;
+        color: var(--color-text-muted);
+        font-weight: 600;
+    }
+
+    .precio-input {
+        padding-left: 25px !important;
+        width: 100%;
+        text-align: right;
+    }
+
+    .precio-final {
+        font-weight: 700;
+        color: var(--color-text-primary);
+        font-family: monospace;
+        font-size: 1.1rem;
+    }
+
+    .precio-final.personalizado {
+        color: var(--color-success);
+    }
+
+    .badge-custom {
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+        cursor: help;
+    }
+
+    /* Checkbox personalizado */
+    .checkbox-container {
+        display: block;
+        position: relative;
+        padding-left: 30px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .checkbox-container input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+
+    .checkmark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        height: 22px;
+        width: 22px;
+        background-color: var(--color-bg-dark);
+        border: 2px solid var(--color-border);
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .checkbox-container:hover input~.checkmark {
+        border-color: var(--color-primary);
+    }
+
+    .checkbox-container input:checked~.checkmark {
+        background-color: var(--color-success);
+        border-color: var(--color-success);
+    }
+
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+    }
+
+    .checkbox-container input:checked~.checkmark:after {
+        display: block;
+    }
+
+    .checkbox-container .checkmark:after {
+        left: 6px;
+        top: 2px;
+        width: 6px;
+        height: 11px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .services-table {
+            font-size: 0.9rem;
+        }
+
+        .services-table th,
+        .services-table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .precio-input-container {
+            min-width: 100px;
+        }
+    }
+</style>
+
+<script>
+    function toggleRow(checkbox, servicioId) {
+        const row = document.querySelector(`tr[data-servicio-id="${servicioId}"]`);
+        if (checkbox.checked) {
+            row.classList.remove('inactive');
+        } else {
+            row.classList.add('inactive');
+        }
+    }
+
+    function updatePrecioFinal(servicioId) {
+        const precioInput = document.getElementById(`precio_${servicioId}`);
+        const precioFinal = document.getElementById(`final_${servicioId}`);
+        const precioBase = parseFloat(precioInput.dataset.precioBase);
+
+        let precioValue = parseFloat(precioInput.value);
+
+        if (isNaN(precioValue) || precioInput.value === '') {
+            // Usar precio base
+            precioValue = precioBase;
+            precioFinal.classList.remove('personalizado');
+            // Eliminar badge si existe
+            const badge = precioFinal.nextElementSibling;
+            if (badge && badge.classList.contains('badge-custom')) {
+                badge.remove();
+            }
+        } else {
+            precioFinal.classList.add('personalizado');
+            // Agregar badge si no existe
+            if (!precioFinal.nextElementSibling || !precioFinal.nextElementSibling.classList.contains('badge-custom')) {
+                const badge = document.createElement('span');
+                badge.className = 'badge-custom';
+                badge.title = 'Precio personalizado';
+                badge.textContent = '✨';
+                precioFinal.parentNode.appendChild(badge);
+            }
+        }
+
+        // Formatear y mostrar precio
+        precioFinal.textContent = '$' + precioValue.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.');
+    }
+
+    function resetAllPrices() {
+        if (confirm('¿Está seguro de que desea restablecer todos los precios personalizados?')) {
+            document.querySelectorAll('.precio-input').forEach(input => {
+                input.value = '';
+                const servicioId = input.id.replace('precio_', '');
+                updatePrecioFinal(servicioId);
+            });
+        }
+    }
+
+    // Inicializar al cargar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Actualizar precios finales al cargar
+        document.querySelectorAll('.precio-input').forEach(input => {
+            const servicioId = input.id.replace('precio_', '');
+            updatePrecioFinal(servicioId);
+        });
+    });
+</script>
+
+{% endblock %}

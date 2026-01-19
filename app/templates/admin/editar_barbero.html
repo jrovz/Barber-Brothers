@@ -7,13 +7,13 @@
 
 {# Mostrar mensajes flash #}
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category or 'info' }}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    {% endif %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{ category or 'info' }}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
 {% endwith %}
 
 <section class="admin-form">
@@ -31,19 +31,20 @@
                 {{ form.especialidad(class="form-input") }}
                 {% for error in form.especialidad.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
-            
+
             <!-- Imagen actual -->
             <div class="form-group">
                 <label class="form-label">Imagen Actual:</label>
                 <div>
                     {% if barbero.imagen_url %}
-                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" style="max-width: 100px; max-height: 100px; margin-bottom: 10px;">
+                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}"
+                        style="max-width: 100px; max-height: 100px; margin-bottom: 10px;">
                     {% else %}
                     <p>Sin imagen</p>
                     {% endif %}
                 </div>
             </div>
-            
+
             <!-- Campos de imagen -->
             <div class="form-group">
                 {{ form.imagen_url.label(class="form-label") }}
@@ -51,7 +52,7 @@
                 {% for error in form.imagen_url.errors %}<span class="error">{{ error }}</span>{% endfor %}
                 <small class="form-text text-muted">Dejar vacío para mantener la imagen actual</small>
             </div>
-            
+
             <!-- Nuevo campo para subir archivo -->
             <div class="form-group">
                 {{ form.imagen_file.label(class="form-label") }}
@@ -60,14 +61,14 @@
                 <small class="form-text text-muted">Si subes una nueva imagen, reemplazará la actual</small>
                 <div id="imagen_preview" style="display: none;"></div>
             </div>
-            
+
             <div class="form-group" style="display: flex; align-items: center;">
                 {{ form.activo(style="margin-right: 0.5rem;") }}
                 {{ form.activo.label(class="form-label", style="margin-bottom: 0;") }}
                 {% for error in form.activo.errors %}<span class="error">{{ error }}</span>{% endfor %}
             </div>
         </div>
-        
+
         <!-- Sección de Acceso Web -->
         <div style="border-top: 1px solid var(--color-border); padding-top: 1.5rem; margin-top: 1.5rem;">
             <h3 style="color: var(--color-text-accent); margin-bottom: 1rem;">🌐 Acceso Web</h3>
@@ -79,7 +80,7 @@
                     Permitir que el barbero acceda a su panel web para gestionar sus citas
                 </small>
             </div>
-            
+
             <div id="campos_acceso_web" style="display: none;">
                 <div class="form-grid">
                     <div class="form-group">
@@ -97,10 +98,11 @@
                     <div class="form-group">
                         {{ form.confirmar_password.label(class="form-label") }}
                         {{ form.confirmar_password(class="form-input", placeholder="Repetir contraseña") }}
-                        {% for error in form.confirmar_password.errors %}<span class="error">{{ error }}</span>{% endfor %}
+                        {% for error in form.confirmar_password.errors %}<span class="error">{{ error }}</span>{% endfor
+                        %}
                     </div>
                 </div>
-                
+
                 <div class="alert alert-info" style="margin-top: 1rem;">
                     <strong>💡 Información:</strong> Con acceso web habilitado, el barbero podrá:
                     <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
@@ -113,65 +115,70 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="form-group">
             {{ form.descripcion.label(class="form-label") }}
             {{ form.descripcion(class="form-input", rows=3) }}
             {% for error in form.descripcion.errors %}<span class="error">{{ error }}</span>{% endfor %}
         </div>
-          {{ form.submit(class="btn", value="Actualizar Barbero") }}
-        <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-outline" style="margin-left: 1rem;">Cancelar</a>
+        {{ form.submit(class="btn", value="Actualizar Barbero") }}
+        <a href="{{ url_for('admin.gestionar_barberos') }}" class="btn btn-outline"
+            style="margin-left: 1rem;">Cancelar</a>
         <!-- Botón para ir a gestionar disponibilidad -->
-        <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-secondary" style="margin-left: 1rem;">Gestionar Horarios</a>
+        <a href="{{ url_for('admin.gestionar_disponibilidad', barbero_id=barbero.id) }}" class="btn btn-secondary"
+            style="margin-left: 1rem;">⏰ Gestionar Horarios</a>
+        <!-- Botón para ir a gestionar servicios y precios -->
+        <a href="{{ url_for('admin.gestionar_servicios_barbero', barbero_id=barbero.id) }}" class="btn btn-info"
+            style="margin-left: 1rem;">💈 Servicios y Precios</a>
     </form>
 </section>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const input = document.getElementById('imagen_file');
-    const preview = document.getElementById('imagen_preview');
-    
-    if (input && preview) {
-        input.addEventListener('change', function() {
-            preview.innerHTML = '';
-            
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.maxWidth = '100px';
-                    img.style.maxHeight = '100px';
-                    img.style.marginTop = '10px';
-                    preview.appendChild(img);
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('imagen_file');
+        const preview = document.getElementById('imagen_preview');
+
+        if (input && preview) {
+            input.addEventListener('change', function () {
+                preview.innerHTML = '';
+
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.maxWidth = '100px';
+                        img.style.maxHeight = '100px';
+                        img.style.marginTop = '10px';
+                        preview.appendChild(img);
+                    }
+
+                    reader.readAsDataURL(input.files[0]);
+                    preview.style.display = 'block';
                 }
-                
-                reader.readAsDataURL(input.files[0]);
-                preview.style.display = 'block';
-            }
-        });
-    }
-    
-    // Control de visibilidad de campos de acceso web
-    const toggleAccesoWeb = document.getElementById('toggle_acceso_web');
-    const camposAccesoWeb = document.getElementById('campos_acceso_web');
-    
-    function toggleCamposAcceso() {
-        if (toggleAccesoWeb.checked) {
-            camposAccesoWeb.style.display = 'block';
-        } else {
-            camposAccesoWeb.style.display = 'none';
+            });
         }
-    }
-    
-    if (toggleAccesoWeb && camposAccesoWeb) {
-        // Mostrar campos si ya está marcado al cargar la página
-        toggleCamposAcceso();
-        
-        // Escuchar cambios en el checkbox
-        toggleAccesoWeb.addEventListener('change', toggleCamposAcceso);
-    }
-});
+
+        // Control de visibilidad de campos de acceso web
+        const toggleAccesoWeb = document.getElementById('toggle_acceso_web');
+        const camposAccesoWeb = document.getElementById('campos_acceso_web');
+
+        function toggleCamposAcceso() {
+            if (toggleAccesoWeb.checked) {
+                camposAccesoWeb.style.display = 'block';
+            } else {
+                camposAccesoWeb.style.display = 'none';
+            }
+        }
+
+        if (toggleAccesoWeb && camposAccesoWeb) {
+            // Mostrar campos si ya está marcado al cargar la página
+            toggleCamposAcceso();
+
+            // Escuchar cambios en el checkbox
+            toggleAccesoWeb.addEventListener('change', toggleCamposAcceso);
+        }
+    });
 </script>
 {% endblock %}

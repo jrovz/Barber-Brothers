@@ -163,7 +163,7 @@
  * ========================================================================
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // ==================== CONFIGURACIÓN Y CONSTANTES ====================
     const CONFIG = {
         DEBOUNCE_DELAY: 300,
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
         async fetchWithRetry(url, options = {}, retries = CONFIG.RETRY_ATTEMPTS) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT);
-            
+
             try {
                 const response = await fetch(url, {
                     ...options,
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return response;
             } catch (error) {
                 clearTimeout(timeoutId);
-                
+
                 if (retries > 0 && error.name !== 'AbortError') {
                     console.warn(`Reintentando petición a ${url}. Intentos restantes: ${retries - 1}`);
                     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -307,14 +307,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button class="toast-close" onclick="this.parentElement.parentElement.remove()">×</button>
                 </div>
             `;
-            
+
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
         },
 
         setLoadingState(isLoading) {
             appState.isLoading = isLoading;
-            
+
             if (elements.horariosContainer) {
                 if (isLoading) {
                     elements.horariosContainer.innerHTML = `
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 }
             }
-            
+
             // Deshabilitar controles durante carga
             [elements.barberoSelect, elements.servicioSelect].forEach(el => {
                 if (el) el.disabled = isLoading;
@@ -336,19 +336,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== INICIALIZACIÓN ====================
     function init() {
         console.log('Inicializando sistema de reservas optimizado...');
-        
+
         // Debug: Mostrar todos los elementos encontrados
         console.log('Estado de elementos DOM:');
         Object.keys(elements).forEach(key => {
             console.log(`${key}:`, elements[key] ? '✓ Encontrado' : '❌ No encontrado');
         });
-        
+
         // Validación de elementos críticos
         const requiredElements = [
-            'barberoSelect', 'servicioSelect', 'horariosContainer', 
+            'barberoSelect', 'servicioSelect', 'horariosContainer',
             'bookingConfirmation', 'confirmButton'
         ];
-        
+
         const missingElements = requiredElements.filter(name => !elements[name]);
         if (missingElements.length > 0) {
             console.error(`Faltan elementos esenciales del DOM: ${missingElements.join(', ')}`);
@@ -362,11 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (elements.servicioSelect) {
             console.log(`Servicios en selector: ${elements.servicioSelect.options.length - 1}`);
         }
-        
+
         if (elements.bookingConfirmation) {
             elements.bookingConfirmation.style.display = 'none';
         }
-        
+
         getDateOptions().forEach(option => option.classList.add('disabled'));
 
         if (elements.barberoSelect && elements.barberoSelect.options.length <= 1) {
@@ -376,15 +376,101 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn("No hay servicios activos disponibles.");
         }
     }
-    
+
+    // ==================== ACTUALIZACIÓN DE PRECIOS POR BARBERO ====================
+    async function actualizarServiciosConPreciosBarbero(barberoId) {
+        console.log(`Actualizando precios de servicios para barbero ${barberoId}`);
+
+        if (!elements.servicioSelect || !barberoId) return;
+
+        try {
+            const url = `/api/barbero/${barberoId}/servicios`;
+            const response = await utils.fetchWithRetry(url);
+
+            if (!response.ok) {
+                throw new Error('Error al obtener servicios del barbero');
+            }
+
+            const data = await response.json();
+            console.log('Servicios con precios del barbero:', data);
+
+            // Guardar el servicio actualmente seleccionado
+            const selectedServicioId = elements.servicioSelect.value;
+
+            // Actualizar las opciones del select con los nuevos precios
+            Array.from(elements.servicioSelect.options).forEach(option => {
+                if (option.value === '') return; // Skip the placeholder option
+
+                const servicioId = parseInt(option.value);
+                const servicioData = data.servicios.find(s => s.id === servicioId);
+
+                if (servicioData) {
+                    // Formatear el precio en formato colombiano
+                    const precioFormateado = `$${servicioData.precio_valor.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')}`;
+                    const duracion = servicioData.duracion_estimada || '';
+
+                    // Actualizar el texto del option
+                    option.textContent = `${servicioData.nombre} - ${precioFormateado} COP${duracion ? ' (' + duracion + ')' : ''}`;
+
+                    // Guardar el precio en un data attribute para uso posterior
+                    option.dataset.precio = servicioData.precio_valor;
+                    option.dataset.precioPersonalizado = servicioData.es_precio_personalizado;
+
+                    // Agregar indicador visual si tiene precio personalizado
+                    if (servicioData.es_precio_personalizado) {
+                        option.textContent += ' ✨';
+                    }
+                }
+            });
+
+            // Restaurar la selección si existía
+            if (selectedServicioId) {
+                elements.servicioSelect.value = selectedServicioId;
+            }
+
+            console.log('Precios actualizados correctamente');
+
+        } catch (error) {
+            console.error('Error actualizando precios:', error);
+            utils.showError('No se pudieron actualizar los precios. Usando precios base.');
+        }
+    }
+
+    function restaurarPreciosBase() {
+        console.log('Restaurando precios base de servicios');
+
+        if (!elements.servicioSelect) return;
+
+        // Restaurar los textos originales de las opciones
+        Array.from(elements.servicioSelect.options).forEach(option => {
+            if (option.value === '') return; // Skip placeholder
+
+            // Si tiene precio base guardado, restaurarlo
+            if (option.dataset.precioBase) {
+                const precioBase = parseFloat(option.dataset.precioBase);
+                const precioFormateado = `$${precioBase.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')}`;
+                const duracion = option.dataset.duracion ? ` (${option.dataset.duracion})` : '';
+
+                // Extraer solo el nombre del servicio (antes del primer " - ")
+                const nombreServicio = option.textContent.split(' - ')[0].replace(' ✨', '').trim();
+                option.textContent = `${nombreServicio} - ${precioFormateado} COP${duracion}`;
+
+                // Limpiar flags de precio personalizado
+                delete option.dataset.precioPersonalizado;
+            }
+        });
+
+        console.log('Precios base restaurados');
+    }
+
     // ==================== FUNCIONES PRINCIPALES ====================
-    const loadAvailableTimes = utils.debounce(async function() {
+    const loadAvailableTimes = utils.debounce(async function () {
         console.log('=== loadAvailableTimes ejecutándose ===');
-        
+
         const barberoId = elements.barberoSelect?.value;
         const servicioId = elements.servicioSelect?.value;
         const fecha = appState.selectedDate;
-        
+
         console.log('Valores actuales:', {
             barberoId,
             servicioId,
@@ -406,42 +492,42 @@ document.addEventListener('DOMContentLoaded', function() {
         // Verificar cache primero
         const cacheKey = utils.getCacheKey(barberoId, servicioId, fecha);
         const cachedData = utils.getCachedData(cacheKey);
-        
+
         if (cachedData) {
             console.log('Usando datos en cache para horarios');
             renderTimeSlots(cachedData, fecha);
             return;
         }
-        
+
         try {
             utils.setLoadingState(true);
             appState.lastRequestTime = Date.now();
-            
+
             const url = `/api/disponibilidad/${barberoId}/${fecha}?servicio_id=${servicioId}`;
             console.log(`Fetching: ${url}`);
-            
+
             const response = await utils.fetchWithRetry(url);
             const data = await response.json();
-            
+
             console.log("API Response Data:", data);
             console.log(`Horarios disponibles recibidos: ${data.horarios ? data.horarios.length : 0}`);
-            
+
             if (!response.ok) {
                 throw new Error(data.error || `Error ${response.status}: No se pudieron cargar los horarios`);
             }
-            
+
             // Guardar en cache
             utils.setCachedData(cacheKey, data);
-            
+
             // Renderizar horarios
             renderTimeSlots(data, fecha);
-            
+
             // Resetear contador de reintentos en caso de éxito
             appState.retryCount = 0;
-            
+
         } catch (error) {
             console.error('Error al cargar horarios:', error);
-            
+
             if (error.name === 'AbortError') {
                 utils.showError('La solicitud tardó demasiado. Por favor, intenta de nuevo.');
             } else if (!navigator.onLine) {
@@ -449,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 utils.showError(`Error al cargar horarios: ${error.message}`);
             }
-            
+
             elements.horariosContainer.innerHTML = `
                 <div class="error-container">
                     <p class="instruction-message error">❌ ${error.message}</p>
@@ -464,48 +550,48 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTimeSlots(data, fecha) {
         elements.horariosContainer.innerHTML = '';
 
-            if (!data.horarios || data.horarios.length === 0) {
+        if (!data.horarios || data.horarios.length === 0) {
             elements.horariosContainer.innerHTML = `
                 <p class="instruction-message">${data.mensaje || 'No hay horarios disponibles para la selección.'}</p>
             `;
-                return;
-            }
-            
-        // Filtrar horas pasadas si es hoy
-            const [anioSel, mesSel, diaSel] = fecha.split('-').map(Number);
-            const now = new Date();
-            const isToday = (
-            now.getFullYear() === anioSel && 
-            (now.getMonth() + 1) === mesSel && 
-            now.getDate() === diaSel
-            );
+            return;
+        }
 
-            const isPastOnSelectedDay = (hhmm) => {
-                const [hh, mm] = hhmm.split(':').map(Number);
+        // Filtrar horas pasadas si es hoy
+        const [anioSel, mesSel, diaSel] = fecha.split('-').map(Number);
+        const now = new Date();
+        const isToday = (
+            now.getFullYear() === anioSel &&
+            (now.getMonth() + 1) === mesSel &&
+            now.getDate() === diaSel
+        );
+
+        const isPastOnSelectedDay = (hhmm) => {
+            const [hh, mm] = hhmm.split(':').map(Number);
             const slotDate = new Date(anioSel, mesSel - 1, diaSel, hh, mm, 0, 0);
-                return slotDate.getTime() <= now.getTime();
-            };
+            return slotDate.getTime() <= now.getTime();
+        };
 
         // Fragment para mejor performance
         const fragment = document.createDocumentFragment();
-        
-            data.horarios.forEach(horaString => {
+
+        data.horarios.forEach(horaString => {
             if (typeof horaString !== 'string') {
                 console.error("Slot de horario inesperado (no es string):", horaString);
                 return;
             }
 
-                    // Si es el día actual, ocultar horas que ya pasaron
-                    if (isToday && isPastOnSelectedDay(horaString)) {
+            // Si es el día actual, ocultar horas que ya pasaron
+            if (isToday && isPastOnSelectedDay(horaString)) {
                 return;
             }
 
             const slotButton = createTimeSlotButton(horaString, fecha);
             fragment.appendChild(slotButton);
         });
-        
+
         elements.horariosContainer.appendChild(fragment);
-        
+
         // Agregar atributos de accesibilidad
         elements.horariosContainer.setAttribute('role', 'radiogroup');
         elements.horariosContainer.setAttribute('aria-label', 'Horarios disponibles');
@@ -517,7 +603,7 @@ document.addEventListener('DOMContentLoaded', function() {
         slotButton.className = 'time-slot-btn';
         slotButton.textContent = utils.formatTime12h(horaString);
         slotButton.dataset.hora = horaString;
-        
+
         // Atributos de accesibilidad
         slotButton.setAttribute('role', 'radio');
         slotButton.setAttribute('aria-checked', 'false');
@@ -554,11 +640,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const servicioName = elements.servicioSelect.options[elements.servicioSelect.selectedIndex].text.split(' - ')[0];
 
         showConfirmationPanel(
-            appState.selectedBarberoId, 
-            barberoName, 
-            appState.selectedServicioId, 
-            servicioName, 
-            appState.selectedDate, 
+            appState.selectedBarberoId,
+            barberoName,
+            appState.selectedServicioId,
+            servicioName,
+            appState.selectedDate,
             appState.selectedTime
         );
     }
@@ -597,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
     }
-    
+
     function showConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora) {
         if (!elements.bookingConfirmation) return;
 
@@ -609,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     loadAvailableTimes();
                     return;
                 }
-                
+
                 // Continuar con la confirmación si está disponible
                 displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora);
             })
@@ -619,18 +705,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora);
             });
     }
-    
+
     async function validateSlotAvailability(barberoId, servicioId, fecha, hora) {
         try {
             const url = `/api/disponibilidad/${barberoId}/${fecha}?servicio_id=${servicioId}&validate_slot=${hora}`;
             const response = await utils.fetchWithRetry(url);
             const data = await response.json();
-            
+
             if (!response.ok) {
                 console.warn('Error validando slot:', data.error);
                 return true; // En caso de error, permitir continuar
             }
-            
+
             // Verificar si el horario específico está en la lista de disponibles
             return data.horarios && data.horarios.includes(hora);
         } catch (error) {
@@ -638,36 +724,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return true; // En caso de error, permitir continuar
         }
     }
-    
+
     function displayConfirmationPanel(barberoId, barberoName, servicioId, servicioName, fecha, hora) {
         // Actualizar información de la confirmación
         const confirmBarbero = document.getElementById('confirm-barbero');
         const confirmServicio = document.getElementById('confirm-servicio');
         const confirmFecha = document.getElementById('confirm-fecha');
         const confirmHora = document.getElementById('confirm-hora');
-        
+
         if (confirmBarbero) confirmBarbero.textContent = barberoName;
-        
+
         // Obtener la duración del servicio seleccionado
         const selectedServiceOption = elements.servicioSelect.options[elements.servicioSelect.selectedIndex];
         const duracionMinutos = selectedServiceOption.dataset.duracion || '30';
         const servicioConDuracion = `${servicioName} (${duracionMinutos} min)`;
-        
+
         if (confirmServicio) confirmServicio.textContent = servicioConDuracion;
-        
+
         // Formatear fecha para display
-        const fechaObj = new Date(fecha + 'T00:00:00'); 
+        const fechaObj = new Date(fecha + 'T00:00:00');
         const fechaFormateadaParaDisplay = fechaObj.toLocaleDateString('es-ES', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
         if (confirmFecha) confirmFecha.textContent = fechaFormateadaParaDisplay;
-        
+
         // Calcular y mostrar hora de inicio y finalización
         const [horas, minutos] = hora.split(':').map(Number);
         const minutosFinalizacion = minutos + parseInt(duracionMinutos);
         const horasFinalizacion = horas + Math.floor(minutosFinalizacion / 60);
         const minutosRestantes = minutosFinalizacion % 60;
-        const horaFin24 = `${(horasFinalizacion%24).toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')}`;
+        const horaFin24 = `${(horasFinalizacion % 24).toString().padStart(2, '0')}:${minutosRestantes.toString().padStart(2, '0')}`;
 
         const horaFormateada = `${utils.formatTime12h(hora)} - ${utils.formatTime12h(horaFin24)}`;
         if (confirmHora) confirmHora.textContent = horaFormateada;
@@ -675,8 +761,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Poblar los campos ocultos
         if (elements.selectedBarberoIdInput) elements.selectedBarberoIdInput.value = barberoId;
         if (elements.selectedServicioIdInput) elements.selectedServicioIdInput.value = servicioId;
-        if (elements.selectedDateInput) elements.selectedDateInput.value = fecha; 
-        if (elements.selectedTimeInput) elements.selectedTimeInput.value = hora;   
+        if (elements.selectedDateInput) elements.selectedDateInput.value = fecha;
+        if (elements.selectedTimeInput) elements.selectedTimeInput.value = hora;
 
         // Mostrar formulario y panel
         if (elements.clientInfoForm) {
@@ -685,35 +771,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
         elements.bookingConfirmation.style.display = 'block';
         elements.bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
-        
+
         // Focus en el primer campo del formulario para mejor UX
         if (elements.clientNameInput) {
             elements.clientNameInput.focus();
         }
     }
-    
+
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
         // Barbero select
         if (elements.barberoSelect) {
-            elements.barberoSelect.addEventListener('change', function() {
+            elements.barberoSelect.addEventListener('change', function () {
                 appState.selectedBarberoId = this.value;
                 console.log(`Barbero seleccionado ID: ${appState.selectedBarberoId}`);
-                
+
                 // Resetear selecciones dependientes
                 appState.selectedDate = null;
                 appState.selectedTime = null;
                 appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-            getDateOptions().forEach(el => el.classList.remove('selected'));
-            
+                getDateOptions().forEach(el => el.classList.remove('selected'));
+
                 // Invalidar cache relacionado
                 clearRelatedCache();
-                
-                                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" && 
+
+                // Actualizar precios de servicios según el barbero seleccionado
+                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0") {
+                    actualizarServiciosConPreciosBarbero(appState.selectedBarberoId);
+                } else {
+                    // Restaurar precios base si no hay barbero seleccionado
+                    restaurarPreciosBase();
+                }
+
+                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" &&
                     appState.selectedServicioId && appState.selectedServicioId !== "0") {
                     getDateOptions().forEach(option => option.classList.remove('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
-            } else {
+                } else {
                     getDateOptions().forEach(option => option.classList.add('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
                 }
@@ -723,31 +817,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Servicio select
         if (elements.servicioSelect) {
-            elements.servicioSelect.addEventListener('change', function() {
+            elements.servicioSelect.addEventListener('change', function () {
                 appState.selectedServicioId = this.value;
                 console.log(`Servicio seleccionado ID: ${appState.selectedServicioId}`);
-                
+
                 // Resetear selecciones dependientes
                 appState.selectedDate = null;
                 appState.selectedTime = null;
                 appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-            getDateOptions().forEach(el => el.classList.remove('selected'));
-            
+                getDateOptions().forEach(el => el.classList.remove('selected'));
+
                 // Invalidar cache relacionado
                 clearRelatedCache();
-                
-                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" && 
+
+                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" &&
                     appState.selectedServicioId && appState.selectedServicioId !== "0") {
                     getDateOptions().forEach(option => option.classList.remove('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
-            } else {
+                } else {
                     getDateOptions().forEach(option => option.classList.add('disabled'));
                     elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
-            }
+                }
                 if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
-        });
-    }
-    
+            });
+        }
+
         // Date options
         const dateOptionsCount = getDateOptions().length;
         console.log(`Configurando ${dateOptionsCount} opciones de fecha`);
@@ -796,17 +890,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Limpiar cache relacionado cuando cambian barbero o servicio
         const keysToDelete = [];
         for (const key of appState.cache.keys()) {
-            if (key.startsWith(`${appState.selectedBarberoId}-`) || 
+            if (key.startsWith(`${appState.selectedBarberoId}-`) ||
                 key.includes(`-${appState.selectedServicioId}-`)) {
                 keysToDelete.push(key);
             }
         }
         keysToDelete.forEach(key => appState.cache.delete(key));
     }
-    
+
     // ==================== CONFIRMACIÓN DE BOOKING ====================
     async function handleBookingConfirmation() {
-            const bookingData = {
+        const bookingData = {
             nombre: elements.clientNameInput?.value?.trim(),
             email: elements.clientEmailInput?.value?.trim(),
             telefono: elements.clientPhoneInput?.value?.trim(),
@@ -814,23 +908,23 @@ document.addEventListener('DOMContentLoaded', function() {
             servicio_id: elements.selectedServicioIdInput?.value,
             fecha: elements.selectedDateInput?.value,
             hora: elements.selectedTimeInput?.value
-            };
+        };
 
-            console.log("Data to be sent to backend:", bookingData);
-        
+        console.log("Data to be sent to backend:", bookingData);
+
         // Validaciones mejoradas
         const validationErrors = validateBookingData(bookingData);
         if (validationErrors.length > 0) {
             utils.showError(validationErrors.join('<br>'));
-                return;
-            }
+            return;
+        }
 
         // Verificar CSRF token
         if (!csrfToken) {
             console.error('CSRF token not found!');
             utils.showError('Error de configuración: No se pudo encontrar el token de seguridad. Por favor, recarga la página.');
-                return;
-            }
+            return;
+        }
 
         // Deshabilitar botón y mostrar loading
         elements.confirmButton.disabled = true;
@@ -846,28 +940,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(bookingData)
             });
 
-                const contentType = response.headers.get("content-type");
+            const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
                 const text = await response.text();
                 throw new Error(`Respuesta inesperada del servidor: ${text.substring(0, 100)}`);
             }
 
             const data = await response.json();
-            
+
             if (response.ok && data.success) {
                 handleBookingSuccess(data);
             } else {
                 handleBookingError(response.status, data);
             }
-            
+
         } catch (error) {
             console.error('Error en fetch o al procesar respuesta:', error);
-            
+
             if (error.name === 'AbortError') {
                 utils.showError('La solicitud tardó demasiado. Por favor, intenta de nuevo.');
             } else if (!navigator.onLine) {
                 utils.showError('Sin conexión a internet. Verifica tu conexión y vuelve a intentar.');
-                } else {
+            } else {
                 utils.showError(`Ocurrió un error: ${error.message}`);
             }
         } finally {
@@ -878,7 +972,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateBookingData(data) {
         const errors = [];
-        
+
         if (!data.nombre) errors.push('• El nombre es obligatorio');
         if (!data.email) errors.push('• El correo electrónico es obligatorio');
         else if (!utils.validateEmail(data.email)) errors.push('• El correo electrónico no es válido');
@@ -887,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!data.servicio_id || data.servicio_id === "0") errors.push('• Debe seleccionar un servicio');
         if (!data.fecha) errors.push('• Debe seleccionar una fecha');
         if (!data.hora) errors.push('• Debe seleccionar un horario');
-        
+
         return errors;
     }
 
@@ -903,24 +997,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         }
-        
+
         // Marcar booking como completado para detener validaciones
         appState.bookingCompleted = true;
-        
+
         // Detener validación en tiempo real
         if (validationInterval) {
             clearInterval(validationInterval);
             validationInterval = null;
         }
-        
+
         // Limpiar estado de selección para evitar validaciones futuras
         appState.selectedBarberoId = null;
         appState.selectedServicioId = null;
         appState.selectedDate = null;
         appState.selectedTime = null;
-        
+
         utils.showError('¡Cita solicitada exitosamente! Revisa tu correo para confirmar.', 'success');
-        
+
         // Limpiar cache para refrescar horarios
         appState.cache.clear();
     }
@@ -929,8 +1023,8 @@ document.addEventListener('DOMContentLoaded', function() {
         switch (status) {
             case 409:
                 utils.showError('Lo sentimos, alguien más acaba de agendar este horario. Te mostraremos horarios actualizados.');
-                        console.log('Conflicto de horario detectado, recargando horarios disponibles...');
-                        loadAvailableTimes();
+                console.log('Conflicto de horario detectado, recargando horarios disponibles...');
+                loadAvailableTimes();
                 if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
                 break;
             case 400:
@@ -946,16 +1040,16 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
 
     // ==================== FUNCIONES GLOBALES ====================
-    window.hideConfirmationPanel = function() {
+    window.hideConfirmationPanel = function () {
         if (elements.bookingConfirmation) {
             elements.bookingConfirmation.style.display = 'none';
         }
-        
+
         // Limpiar formulario opcionalmente
         [elements.clientNameInput, elements.clientEmailInput, elements.clientPhoneInput].forEach(input => {
             if (input) input.value = '';
         });
-        
+
         // Resetear flag de booking completado para permitir nuevas validaciones
         appState.bookingCompleted = false;
     };
@@ -968,7 +1062,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (validationInterval) {
             clearInterval(validationInterval);
         }
-        
+
         validationInterval = setInterval(() => {
             // Verificar si el booking ya se completó exitosamente
             if (appState.bookingCompleted) {
@@ -976,12 +1070,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 validationInterval = null;
                 return;
             }
-            
+
             if (appState.selectedTime && appState.selectedDate && appState.selectedBarberoId && appState.selectedServicioId) {
                 validateSlotAvailability(
-                    appState.selectedBarberoId, 
-                    appState.selectedServicioId, 
-                    appState.selectedDate, 
+                    appState.selectedBarberoId,
+                    appState.selectedServicioId,
+                    appState.selectedDate,
                     appState.selectedTime
                 ).then(isAvailable => {
                     if (!isAvailable) {
@@ -994,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Limpiar recursos al salir de la página
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
         if (validationInterval) {
             clearInterval(validationInterval);
         }

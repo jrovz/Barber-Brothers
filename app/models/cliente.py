@@ -78,7 +78,13 @@ class Cita(db.Model):
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     duracion = db.Column(db.Integer, default=30)
     notas = db.Column(db.Text, nullable=True)
-    confirmed_at = db.Column(db.DateTime, nullable=True) # Hora de confirmación    # Relaciones
+    confirmed_at = db.Column(db.DateTime, nullable=True) # Hora de confirmación
+    
+    # Campos para registro de precio al momento de la reserva
+    precio_cobrado = db.Column(db.Numeric(10, 2), nullable=True)  # Precio al momento de reserva
+    es_precio_personalizado = db.Column(db.Boolean, default=False)  # True si usó precio personalizado del barbero
+    
+    # Relaciones
     # cliente ya está en Cliente model via backref='cliente'
     # barbero ya está en Barbero model via backref='barbero'
     servicio_rel = db.relationship('Servicio', backref='citas_servicio', foreign_keys=[servicio_id]) # Cambiado backref para evitar conflicto si Servicio tiene otras citas
