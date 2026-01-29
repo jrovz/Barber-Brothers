@@ -16,52 +16,62 @@ Error de Confirmación - Barber Brothers
 <section class="confirmation-page">
     <div class="confirmation-container">
         {% if success %}
-            <div class="confirmation-success">
-                <div class="success-icon">✓</div>
-                <h2 class="confirmation-title">{{ message }}</h2>
-                
-                {% if cita %}
-                <div class="appointment-details">
-                    <h3 class="details-title">Detalles de tu cita:</h3>
-                    <div class="detail-item">
-                        <span class="detail-label">Servicio:</span>
-                        <span class="detail-value">{{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Barbero:</span>
-                        <span class="detail-value">{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Fecha:</span>
-                        <span class="detail-value">{{ cita.fecha.strftime('%A, %d de %B de %Y') }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Hora:</span>
-                        <span class="detail-value">{{ cita.fecha.strftime('%I:%M %p') }}</span>
-                    </div>
+        <div class="confirmation-success">
+            <div class="success-icon">✓</div>
+            <h2 class="confirmation-title">{{ message }}</h2>
+
+            {% if cita %}
+            <div class="appointment-details">
+                <h3 class="details-title">Detalles de tu cita:</h3>
+                <div class="detail-item">
+                    <span class="detail-label">Servicio:</span>
+                    <span class="detail-value">{{ cita.servicio_rel.nombre if cita.servicio_rel else 'N/A' }}</span>
                 </div>
-                {% endif %}
-                
-                <div class="confirmation-message">
-                    <p>Te hemos enviado un correo electrónico con los detalles de tu cita. ¡Esperamos verte pronto!</p>
+                <div class="detail-item">
+                    <span class="detail-label">Barbero:</span>
+                    <span class="detail-value">{{ cita.barbero.nombre if cita.barbero else 'N/A' }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fecha:</span>
+                    <span class="detail-value">{{ cita.fecha.strftime('%A, %d de %B de %Y') }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Hora:</span>
+                    <span class="detail-value">{{ cita.fecha.strftime('%I:%M %p') }}</span>
                 </div>
             </div>
+            {% endif %}
+
+            <div class="confirmation-message">
+                <p>Te hemos enviado un correo electrónico con los detalles de tu cita. ¡Esperamos verte pronto!</p>
+            </div>
+        </div>
+        {% elif warning %}
+        <div class="confirmation-warning">
+            <div class="warning-icon">⚠</div>
+            <h2 class="confirmation-title">{{ message }}</h2>
+            <div class="warning-message">
+                <p>Aunque el enlace ha expirado, tu cita sigue reservada en nuestro sistema.</p>
+                <p>Por favor contáctanos lo antes posible para confirmar tu asistencia y no perder tu lugar:</p>
+                <a href="https://wa.me/573143782855" target="_blank" class="btn-whatsapp-warning">
+                    📱 Contactar por WhatsApp (314 378 2855)
+                </a>
+            </div>
+        </div>
         {% else %}
-            <div class="confirmation-error">
-                <div class="error-icon">✕</div>
-                <h2 class="confirmation-title">{{ message }}</h2>
-                <div class="error-message">
-                    <p>Por favor, intenta agendar tu cita nuevamente o contacta con nosotros si el problema persiste.</p>
-                    <p>Puedes llamarnos al <strong>3102160496</strong> o enviarnos un WhatsApp.</p>
-                </div>
+        <div class="confirmation-error">
+            <div class="error-icon">✕</div>
+            <h2 class="confirmation-title">{{ message }}</h2>
+            <div class="error-message">
+                <p>Por favor, intenta agendar tu cita nuevamente o contacta con nosotros si el problema persiste.</p>
+                <p>Puedes llamarnos al <strong>3143782855</strong> o enviarnos un WhatsApp.</p>
             </div>
+        </div>
         {% endif %}
-        
+
         <div class="confirmation-actions">
             <a href="{{ url_for('public.home') }}" class="btn btn-primary">Volver al Inicio</a>
-            {% if not success %}
-            <a href="{{ url_for('public.home') }}#availability" class="btn btn-secondary">Intentar de Nuevo</a>
-            {% endif %}
+
         </div>
     </div>
 </section>

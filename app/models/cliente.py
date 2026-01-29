@@ -156,7 +156,7 @@ class Cita(db.Model):
         return serializer.dumps(self.id, salt='email-confirmation-salt')
 
     @staticmethod
-    def verify_confirmation_token(token, max_age_seconds=3600): # 1 hora por defecto
+    def verify_confirmation_token(token, max_age_seconds=43200): # 12 horas por defecto
         serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
         try:
             cita_id = serializer.loads(
@@ -175,7 +175,7 @@ class Cita(db.Model):
         return None
 
     @staticmethod
-    def get_cita_from_token(token, max_age_seconds=3600):
+    def get_cita_from_token(token, max_age_seconds=43200):
         """Devuelve la cita asociada al token si el token es válido y no ha expirado.
         No impone estado específico; útil para flujos idempotentes (ya confirmada).
         """

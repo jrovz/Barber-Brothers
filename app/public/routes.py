@@ -1117,10 +1117,11 @@ def confirmar_cita_route(token):
     # Intentar obtener la cita desde el token sin imponer estado (manejo idempotente)
     cita_token = Cita.get_cita_from_token(token)
     if not cita_token:
-        flash('El enlace de confirmación no es válido o ha expirado.', 'danger')
+        flash('El link expiró pero tu lugar sigue reservado. Por favor contáctanos.', 'warning')
         return render_template('public/confirmation_status.html',
                                success=False,
-                               message='El enlace de confirmación no es válido o ha expirado.')
+                               warning=True,
+                               message='El enlace ha expirado, pero tu lugar sigue reservado. Por favor, ponte en contacto con la barbería para confirmar tu asistencia.')
 
     # Si ya está confirmada, mostrar éxito (posible prefetch del enlace por el proveedor de correo)
     if cita_token.estado == 'confirmada':
