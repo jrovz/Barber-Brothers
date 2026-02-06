@@ -660,17 +660,27 @@ def eliminar_barbero(id):
         abort(403)
     barbero = Barbero.query.get_or_404(id)
     # Add check for associated Citas if necessary
-    if Cita.query.filter_by(barbero_id=id).first():
-         flash(f'No se puede eliminar el barbero {barbero.nombre} porque tiene citas asociadas.', 'danger')
-         return redirect(url_for('admin.gestionar_barberos'))
     try:
-        # Delete associated availabilities first
+        # Delete associated records manually (Cascading delete)
+        # 1. Eliminar bloqueos de horario
+        BloqueoHorario.query.filter_by(barbero_id=id).delete()
+        
+        # 2. Eliminar precios personalizados/configuración de servicios
+        BarberoServicio.query.filter_by(barbero_id=id).delete()
+        
+        # 3. Eliminar citas asociadas (Pasadas y futuras)
+        Cita.query.filter_by(barbero_id=id).delete()
+        
+        # 4. Eliminar disponibilidad (Horarios recurrentes)
         DisponibilidadBarbero.query.filter_by(barbero_id=id).delete()
+        
+        # Finalmente, eliminar al barbero
         db.session.delete(barbero)
         db.session.commit()
-        flash('Barbero y su disponibilidad eliminados correctamente.', 'success')
+        flash('Barbero y todos sus registros asociados (citas, servicios, horarios) eliminados correctamente.', 'success')
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error al eliminar barbero: {str(e)}")
         flash(f'Error al eliminar barbero: {str(e)}', 'danger')
     return redirect(url_for('admin.gestionar_barberos'))
 

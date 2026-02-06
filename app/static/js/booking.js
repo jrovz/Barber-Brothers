@@ -394,10 +394,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
             console.log('Servicios con precios del barbero:', data);
 
+            // Crear un Set de IDs de servicios disponibles para búsqueda rápida
+            const serviciosDisponiblesIds = new Set(data.servicios.map(s => s.id));
+
             // Guardar el servicio actualmente seleccionado
             const selectedServicioId = elements.servicioSelect.value;
+            let currentSelectionValid = false;
 
-            // Actualizar las opciones del select con los nuevos precios
+            // Actualizar las opciones del select
             Array.from(elements.servicioSelect.options).forEach(option => {
                 if (option.value === '') return; // Skip the placeholder option
 
@@ -405,6 +409,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const servicioData = data.servicios.find(s => s.id === servicioId);
 
                 if (servicioData) {
+                    // El servicio está disponible para este barbero
+                    option.style.display = ''; // Asegurar que sea visible
+
                     // Formatear el precio en formato colombiano
                     const precioFormateado = `$${servicioData.precio_valor.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')}`;
                     const duracion = servicioData.duracion_estimada || '';
@@ -420,19 +427,31 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (servicioData.es_precio_personalizado) {
                         option.textContent += ' ✨';
                     }
+
+                    if (option.value === selectedServicioId) {
+                        currentSelectionValid = true;
+                    }
+                } else {
+                    // El servicio NO está disponible para este barbero: Ocultarlo
+                    option.style.display = 'none';
                 }
             });
 
-            // Restaurar la selección si existía
-            if (selectedServicioId) {
+            // Si el servicio seleccionado ya no es válido, resetear selección
+            if (selectedServicioId && !currentSelectionValid) {
+                elements.servicioSelect.value = '';
+                console.log('Servicio seleccionado previamente no disponible para este barbero. Selección reseteada.');
+            } else if (selectedServicioId) {
                 elements.servicioSelect.value = selectedServicioId;
             }
 
-            console.log('Precios actualizados correctamente');
+            console.log('Precios y visibilidad actualizados correctamente');
 
         } catch (error) {
             console.error('Error actualizando precios:', error);
-            utils.showError('No se pudieron actualizar los precios. Usando precios base.');
+            utils.showError('No se pudieron actualizar los servicios. Intenta recargar la página.');
+            // En error, restauramos para no bloquear
+            restaurarPreciosBase();
         }
     }
 
@@ -441,9 +460,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!elements.servicioSelect) return;
 
-        // Restaurar los textos originales de las opciones
+        // Restaurar los textos originales de las opciones y su visibilidad
         Array.from(elements.servicioSelect.options).forEach(option => {
             if (option.value === '') return; // Skip placeholder
+
+            // Asegurar que todos sean visibles al restaurar
+            option.style.display = '';
 
             // Si tiene precio base guardado, restaurarlo
             if (option.dataset.precioBase) {
@@ -460,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        console.log('Precios base restaurados');
+        console.log('Precios base y visibilidad restaurados');
     }
 
     // ==================== FUNCIONES PRINCIPALES ====================
