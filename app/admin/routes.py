@@ -379,6 +379,7 @@ def dashboard():
 # --- Gestión de Productos (CRUD) ---
 @bp.route('/productos', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_productos():
     form = ProductoForm()
     if form.validate_on_submit():
@@ -418,6 +419,7 @@ def gestionar_productos():
 
 @bp.route('/productos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_producto(id):
     producto = Producto.query.get_or_404(id)
     form = ProductoForm(obj=producto if request.method == 'GET' else None)

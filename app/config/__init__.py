@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from sqlalchemy.pool import StaticPool
 
 load_dotenv()
 
@@ -45,6 +46,12 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
+    # Comparte una única conexión en memoria entre requests/hilos de prueba;
+    # sin esto, cada conexión nueva del pool ve una base de datos SQLite distinta y vacía.
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'poolclass': StaticPool,
+        'connect_args': {'check_same_thread': False},
+    }
 
 # Diccionario para seleccionar configuración
 config_dict = {
