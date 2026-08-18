@@ -81,13 +81,16 @@ barber-brothers/
 ├── app/                      # Directorio principal de la aplicación
 │   ├── __init__.py           # Factory de la aplicación (create_app)
 │   ├── admin/                # Blueprint para el panel de administración
-│   ├── api/                  # Blueprint para la API (AJAX)
+│   │   └── routes/           # Vistas divididas por dominio (productos, citas, barberos...)
+│   ├── api/                  # Blueprint para la API (hoy casi sin uso, ver sección 5)
 │   ├── barbero/              # Blueprint para el panel de barberos
-│   ├── public/               # Blueprint para la parte pública
+│   ├── public/               # Blueprint para la parte pública (incluye el booking real)
 │   ├── models/               # Modelos de SQLAlchemy
 │   ├── static/               # Archivos estáticos (CSS, JS, imágenes)
 │   ├── templates/            # Plantillas Jinja2
 │   └── utils/                # Funciones de utilidad
+├── tests/                    # Suite de pytest + fixtures (app, client, modelos de prueba)
+├── .github/workflows/        # CI: corre la suite de tests en cada push/PR
 ├── migrations/               # Archivos de migración de Flask-Migrate
 ├── deployment/               # Scripts para despliegue y configuración
 ├── venv/                     # Entorno virtual de Python
@@ -120,15 +123,17 @@ barber-brothers/
 
 ### Flujo de Booking de Citas
 1.  **Cliente (Frontend):** Selecciona Barbero, Servicio y Fecha en `Home.html`.
-2.  **JavaScript (`booking.js`):** Envía una petición `GET` a la API (`/api/disponibilidad/...`).
-3.  **API Blueprint (Backend):** La vista de la API consulta los modelos `DisponibilidadBarbero` y `Cita` para calcular los horarios libres.
-4.  **API Blueprint (Backend):** Devuelve una respuesta JSON con los horarios disponibles.
+2.  **JavaScript (`booking.js`):** Envía una petición `GET` a `/api/disponibilidad/...`.
+3.  **Public Blueprint (Backend):** `/api/disponibilidad/<barbero_id>/<fecha>` (definida en `app/public/routes.py`) consulta los modelos `DisponibilidadBarbero` y `Cita` para calcular los horarios libres.
+4.  **Public Blueprint (Backend):** Devuelve una respuesta JSON con los horarios disponibles.
 5.  **JavaScript (`booking.js`):** Renderiza dinámicamente los horarios en la página.
 6.  **Cliente (Frontend):** Selecciona un horario e introduce sus datos.
 7.  **JavaScript (`booking.js`):** Envía una petición `POST` a `/api/agendar-cita` con todos los detalles.
-8.  **API Blueprint (Backend):** Valida los datos, crea un nuevo registro de `Cliente` (si no existe) y una `Cita` con estado `pendiente_confirmacion`, y envía un correo de confirmación con un token.
+8.  **Public Blueprint (Backend):** `/api/agendar-cita` (también en `app/public/routes.py`) valida los datos, crea un nuevo registro de `Cliente` (si no existe) y una `Cita` con estado `pendiente_confirmacion`, y envía un correo de confirmación con un token.
 9.  **Cliente:** Hace clic en el enlace del correo.
 10. **Public Blueprint (Backend):** La ruta `/confirmar-cita/<token>` valida el token y actualiza el estado de la cita a `confirmada`.
+
+> Nota: pese al nombre de las URLs (`/api/...`), esta lógica vive en el Blueprint `public`, no en el Blueprint `api` (`app/api/routes.py`), que hoy solo expone un endpoint de ejemplo (`/api/info`). Es una discrepancia heredada del código, documentada aquí para que no confunda a quien la busque en el lugar "obvio".
 
 ## 6. Evaluación y Puntos de Mejora
 
@@ -140,10 +145,8 @@ barber-brothers/
 *   **Seguridad:** Se implementan conceptos básicos de seguridad como CSRF (con Flask-WTF) y un sistema de autenticación y autorización con Flask-Login.
 
 ### Áreas de Mejora Potencial
-*   **Testing:** El proyecto carece de una suite de pruebas automatizadas. Se recomienda añadir:
-    *   **Pruebas Unitarias:** Para los modelos y funciones de utilidad.
-    *   **Pruebas de Integración:** Para las vistas de los Blueprints y la lógica de la API.
-*   **Gestión de Dependencias:** Formalizar las dependencias en un archivo `requirements.txt` es crucial para garantizar la reproducibilidad del entorno.
+*   ~~**Testing:** El proyecto carece de una suite de pruebas automatizadas.~~ Resuelto parcialmente: existe `tests/` (pytest) con cobertura de login de administrador, autorización de todas las rutas `/admin/*` y el flujo de agendamiento de citas, más un workflow de CI (`.github/workflows/tests.yml`) que las corre en cada push/PR. Sigue faltando cobertura de las vistas de barbero y del checkout de productos.
+*   ~~**Gestión de Dependencias:** Formalizar las dependencias en un archivo `requirements.txt`.~~ Resuelto: `requirements.txt` es la única fuente de verdad (se eliminó el directorio `requirements/` que había quedado duplicado y desactualizado), y sus versiones se auditan contra la base de datos de vulnerabilidades OSV.
 *   **Tareas en Segundo Plano:** Para operaciones que pueden tardar (como el envío de correos), se podría integrar una cola de tareas como **Celery** con **Redis**. Esto evitaría que la aplicación se bloquee esperando la respuesta del servidor de correo y mejoraría la experiencia del usuario.
 *   **Contenerización:** Utilizar **Docker** y **Docker Compose** simplificaría la configuración del entorno de desarrollo y estandarizaría el despliegue, haciéndolo más portable y consistente.
 *   **Manejo de Archivos Estáticos:** Para una aplicación a gran escala, se podría considerar el uso de un servicio de almacenamiento de objetos (como Amazon S3 o Google Cloud Storage) para servir las imágenes subidas, delegando esta tarea a un servicio especializado.
