@@ -6,7 +6,7 @@ from flask import current_app
 def allowed_file(filename):
     allowed_extensions = current_app.config['ALLOWED_EXTENSIONS']
     is_allowed = '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
-    print(f"¿Archivo {filename} permitido?: {is_allowed}")
+    current_app.logger.debug(f"¿Archivo {filename} permitido?: {is_allowed}")
     return is_allowed
 
 def save_image(file, subfolder):

@@ -8,6 +8,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'desarrollo-clave-segura'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
     # Configuraciones para carga de archivos    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'uploads')
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     MAX_CONTENT_LENGTH = 30 * 1024 * 1024  # 30 MB límite de tamaño
@@ -29,10 +31,15 @@ class DevelopmentConfig(Config):
     
 class ProductionConfig(Config):
     DEBUG = False
+    SESSION_COOKIE_SECURE = True
     # Configuración de base de datos para producción usando PostgreSQL estándar
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     if SQLALCHEMY_DATABASE_URI is None:
         raise ValueError("DATABASE_URL environment variable is required for production")
+
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if SECRET_KEY is None:
+        raise ValueError("SECRET_KEY environment variable is required for production")
 
 class TestingConfig(Config):
     TESTING = True

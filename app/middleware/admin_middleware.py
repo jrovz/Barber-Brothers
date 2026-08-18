@@ -48,7 +48,8 @@ class AdminMiddleware:
         try:
             if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
                 return
-        except:
+        except Exception as e:
+            logger.warning(f"Error checking admin status: {e}")
             return
         
         try:
@@ -115,7 +116,8 @@ class AdminMiddleware:
         try:
             if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
                 return response
-        except:
+        except Exception as e:
+            logger.warning(f"Error checking admin status: {e}")
             return response
         
         try:

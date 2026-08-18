@@ -98,6 +98,7 @@ Notas de mantenimiento
 from flask import render_template, request, redirect, url_for, flash, abort, current_app, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from app.admin import bp
+from app.utils.decorators import admin_required
 # Import models
 from app.models.producto import Producto
 from app.models.admin import User # Assuming User model is in admin.py
@@ -193,9 +194,8 @@ def logout():
 
 @bp.route('/')
 @login_required
+@admin_required
 def dashboard():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
 
     try:
         # Verificar conexión a la base de datos primero
@@ -460,9 +460,8 @@ def editar_producto(id):
 
 @bp.route('/productos/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_producto(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     producto = Producto.query.get_or_404(id)
     try:
         db.session.delete(producto)
@@ -476,9 +475,8 @@ def eliminar_producto(id):
 # --- Gestión de Categorías (CRUD) ---
 @bp.route('/categorias', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_categorias():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     form = CategoriaForm()
     if form.validate_on_submit():
         nueva_categoria = Categoria(nombre=form.nombre.data)
@@ -499,9 +497,8 @@ def gestionar_categorias():
 
 @bp.route('/categorias/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_categoria(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     categoria = Categoria.query.get_or_404(id)
     form = CategoriaForm(obj=categoria) # Pass obj to pre-fill and for validation context
 
@@ -522,9 +519,8 @@ def editar_categoria(id):
 
 @bp.route('/categorias/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_categoria(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     categoria = Categoria.query.get_or_404(id)
     if categoria.productos.first():
         flash('No se puede eliminar la categoría porque tiene productos asociados. Por favor, reasigne o elimine esos productos primero.', 'danger')
@@ -541,9 +537,8 @@ def eliminar_categoria(id):
 # --- Gestión de Barberos (CRUD) ---
 @bp.route('/barberos', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_barberos():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     form = BarberoForm()
     if form.validate_on_submit():
         imagen_url = None
@@ -589,9 +584,8 @@ def gestionar_barberos():
 
 @bp.route('/barberos/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_barbero(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     barbero = Barbero.query.get_or_404(id)
     # Pass obj=barbero to pre-fill the form on GET
     form = BarberoForm(obj=barbero if request.method == 'GET' else None)
@@ -655,9 +649,8 @@ def editar_barbero(id):
 
 @bp.route('/barberos/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_barbero(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     barbero = Barbero.query.get_or_404(id)
     # Add check for associated Citas if necessary
     try:
@@ -687,6 +680,7 @@ def eliminar_barbero(id):
 # --- Gestión de Servicios y Precios por Barbero ---
 @bp.route('/barberos/<int:barbero_id>/servicios', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_servicios_barbero(barbero_id):
     """
     Gestionar qué servicios ofrece un barbero y sus precios personalizados.
@@ -694,8 +688,6 @@ def gestionar_servicios_barbero(barbero_id):
     GET: Muestra tabla con todos los servicios y configuración del barbero
     POST: Guarda la configuración de servicios y precios
     """
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     barbero = Barbero.query.get_or_404(barbero_id)
     servicios = Servicio.query.filter_by(activo=True).order_by(Servicio.orden, Servicio.nombre).all()
@@ -784,9 +776,8 @@ def gestionar_servicios_barbero(barbero_id):
 # --- Gestión de Disponibilidad de Barberos ---
 @bp.route('/barberos/<int:barbero_id>/disponibilidad', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_disponibilidad(barbero_id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     barbero = Barbero.query.get_or_404(barbero_id)
     form = DisponibilidadForm()
 
@@ -842,9 +833,8 @@ def gestionar_disponibilidad(barbero_id):
 
 @bp.route('/barberos/disponibilidad/eliminar/<int:disp_id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_disponibilidad(disp_id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     disp = DisponibilidadBarbero.query.get_or_404(disp_id)
     barbero_id = disp.barbero_id
     try:
@@ -858,9 +848,8 @@ def eliminar_disponibilidad(disp_id):
 
 @bp.route('/barberos/<int:barbero_id>/disponibilidad/crear_predeterminada', methods=['POST'])
 @login_required
+@admin_required
 def crear_disponibilidad_predeterminada(barbero_id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     barbero = Barbero.query.get_or_404(barbero_id)
     horario_estandar = {
         0: [(time(8, 0), time(12, 0)), (time(13, 0), time(20, 0))], # Lunes
@@ -891,9 +880,8 @@ def crear_disponibilidad_predeterminada(barbero_id):
 # --- Gestión de Servicios (CRUD) ---
 @bp.route('/servicios', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_servicios():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     form = ServicioForm()
     try:
         if form.validate_on_submit():
@@ -962,9 +950,8 @@ def gestionar_servicios():
 
 @bp.route('/servicios/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_servicio(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     servicio = Servicio.query.get_or_404(id)
     form = ServicioForm(obj=servicio if request.method == 'GET' else None)
 
@@ -1047,9 +1034,8 @@ def eliminar_imagen_servicio(imagen_id):
 
 @bp.route('/servicios/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_servicio(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     servicio = Servicio.query.get_or_404(id)
     # Add check for associated Citas if necessary
     if Cita.query.filter_by(servicio_id=id).first(): # Assuming Cita has servicio_id
@@ -1067,9 +1053,8 @@ def eliminar_servicio(id):
 
 @bp.route('/citas', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_citas():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     form = CitaForm()
 
     if request.method == 'POST':
@@ -1188,9 +1173,8 @@ def gestionar_citas():
 
 @bp.route('/citas/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_cita(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     cita = Cita.query.get_or_404(id)
     form = CitaForm(obj=cita if request.method == 'GET' else None)
 
@@ -1300,9 +1284,8 @@ def editar_cita(id):
 
 @bp.route('/citas/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_cita(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     cita = Cita.query.get_or_404(id)
     try:
         db.session.delete(cita)
@@ -1316,9 +1299,8 @@ def eliminar_cita(id):
 # --- Debug Images ---
 @bp.route('/debug/images')
 @login_required
+@admin_required
 def debug_images():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     barberos = Barbero.query.all()
     productos = Producto.query.all()
     servicios = Servicio.query.all()
@@ -1337,9 +1319,8 @@ def debug_images():
 # --- Gestión de Clientes y Segmentación ---
 @bp.route('/clientes', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_clientes():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     form = ClienteFilterForm()
     
@@ -1397,9 +1378,8 @@ def gestionar_clientes():
 
 @bp.route('/clientes/<int:id>')
 @login_required
+@admin_required
 def detalle_cliente(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
         
     cliente = Cliente.query.get_or_404(id)
     
@@ -1421,9 +1401,8 @@ def detalle_cliente(id):
 
 @bp.route('/clientes/actualizar-segmentos', methods=['POST'])
 @login_required
+@admin_required
 def actualizar_segmentos():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
         
     # Obtener todos los clientes
     clientes = Cliente.query.all()
@@ -1448,9 +1427,8 @@ def actualizar_segmentos():
 
 @bp.route('/sliders', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def gestionar_sliders():
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     if Slider is None:
         flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
@@ -1498,9 +1476,8 @@ def gestionar_sliders():
 
 @bp.route('/sliders/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def editar_slider(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     if Slider is None:
         flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
@@ -1573,9 +1550,8 @@ def editar_slider(id):
 
 @bp.route('/sliders/eliminar/<int:id>', methods=['POST'])
 @login_required
+@admin_required
 def eliminar_slider(id):
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     if Slider is None:
         flash('Error: El modelo Slider no está disponible. Verifica que la tabla exista en la base de datos.', 'danger')
@@ -1634,10 +1610,9 @@ def eliminar_slider(id):
 
 @bp.route('/api/save-dashboard-config', methods=['POST'])
 @login_required
+@admin_required
 def save_dashboard_config():
     """Guarda la configuración del dashboard en cookies"""
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     try:
         from flask import request, make_response, jsonify
@@ -1659,10 +1634,9 @@ def save_dashboard_config():
 
 @bp.route('/api/save-interface-setting', methods=['POST'])
 @login_required
+@admin_required
 def save_interface_setting():
     """Guarda una configuración específica de interfaz"""
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     try:
         from flask import request, make_response, jsonify
@@ -1686,10 +1660,9 @@ def save_interface_setting():
 
 @bp.route('/api/refresh-metrics', methods=['POST'])
 @login_required
+@admin_required
 def refresh_metrics():
     """Actualiza las métricas del dashboard"""
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     try:
         from app.utils.admin_cookies import AdminMetricsCalculator
@@ -1710,10 +1683,9 @@ def refresh_metrics():
 
 @bp.route('/api/get-quick-access', methods=['GET'])
 @login_required
+@admin_required
 def get_quick_access():
     """Obtiene datos de acceso rápido"""
-    if not hasattr(current_user, 'is_admin') or not current_user.is_admin():
-        abort(403)
     
     try:
         from app.utils.admin_cookies import AdminCookieManager
