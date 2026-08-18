@@ -5,7 +5,7 @@ from app.admin import bp
 from app.utils.decorators import admin_required
 from app.models.cliente import Cita
 from app.models.servicio import Servicio
-from app.models.barbero import Barbero, DisponibilidadBarbero
+from app.models.barbero import Barbero, DisponibilidadBarbero, BloqueoHorario
 from app.models.barbero_servicio import BarberoServicio
 from decimal import Decimal
 from app import db
