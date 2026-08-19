@@ -17,4 +17,4 @@ Pillow==12.3.0
 
 
 # Common dependencies
-SQLAlchemy==2.0.20
+SQLAlchemy==2.0.52
