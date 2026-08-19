@@ -95,30 +95,40 @@ def dashboard():
     ).count()
     
     # Estadísticas por barbero
+    # Una sola query agregada por métrica en vez de 2 queries por barbero (evita N+1)
     barberos = Barbero.query.all()
-    stats_barberos = []
-    
-    for barbero in barberos:
-        # Citas asignadas a este barbero este mes
-        citas_barbero = Cita.query.filter(
-            Cita.barbero_id == barbero.id,
+    barbero_ids = [b.id for b in barberos]
+
+    citas_por_barbero = dict(
+        db.session.query(Cita.barbero_id, db.func.count(Cita.id))
+        .filter(
+            Cita.barbero_id.in_(barbero_ids),
             Cita.fecha >= datetime.combine(this_month_start, time.min),
             Cita.fecha < datetime.combine(next_month_start, time.min)
-        ).count()
-        
-        # Calculando tasa de ocupación basada en disponibilidad
-        disponibilidad = DisponibilidadBarbero.query.filter_by(barbero_id=barbero.id, activo=True).all()
-        horas_disponibles = 0
-        for disp in disponibilidad:
-            # Calculamos horas disponibles por semana
-            inicio = disp.hora_inicio
-            fin = disp.hora_fin
-            delta = (datetime.combine(today, fin) - datetime.combine(today, inicio))
-            horas_disponibles += delta.total_seconds() / 3600  # horas por día
-        
+        )
+        .group_by(Cita.barbero_id)
+        .all()
+    )
+
+    horas_disponibles_por_barbero = {}
+    for disp in DisponibilidadBarbero.query.filter(
+        DisponibilidadBarbero.barbero_id.in_(barbero_ids),
+        DisponibilidadBarbero.activo == True
+    ).all():
+        # Calculamos horas disponibles por día para ese bloque
+        delta = datetime.combine(today, disp.hora_fin) - datetime.combine(today, disp.hora_inicio)
+        horas_disponibles_por_barbero[disp.barbero_id] = (
+            horas_disponibles_por_barbero.get(disp.barbero_id, 0) + delta.total_seconds() / 3600
+        )
+
+    stats_barberos = []
+    for barbero in barberos:
+        citas_barbero = citas_por_barbero.get(barbero.id, 0)
+        horas_disponibles = horas_disponibles_por_barbero.get(barbero.id, 0)
+
         # La tasa sería un estimado (mejorable con datos reales de duración de citas)
         tasa_ocupacion = round((citas_barbero / (horas_disponibles * 4)) * 100) if horas_disponibles > 0 else 0
-        
+
         stats_barberos.append({
             'id': barbero.id,
             'nombre': barbero.nombre,

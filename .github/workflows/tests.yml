@@ -22,3 +22,18 @@ jobs:
 
       - name: Ejecutar pruebas
         run: pytest tests/ -v
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Auditar dependencias contra la base de datos OSV
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip-audit -r requirements.txt

@@ -18,16 +18,24 @@ from app.utils.cart_optimizer import CartOptimizer, PurchaseIncentiveManager
 
 class BusinessMiddleware:
     """Middleware para procesamiento automático de lógica comercial"""
-    
+
+    # Endpoints que realmente consumen g.personalization / g.conversion_* / la
+    # cookie 'conversion_strategy': hoy solo la home la usa (business_optimization.js
+    # y smart_cart.js se cargan únicamente desde Home.html vía
+    # business_optimization_snippets.html). El resto de rutas de compra/reserva
+    # (checkout, agendar-cita) llaman a BusinessCookieManager/CartOptimizer
+    # directamente sobre su propia respuesta y no dependen de este middleware.
+    RELEVANT_ENDPOINTS = {'public.home'}
+
     def __init__(self, app=None):
         if app:
             self.init_app(app)
-    
+
     def init_app(self, app):
         """Inicializar middleware con la aplicación Flask"""
         app.before_request(self.before_request)
         app.after_request(self.after_request)
-        
+
         # Configurar logging específico para métricas de negocio
         if not app.logger.handlers:
             import logging
@@ -38,9 +46,11 @@ class BusinessMiddleware:
             )
             handler.setFormatter(formatter)
             app.logger.addHandler(handler)
-    
+
     def before_request(self):
-        """Procesar datos antes de cada request"""
+        """Procesar datos antes de cada request (solo en RELEVANT_ENDPOINTS)"""
+        if request.endpoint not in self.RELEVANT_ENDPOINTS:
+            return
         try:
             # 1. Cargar datos de personalización
             g.personalization = BusinessCookieManager.get_personalization_data()
@@ -81,7 +91,9 @@ class BusinessMiddleware:
             g.smart_recommendations = {}
     
     def after_request(self, response):
-        """Procesar datos después de cada response"""
+        """Procesar datos después de cada response (solo en RELEVANT_ENDPOINTS)"""
+        if request.endpoint not in self.RELEVANT_ENDPOINTS:
+            return response
         try:
             # 1. Actualizar métricas de sesión
             self._update_session_metrics(response)

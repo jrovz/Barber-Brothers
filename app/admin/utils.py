@@ -2,6 +2,7 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 from flask import current_app
+from PIL import Image, UnidentifiedImageError
 
 def allowed_file(filename):
     allowed_extensions = current_app.config['ALLOWED_EXTENSIONS']
@@ -72,21 +73,31 @@ def save_image(file, subfolder):
         # Guardar el archivo
         try:
             file.save(file_path)
-            
+
             # Verificar si el archivo existe después de guardarlo
             if os.path.exists(file_path):
                 logger.info(f"✅ Archivo guardado exitosamente y verificado")
                 logger.info(f"   - Tamaño del archivo: {os.path.getsize(file_path)} bytes")
             else:
                 logger.error(f"❌ El archivo no existe después de guardarlo")
-                
+
             logger.info(f"   - Ruta del sistema: {file_path}")
             logger.info(f"   - URL relativa: /static/uploads/{subfolder}/{unique_filename}")
             logger.info(f"   - URL absoluta: {request.host_url}static/uploads/{subfolder}/{unique_filename}")
         except Exception as e:
             logger.error(f"❌ Error al guardar: {str(e)}")
             return None
-        
+
+        # Verificar que el contenido guardado sea realmente una imagen,
+        # no solo que la extensión del nombre lo parezca
+        try:
+            with Image.open(file_path) as img:
+                img.verify()
+        except (UnidentifiedImageError, OSError) as e:
+            logger.warning(f"⚠️ Archivo rechazado, el contenido no es una imagen válida: {file.filename} ({e})")
+            os.remove(file_path)
+            return None
+
         logger.info(f"--- FIN GUARDADO DE IMAGEN ---")
         return f'/static/uploads/{subfolder}/{unique_filename}'
     
