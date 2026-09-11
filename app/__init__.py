@@ -86,6 +86,24 @@ def create_app(config_name='default'):
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     app.jinja_env.filters['cop_format'] = format_cop
+
+    # Nginx sirve css/js con Cache-Control "public, immutable" por 1 año, así que
+    # sin esto el navegador de los visitantes nunca vuelve a pedir un archivo
+    # estático tras un deploy. Se agrega ?v=<mtime> a las URLs de /static para
+    # que cambien solo cuando el archivo realmente cambia.
+    def dated_url_for(endpoint, **values):
+        if endpoint == 'static':
+            filename = values.get('filename')
+            if filename:
+                file_path = os.path.join(app.root_path, 'static', filename)
+                if os.path.exists(file_path):
+                    values['v'] = int(os.stat(file_path).st_mtime)
+        return url_for(endpoint, **values)
+
+    @app.context_processor
+    def override_url_for():
+        return dict(url_for=dated_url_for)
+
     # Crear carpeta de uploads si no existe
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     
