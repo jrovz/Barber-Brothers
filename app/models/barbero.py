@@ -25,13 +25,14 @@ class Barbero(db.Model, UserMixin):
     disponibilidad = db.relationship('DisponibilidadBarbero', backref='barbero', lazy='dynamic',
                                     cascade='all, delete-orphan')
     
-    def esta_disponible(self, fecha_propuesta):
+    def esta_disponible(self, fecha_propuesta, duracion=30):
         """
         Verifica si el barbero está disponible en una fecha específica
-        
+
         Args:
             fecha_propuesta (datetime): Fecha y hora para verificar disponibilidad
-            
+            duracion (int): Duración en minutos del servicio a agendar
+
         Returns:
             bool: True si está disponible, False en caso contrario
         """
@@ -61,15 +62,12 @@ class Barbero(db.Model, UserMixin):
         # Comprobar en cada bloque de disponibilidad
         for disp in self.disponibilidad.filter_by(dia_semana=dia_semana, activo=True).all():
             if disp.hora_inicio <= solo_hora < disp.hora_fin:
-                # Verificar si ya tiene una cita en ese horario
-                # Incluimos citas expiradas como ocupadas para mantener el horario bloqueado
+                # Verificar solapamiento con citas existentes (incluidas las expiradas,
+                # para mantener el horario bloqueado) considerando la duración del servicio
                 from app.models.cliente import Cita
-                cita_existente = Cita.query.filter_by(
-                    barbero_id=self.id,
-                    fecha=fecha_propuesta
-                ).filter(Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])).first()
-                return cita_existente is None
-                
+                fin_propuesto = fecha_propuesta + timedelta(minutes=duracion)
+                return not Cita.hay_solapamiento(self.id, fecha_propuesta, fin_propuesto)
+
         return False
 
     def get_disponibilidad_por_dia(self, dia_semana):
@@ -172,7 +170,16 @@ class Barbero(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def generate_username(self):
-        """Genera un username único basado en el nombre del barbero"""
+        """
+        Genera un username único basado en el nombre del barbero.
+
+        Nota: el check-then-set no es atómico (hay una consulta por cada
+        candidato antes de asignar `self.username`). Solo se invoca desde los
+        formularios de alta/edición de barbero en el panel de admin, protegidos
+        por @admin_required, por lo que la ventana de carrera es despreciable
+        en la práctica; si en el futuro se usa desde un flujo concurrente,
+        habrá que capturar `IntegrityError` en el commit del caller y reintentar.
+        """
         if not self.username:
             # Crear username base del nombre (sin espacios, lowercase)
             base_username = self.nombre.lower().replace(' ', '').replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u').replace('ñ', 'n')
@@ -358,24 +365,10 @@ class DisponibilidadBarbero(db.Model):
             end_time = datetime.combine(fecha, self.hora_fin)
             
             # Obtener todas las citas que ocupan espacio para este día y barbero
+            # (una sola consulta para todo el día, compartida con esta_disponible())
             try:
-                # Incluimos 'expirada' para mantener esos slots ocupados como solicitado por el cliente
-                citas_del_dia = Cita.query.filter(
-                    Cita.barbero_id == self.barbero_id,
-                    Cita.fecha >= datetime.combine(fecha, self.hora_inicio),
-                    Cita.fecha < datetime.combine(fecha + timedelta(days=1), self.hora_inicio),
-                    Cita.estado.in_(['confirmada', 'pendiente_confirmacion', 'expirada'])
-                ).all()
-                
-                current_app.logger.debug(f"Bloque {self.id}: Encontradas {len(citas_del_dia)} citas para este día")
-                
-                # Crear lista de intervalos ocupados
-                intervalos_ocupados = []
-                for cita in citas_del_dia:
-                    inicio_cita = cita.fecha
-                    fin_cita = inicio_cita + timedelta(minutes=cita.duracion or 30)
-                    intervalos_ocupados.append((inicio_cita, fin_cita))
-                    current_app.logger.debug(f"Cita ID {cita.id} ocupa {inicio_cita.strftime('%H:%M')} - {fin_cita.strftime('%H:%M')}")
+                intervalos_ocupados = Cita.obtener_intervalos_ocupados(self.barbero_id, fecha)
+                current_app.logger.debug(f"Bloque {self.id}: {len(intervalos_ocupados)} citas ocupan horario este día")
             except Exception as e:
                 current_app.logger.error(f"Error al obtener citas del día: {str(e)}")
                 intervalos_ocupados = []  # Si hay error, asumir que no hay citas (mejor mostrar horarios de más que de menos)
@@ -388,14 +381,8 @@ class DisponibilidadBarbero(db.Model):
                 fecha_hora_fin = fecha_hora_inicio + timedelta(minutes=duracion)
                 
                 # Verificar si este slot se solapa con alguna cita existente
-                disponible = True
-                for inicio_ocupado, fin_ocupado in intervalos_ocupados:
-                    # Verificar solapamiento: el slot no debe empezar antes de que termine una cita
-                    # ni terminar después de que empiece otra cita
-                    if not (fecha_hora_fin <= inicio_ocupado or fecha_hora_inicio >= fin_ocupado):
-                        disponible = False
-                        break
-                
+                disponible = not Cita.intervalo_se_solapa(fecha_hora_inicio, fecha_hora_fin, intervalos_ocupados)
+
                 slot_info = {
                     'hora': hora_slot.strftime('%H:%M'),
                     'disponible': disponible

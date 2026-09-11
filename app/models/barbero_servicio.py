@@ -37,6 +37,10 @@ class BarberoServicio(db.Model):
     # Constraint único para evitar duplicados
     __table_args__ = (
         db.UniqueConstraint('barbero_id', 'servicio_id', name='uq_barbero_servicio'),
+        db.CheckConstraint(
+            'precio_personalizado IS NULL OR precio_personalizado >= 0',
+            name='ck_barbero_servicio_precio_no_negativo'
+        ),
     )
     
     def get_precio_final(self):

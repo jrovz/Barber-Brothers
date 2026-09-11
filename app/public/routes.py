@@ -718,12 +718,18 @@ def get_servicio_data(servicio_id):
         barbero_id = request.args.get('barbero_id', type=int)
         
         # Calcular precio según el barbero seleccionado
+        activo_para_barbero = True
         if barbero_id:
             precio_info = obtener_precio_servicio(barbero_id, servicio_id)
             if precio_info:
-                precio_valor = float(precio_info['precio'])
+                activo_para_barbero = precio_info['servicio_activo_para_barbero']
                 precio_base = float(precio_info['precio_base'])
-                es_personalizado = precio_info['es_personalizado']
+                if activo_para_barbero:
+                    precio_valor = float(precio_info['precio'])
+                    es_personalizado = precio_info['es_personalizado']
+                else:
+                    precio_valor = precio_base
+                    es_personalizado = False
             else:
                 precio_valor = float(servicio.precio)
                 precio_base = float(servicio.precio)
@@ -750,6 +756,7 @@ def get_servicio_data(servicio_id):
             'precio_valor': precio_valor,
             'precio_base': precio_base,
             'es_precio_personalizado': es_personalizado,
+            'activo_para_barbero': activo_para_barbero,
             'duracion_estimada': servicio.duracion_estimada,
             'duracion_minutos': servicio.get_duracion_minutos(),
             'imagen_url': servicio.get_imagen_principal(),  # Imagen principal para compatibilidad
@@ -1027,7 +1034,14 @@ def agendar_cita():
         # Obtener el precio que se cobrará al cliente según el barbero seleccionado
         from app.utils.pricing import obtener_precio_servicio
         precio_info = obtener_precio_servicio(int(data['barbero_id']), int(data['servicio_id']))
-        
+
+        if precio_info and not precio_info['servicio_activo_para_barbero']:
+            current_app.logger.warning(
+                f"Intento de reserva de servicio desactivado - Barbero: {data['barbero_id']}, "
+                f"Servicio: {data['servicio_id']}, Cliente: {data['email']}"
+            )
+            return jsonify({'error': 'Este barbero no ofrece este servicio actualmente.'}), 400
+
         if precio_info:
             precio_cobrado = precio_info['precio']
             es_precio_personalizado = precio_info['es_personalizado']

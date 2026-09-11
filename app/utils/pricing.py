@@ -34,22 +34,29 @@ def obtener_precio_servicio(barbero_id: int, servicio_id: int) -> dict:
     servicio = Servicio.query.get(servicio_id)
     if not servicio:
         return None
-    
-    # Buscar configuración específica barbero-servicio
+
+    # Buscar configuración específica barbero-servicio (sin filtrar por activo,
+    # para poder distinguir "no hay config" de "el barbero lo desactivó")
     config = BarberoServicio.query.filter_by(
         barbero_id=barbero_id,
-        servicio_id=servicio_id,
-        activo=True
+        servicio_id=servicio_id
     ).first()
-    
+
     if config:
+        if not config.activo:
+            return {
+                'precio': None,
+                'precio_base': servicio.precio,
+                'es_personalizado': False,
+                'servicio_activo_para_barbero': False
+            }
         return {
             'precio': config.get_precio_final(),
             'precio_base': servicio.precio,
             'es_personalizado': config.tiene_precio_personalizado(),
             'servicio_activo_para_barbero': True
         }
-    
+
     # Si no hay configuración específica, el barbero ofrece el servicio al precio base
     # (comportamiento por defecto para compatibilidad hacia atrás)
     return {
@@ -79,13 +86,15 @@ def obtener_servicios_barbero(barbero_id: int) -> list:
     
     servicios = Servicio.query.filter_by(activo=True).order_by(Servicio.orden).all()
     resultado = []
-    
+
+    configs = {
+        c.servicio_id: c
+        for c in BarberoServicio.query.filter_by(barbero_id=barbero_id).all()
+    }
+
     for servicio in servicios:
-        config = BarberoServicio.query.filter_by(
-            barbero_id=barbero_id,
-            servicio_id=servicio.id
-        ).first()
-        
+        config = configs.get(servicio.id)
+
         if config:
             resultado.append({
                 'servicio': servicio,

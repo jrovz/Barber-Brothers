@@ -7,7 +7,7 @@ from app.models.cliente import Cita
 from app.models.servicio import Servicio
 from app.models.barbero import Barbero, DisponibilidadBarbero, BloqueoHorario
 from app.models.barbero_servicio import BarberoServicio
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from app import db
 from app.admin.forms import BarberoForm, DisponibilidadForm
 from app.admin.utils import save_image
@@ -179,19 +179,20 @@ def gestionar_servicios_barbero(barbero_id):
     servicios = Servicio.query.filter_by(activo=True).order_by(Servicio.orden, Servicio.nombre).all()
     
     if request.method == 'POST':
+        errores = []
         try:
             # Procesar formulario de servicios
             for servicio in servicios:
                 # Verificar si el checkbox está marcado
                 activo = request.form.get(f'servicio_{servicio.id}_activo') == 'on'
                 precio_str = request.form.get(f'servicio_{servicio.id}_precio', '').strip()
-                
+
                 # Buscar configuración existente
                 config = BarberoServicio.query.filter_by(
                     barbero_id=barbero_id,
                     servicio_id=servicio.id
                 ).first()
-                
+
                 if activo:
                     # Si está activo, crear o actualizar configuración
                     if not config:
@@ -200,19 +201,25 @@ def gestionar_servicios_barbero(barbero_id):
                             servicio_id=servicio.id
                         )
                         db.session.add(config)
-                    
+
                     config.activo = True
-                    
+
                     # Procesar precio personalizado
                     if precio_str:
                         try:
                             precio_nuevo = Decimal(precio_str)
-                            # Solo guardar si es diferente al precio base
-                            if precio_nuevo != servicio.precio:
-                                config.precio_personalizado = precio_nuevo
-                            else:
-                                config.precio_personalizado = None
-                        except:
+                        except InvalidOperation:
+                            errores.append(f'Precio inválido para "{servicio.nombre}": "{precio_str}".')
+                            continue
+
+                        if precio_nuevo < 0:
+                            errores.append(f'El precio de "{servicio.nombre}" no puede ser negativo.')
+                            continue
+
+                        # Solo guardar si es diferente al precio base
+                        if precio_nuevo != servicio.precio:
+                            config.precio_personalizado = precio_nuevo
+                        else:
                             config.precio_personalizado = None
                     else:
                         config.precio_personalizado = None
@@ -220,40 +227,29 @@ def gestionar_servicios_barbero(barbero_id):
                     # Si está desactivado
                     if config:
                         config.activo = False
-            
-            db.session.commit()
-            flash(f'Servicios de {barbero.nombre} actualizados correctamente.', 'success')
-            return redirect(url_for('admin.gestionar_servicios_barbero', barbero_id=barbero_id))
-            
+
+            if errores:
+                db.session.rollback()
+                for error in errores:
+                    flash(error, 'danger')
+            else:
+                db.session.commit()
+                flash(f'Servicios de {barbero.nombre} actualizados correctamente.', 'success')
+                return redirect(url_for('admin.gestionar_servicios_barbero', barbero_id=barbero_id))
+
         except Exception as e:
             db.session.rollback()
             logger.error(f"Error al actualizar servicios del barbero: {str(e)}")
             flash(f'Error al guardar cambios: {str(e)}', 'danger')
     
-    # Preparar datos para la vista
-    servicios_config = {}
-    for servicio in servicios:
-        config = BarberoServicio.query.filter_by(
-            barbero_id=barbero_id,
-            servicio_id=servicio.id
-        ).first()
-        
-        if config:
-            servicios_config[servicio.id] = {
-                'servicio': servicio,
-                'activo': config.activo,
-                'precio_personalizado': config.precio_personalizado,
-                'precio_final': config.get_precio_final()
-            }
-        else:
-            # Por defecto, todos los servicios están activos al precio base
-            servicios_config[servicio.id] = {
-                'servicio': servicio,
-                'activo': True,
-                'precio_personalizado': None,
-                'precio_final': servicio.precio
-            }
-    
+    # Preparar datos para la vista reutilizando la misma lógica que consumen
+    # las APIs públicas, para que admin y frontend nunca diverjan
+    from app.utils.pricing import obtener_servicios_barbero
+    servicios_config = {
+        item['servicio'].id: item
+        for item in obtener_servicios_barbero(barbero_id)
+    }
+
     return render_template('admin/barbero_servicios.html',
                           title=f'Servicios de {barbero.nombre}',
                           barbero=barbero,

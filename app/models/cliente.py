@@ -97,7 +97,44 @@ class Cita(db.Model):
     @servicio.setter
     def servicio(self, value):
         self.servicio_rel = value
-    
+
+    ESTADOS_OCUPAN_HORARIO = ('confirmada', 'pendiente_confirmacion', 'expirada')
+
+    @staticmethod
+    def obtener_intervalos_ocupados(barbero_id, fecha, estados=ESTADOS_OCUPAN_HORARIO):
+        """
+        Trae en una sola consulta las citas de un barbero para un día y las devuelve
+        como lista de intervalos (inicio, fin) según su duración.
+        """
+        inicio_dia = datetime.combine(fecha, datetime.min.time())
+        fin_dia = inicio_dia + timedelta(days=1)
+
+        citas_del_dia = Cita.query.filter(
+            Cita.barbero_id == barbero_id,
+            Cita.estado.in_(estados),
+            Cita.fecha >= inicio_dia,
+            Cita.fecha < fin_dia,
+        ).all()
+
+        return [
+            (cita.fecha, cita.fecha + timedelta(minutes=cita.duracion or 30))
+            for cita in citas_del_dia
+        ]
+
+    @staticmethod
+    def intervalo_se_solapa(inicio, fin, intervalos_ocupados):
+        """Indica si [inicio, fin) se solapa con alguno de los intervalos dados."""
+        return any(
+            not (fin <= inicio_ocupado or inicio >= fin_ocupado)
+            for inicio_ocupado, fin_ocupado in intervalos_ocupados
+        )
+
+    @staticmethod
+    def hay_solapamiento(barbero_id, inicio, fin, estados=ESTADOS_OCUPAN_HORARIO):
+        """Indica si existe alguna cita del barbero que se solape con [inicio, fin)."""
+        intervalos = Cita.obtener_intervalos_ocupados(barbero_id, inicio.date(), estados)
+        return Cita.intervalo_se_solapa(inicio, fin, intervalos)
+
     @staticmethod
     def limpiar_citas_expiradas():
         """Registra citas que han expirado pero NO las marca como expiradas para mantener horarios cerrados"""

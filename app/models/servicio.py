@@ -15,7 +15,11 @@ class Servicio(db.Model):
     orden = db.Column(db.Integer, nullable=False, default=0, index=True)  # Nuevo campo para el orden de aparición
     # Relación con múltiples imágenes
     imagenes = db.relationship('ServicioImagen', back_populates='servicio', lazy='dynamic', cascade='all, delete-orphan')
-    
+
+    __table_args__ = (
+        db.CheckConstraint('precio >= 0', name='ck_servicio_precio_no_negativo'),
+    )
+
     def __repr__(self):
         return f'<Servicio {self.nombre}>'
     
