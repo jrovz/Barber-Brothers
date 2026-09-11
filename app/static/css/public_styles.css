@@ -1399,17 +1399,190 @@ footer p {
 }
 
 /* Reservas */
-.booking-form {
+
+/* Selector de barbero + servicio: tarjetas en acordeón. Cada tarjeta muestra el
+   barbero junto con todos sus servicios y precios reales a la vez. */
+.barbero-accordion {
     max-width: 900px;
-    margin: 0 auto 3rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
+    margin: 0 auto 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.barbero-accordion.is-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.barbero-card {
     background-color: var(--color-bg-card);
-    padding: 2rem;
-    border-radius: 6px;
     border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-medium);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.barbero-card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.2rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Lora', serif;
+    color: var(--color-text-primary);
+    transition: background-color 0.2s ease;
+}
+
+.barbero-card-header:hover,
+.barbero-card-header:focus-visible {
+    background-color: var(--color-bg-light);
+}
+
+.barbero-card-header:focus-visible {
+    outline: 3px solid rgba(179, 150, 86, 0.4);
+    outline-offset: -3px;
+}
+
+.barbero-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--color-accent);
+}
+
+.barbero-card-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.barbero-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.barbero-especialidad {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.accordion-chevron {
+    color: var(--color-accent);
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
+}
+
+.barbero-card-header[aria-expanded="true"] .accordion-chevron {
+    transform: rotate(180deg);
+}
+
+.barbero-card-panel {
+    padding: 0 1.5rem 1.2rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.servicio-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.servicio-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1.1rem;
+    background-color: var(--color-bg-dark);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Lora', serif;
+    transition: all 0.2s ease;
+}
+
+.servicio-option:hover,
+.servicio-option:focus-visible {
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+.servicio-option:focus-visible {
+    outline: 3px solid rgba(179, 150, 86, 0.4);
+    outline-offset: 2px;
+}
+
+.servicio-option.selected {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg-dark);
+}
+
+.servicio-nombre {
+    flex: 1;
+    font-weight: 600;
+}
+
+.servicio-duracion {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.servicio-option.selected .servicio-duracion {
+    color: var(--color-bg-dark);
+    opacity: 0.8;
+}
+
+.servicio-precio {
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 1.05rem;
+}
+
+.servicio-precio.personalizado {
+    color: var(--color-accent-hover);
+}
+
+.servicio-option.selected .servicio-precio.personalizado {
+    color: var(--color-bg-dark);
+}
+
+/* Barra de resumen: refuerza que barbero + servicio + precio se vean siempre juntos */
+.seleccion-resumen {
+    max-width: 900px;
+    margin: 0 auto 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-accent);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.seleccion-resumen-item {
+    color: var(--color-text-primary);
+    font-family: 'Lora', serif;
+}
+
+.seleccion-resumen-item strong {
+    color: var(--color-accent);
+    margin-right: 0.4rem;
 }
 
 .date-selector {
@@ -2837,6 +3010,35 @@ footer p {
     /* Booking form */
     .booking-form {
         grid-template-columns: 1fr;
+    }
+
+    .barbero-card-header {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .barbero-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .barbero-name {
+        font-size: 1.05rem;
+    }
+
+    .servicio-option {
+        flex-wrap: wrap;
+        padding: 0.75rem 0.9rem;
+    }
+
+    .servicio-precio {
+        width: 100%;
+        text-align: right;
+    }
+
+    .seleccion-resumen {
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     /* Footer */

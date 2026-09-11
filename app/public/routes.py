@@ -128,6 +128,7 @@ def home():
     featured_products = []
     barberos = []
     servicios = []
+    servicios_por_barbero = {}
     fechas_disponibles = []
     sliders = []
     
@@ -179,7 +180,17 @@ def home():
         for s in servicios:
             print(f"  Active Servicio ID: {s.id}, Nombre: {s.nombre}")
         # --- END REFINED DEBUG ---
-        
+
+        # Precios/servicios por barbero, precargados en el servidor para el
+        # selector de tarjetas: así el precio que se muestra es siempre
+        # exactamente el que calculará /api/agendar-cita (misma función),
+        # sin depender de una llamada AJAX posterior.
+        from app.utils.pricing import obtener_servicios_barbero
+        servicios_por_barbero = {
+            b.id: [item for item in obtener_servicios_barbero(b.id) if item['activo']]
+            for b in barberos
+        }
+
         # Generar fechas para el calendario
         hoy = datetime.now().date()
         fechas_disponibles = [hoy + timedelta(days=i) for i in range(60)]
@@ -240,6 +251,7 @@ def home():
                           featured_products=featured_products,
                           barberos=barberos,
                           servicios=servicios,
+                          servicios_por_barbero=servicios_por_barbero,
                           fechas_disponibles=fechas_disponibles,
                           sliders=sliders,
                           productos_recomendados=productos_recomendados,

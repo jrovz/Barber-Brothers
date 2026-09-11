@@ -197,39 +197,63 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
     <h4 class="booking-intro" style="margin-bottom: 25px;">Reserva tu cita online y disfruta de nuestros servicios
         premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en Ibagué.</h4>
 
-    <!-- Selector de barbero y servicio -->
-    <div class="booking-form">
-        <div class="form-group">
-            <label for="barbero-select">Selecciona un Barbero:</label>
-            <select id="barbero-select" class="select-barbero">
-                <option value="">-- Selecciona un barbero --</option>
-                {% if barberos %}
-                {% for barbero in barberos %}
-                <option value="{{ barbero.id }}">{{ barbero.nombre }}</option>
-                {% endfor %}
-                {% else %}
-                <option value="" disabled>No hay barberos disponibles</option>
+    <!-- Selector de barbero y servicio: tarjetas en acordeón. Cada tarjeta muestra el
+         barbero junto con TODOS sus servicios y precios reales a la vez, para que una
+         captura de pantalla nunca pueda mostrarse como ambigua sobre a qué barbero
+         corresponde un precio. -->
+    <div class="barbero-accordion" id="barbero-accordion">
+        {% if barberos %}
+        {% for barbero in barberos %}
+        <div class="barbero-card" data-barbero-id="{{ barbero.id }}">
+            <button type="button" class="barbero-card-header" aria-expanded="false"
+                aria-controls="barbero-panel-{{ barbero.id }}">
+                {% if barbero.imagen_url %}
+                <img src="{{ barbero.imagen_url }}" alt="" class="barbero-avatar">
                 {% endif %}
-            </select>
+                <span class="barbero-card-info">
+                    <span class="barbero-name">{{ barbero.nombre }}</span>
+                    {% if barbero.especialidad %}
+                    <span class="barbero-especialidad">{{ barbero.especialidad }}</span>
+                    {% endif %}
+                </span>
+                <span class="accordion-chevron" aria-hidden="true">▾</span>
+            </button>
+            <div class="barbero-card-panel" id="barbero-panel-{{ barbero.id }}" hidden>
+                {% set servicios_barbero = servicios_por_barbero.get(barbero.id, []) %}
+                {% if servicios_barbero %}
+                <ul class="servicio-list">
+                    {% for item in servicios_barbero %}
+                    <li>
+                        <button type="button" class="servicio-option" data-servicio-id="{{ item.servicio.id }}"
+                            data-servicio-nombre="{{ item.servicio.nombre }}"
+                            data-duracion="{{ item.servicio.get_duracion_minutos() }}"
+                            data-duracion-formato="{{ item.servicio.duracion_estimada }}"
+                            data-precio="{{ item.precio_final }}" aria-selected="false">
+                            <span class="servicio-nombre">{{ item.servicio.nombre }}</span>
+                            <span class="servicio-duracion">{{ item.servicio.get_duracion_hhmm() }}</span>
+                            <span class="servicio-precio {% if item.precio_personalizado %}personalizado{% endif %}">
+                                ${{ "{:,.0f}".format(item.precio_final|float).replace(',', '.') }} COP
+                            </span>
+                        </button>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="instruction-message">Este barbero no tiene servicios disponibles por ahora.</p>
+                {% endif %}
+            </div>
         </div>
+        {% endfor %}
+        {% else %}
+        <p class="instruction-message">No hay barberos disponibles.</p>
+        {% endif %}
+    </div>
 
-        <div class="form-group">
-            <label for="servicio-select">Selecciona un Servicio:</label>
-            <select id="servicio-select" class="select-servicio">
-                <option value="">-- Selecciona un servicio --</option>
-                {% if servicios %}
-                {% for servicio in servicios %}
-                <option value="{{ servicio.id }}" data-duracion="{{ servicio.get_duracion_minutos() }}"
-                    data-precio-base="{{ servicio.precio }}" data-duracion-formato="{{ servicio.duracion_estimada }}">
-                    {{ servicio.nombre }} - ${{ "{:,.0f}".format(servicio.precio).replace(',', '.') }} COP ({{
-                    servicio.get_duracion_hhmm() }})
-                </option>
-                {% endfor %}
-                {% else %}
-                <option value="" disabled>No hay servicios disponibles</option>
-                {% endif %}
-            </select>
-        </div>
+    <!-- Resumen de la selección actual: siempre muestra barbero + servicio + precio juntos -->
+    <div class="seleccion-resumen" id="seleccion-resumen" style="display: none;">
+        <span class="seleccion-resumen-item"><strong>Barbero:</strong> <span id="resumen-barbero"></span></span>
+        <span class="seleccion-resumen-item"><strong>Servicio:</strong> <span id="resumen-servicio"></span></span>
+        <span class="seleccion-resumen-item"><strong>Precio:</strong> <span id="resumen-precio"></span></span>
     </div>
 
     <!-- Calendario y selección de horarios -->

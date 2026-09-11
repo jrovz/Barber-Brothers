@@ -175,8 +175,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ==================== ELEMENTOS DEL DOM ====================
     const elements = {
-        barberoSelect: document.getElementById('barbero-select'),
-        servicioSelect: document.getElementById('servicio-select'),
+        accordion: document.getElementById('barbero-accordion'),
+        seleccionResumen: document.getElementById('seleccion-resumen'),
+        calendarContainer: document.querySelector('.calendar-container'),
         dateOptionsContainer: document.querySelector('[data-date-options-container]') || document.querySelector('.date-options-container') || null,
         horariosContainer: document.getElementById('horarios-container'),
         bookingConfirmation: document.getElementById('booking-confirmation'),
@@ -213,7 +214,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==================== ESTADO DE LA APLICACIÓN ====================
     const appState = {
         selectedBarberoId: null,
+        selectedBarberoNombre: null,
         selectedServicioId: null,
+        selectedServicioNombre: null,
+        selectedDuracion: null,
         selectedDate: null,
         selectedTime: null,
         isLoading: false,
@@ -327,9 +331,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Deshabilitar controles durante carga
-            [elements.barberoSelect, elements.servicioSelect].forEach(el => {
-                if (el) el.disabled = isLoading;
-            });
+            if (elements.accordion) {
+                elements.accordion.classList.toggle('is-loading', isLoading);
+            }
         }
     };
 
@@ -345,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Validación de elementos críticos
         const requiredElements = [
-            'barberoSelect', 'servicioSelect', 'horariosContainer',
+            'accordion', 'horariosContainer',
             'bookingConfirmation', 'confirmButton'
         ];
 
@@ -356,141 +360,137 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        if (elements.barberoSelect) {
-            console.log(`Opciones en select de barberos: ${elements.barberoSelect.options.length}`);
-        }
-        if (elements.servicioSelect) {
-            console.log(`Servicios en selector: ${elements.servicioSelect.options.length - 1}`);
-        }
-
         if (elements.bookingConfirmation) {
             elements.bookingConfirmation.style.display = 'none';
         }
 
         getDateOptions().forEach(option => option.classList.add('disabled'));
 
-        if (elements.barberoSelect && elements.barberoSelect.options.length <= 1) {
+        const barberoCards = elements.accordion ? elements.accordion.querySelectorAll('.barbero-card').length : 0;
+        console.log(`Tarjetas de barbero encontradas: ${barberoCards}`);
+        if (barberoCards === 0) {
             console.warn("No hay barberos activos disponibles.");
         }
-        if (elements.servicioSelect && elements.servicioSelect.options.length <= 1) {
-            console.warn("No hay servicios activos disponibles.");
+    }
+
+    // ==================== ACORDEÓN DE BARBEROS Y SERVICIOS ====================
+    // Los precios de cada barbero ya vienen renderizados desde el servidor
+    // (misma función que calcula el precio cobrado en /api/agendar-cita), así que
+    // no hace falta una petición aparte para mostrarlos.
+    function onAccordionClick(event) {
+        if (appState.isLoading) return;
+
+        const header = event.target.closest('.barbero-card-header');
+        if (header && elements.accordion.contains(header)) {
+            event.preventDefault();
+            toggleBarberoCard(header);
+            return;
+        }
+
+        const option = event.target.closest('.servicio-option');
+        if (option && elements.accordion.contains(option)) {
+            event.preventDefault();
+            selectServicioOption(option);
         }
     }
 
-    // ==================== ACTUALIZACIÓN DE PRECIOS POR BARBERO ====================
-    async function actualizarServiciosConPreciosBarbero(barberoId) {
-        console.log(`Actualizando precios de servicios para barbero ${barberoId}`);
+    function toggleBarberoCard(header) {
+        const panel = document.getElementById(header.getAttribute('aria-controls'));
+        if (!panel) return;
+        const isOpen = header.getAttribute('aria-expanded') === 'true';
 
-        if (!elements.servicioSelect || !barberoId) return;
-
-        try {
-            const url = `/api/barbero/${barberoId}/servicios`;
-            const response = await utils.fetchWithRetry(url);
-
-            if (!response.ok) {
-                throw new Error('Error al obtener servicios del barbero');
-            }
-
-            const data = await response.json();
-            console.log('Servicios con precios del barbero:', data);
-
-            // Crear un Set de IDs de servicios disponibles para búsqueda rápida
-            const serviciosDisponiblesIds = new Set(data.servicios.map(s => s.id));
-
-            // Guardar el servicio actualmente seleccionado
-            const selectedServicioId = elements.servicioSelect.value;
-            let currentSelectionValid = false;
-
-            // Actualizar las opciones del select
-            Array.from(elements.servicioSelect.options).forEach(option => {
-                if (option.value === '') return; // Skip the placeholder option
-
-                const servicioId = parseInt(option.value);
-                const servicioData = data.servicios.find(s => s.id === servicioId);
-
-                if (servicioData) {
-                    // El servicio está disponible para este barbero
-                    option.style.display = ''; // Asegurar que sea visible
-
-                    // Formatear el precio en formato colombiano
-                    const precioFormateado = `$${servicioData.precio_valor.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')}`;
-                    const duracion = servicioData.duracion_estimada || '';
-
-                    // Actualizar el texto del option
-                    option.textContent = `${servicioData.nombre} - ${precioFormateado} COP${duracion ? ' (' + duracion + ')' : ''}`;
-
-                    // Guardar el precio en un data attribute para uso posterior
-                    option.dataset.precio = servicioData.precio_valor;
-                    option.dataset.precioPersonalizado = servicioData.es_precio_personalizado;
-
-                    // Agregar indicador visual si tiene precio personalizado
-                    if (servicioData.es_precio_personalizado) {
-                        option.textContent += ' ✨';
-                    }
-
-                    if (option.value === selectedServicioId) {
-                        currentSelectionValid = true;
-                    }
-                } else {
-                    // El servicio NO está disponible para este barbero: Ocultarlo
-                    option.style.display = 'none';
-                }
-            });
-
-            // Si el servicio seleccionado ya no es válido, resetear selección
-            if (selectedServicioId && !currentSelectionValid) {
-                elements.servicioSelect.value = '';
-                console.log('Servicio seleccionado previamente no disponible para este barbero. Selección reseteada.');
-            } else if (selectedServicioId) {
-                elements.servicioSelect.value = selectedServicioId;
-            }
-
-            console.log('Precios y visibilidad actualizados correctamente');
-
-        } catch (error) {
-            console.error('Error actualizando precios:', error);
-            utils.showError('No se pudieron actualizar los servicios. Intenta recargar la página.');
-            // En error, restauramos para no bloquear
-            restaurarPreciosBase();
-        }
-    }
-
-    function restaurarPreciosBase() {
-        console.log('Restaurando precios base de servicios');
-
-        if (!elements.servicioSelect) return;
-
-        // Restaurar los textos originales de las opciones y su visibilidad
-        Array.from(elements.servicioSelect.options).forEach(option => {
-            if (option.value === '') return; // Skip placeholder
-
-            // Asegurar que todos sean visibles al restaurar
-            option.style.display = '';
-
-            // Si tiene precio base guardado, restaurarlo
-            if (option.dataset.precioBase) {
-                const precioBase = parseFloat(option.dataset.precioBase);
-                const precioFormateado = `$${precioBase.toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')}`;
-                const duracion = option.dataset.duracion ? ` (${option.dataset.duracion})` : '';
-
-                // Extraer solo el nombre del servicio (antes del primer " - ")
-                const nombreServicio = option.textContent.split(' - ')[0].replace(' ✨', '').trim();
-                option.textContent = `${nombreServicio} - ${precioFormateado} COP${duracion}`;
-
-                // Limpiar flags de precio personalizado
-                delete option.dataset.precioPersonalizado;
+        // Acordeón de una sola tarjeta abierta a la vez, para mantener el orden
+        elements.accordion.querySelectorAll('.barbero-card-header[aria-expanded="true"]').forEach(otherHeader => {
+            if (otherHeader !== header) {
+                otherHeader.setAttribute('aria-expanded', 'false');
+                const otherPanel = document.getElementById(otherHeader.getAttribute('aria-controls'));
+                if (otherPanel) otherPanel.hidden = true;
             }
         });
 
-        console.log('Precios base y visibilidad restaurados');
+        header.setAttribute('aria-expanded', String(!isOpen));
+        panel.hidden = isOpen;
+    }
+
+    function selectServicioOption(option) {
+        const card = option.closest('.barbero-card');
+        if (!card) return;
+
+        const barberoNameEl = card.querySelector('.barbero-name');
+
+        appState.selectedBarberoId = card.dataset.barberoId;
+        appState.selectedBarberoNombre = barberoNameEl ? barberoNameEl.textContent.trim() : '';
+        appState.selectedServicioId = option.dataset.servicioId;
+        appState.selectedServicioNombre = option.dataset.servicioNombre || '';
+        appState.selectedDuracion = option.dataset.duracion || '30';
+
+        console.log(`Selección: barbero ${appState.selectedBarberoId}, servicio ${appState.selectedServicioId}`);
+
+        // Marcar visualmente la opción elegida (única en todo el acordeón)
+        elements.accordion.querySelectorAll('.servicio-option.selected').forEach(el => {
+            if (el !== option) {
+                el.classList.remove('selected');
+                el.setAttribute('aria-selected', 'false');
+            }
+        });
+        option.classList.add('selected');
+        option.setAttribute('aria-selected', 'true');
+
+        // Resetear selecciones dependientes (fecha/hora) igual que antes al cambiar barbero o servicio
+        appState.selectedDate = null;
+        appState.selectedTime = null;
+        appState.bookingCompleted = false;
+        getDateOptions().forEach(el => el.classList.remove('selected'));
+        clearRelatedCache();
+
+        getDateOptions().forEach(el => el.classList.remove('disabled'));
+        if (elements.horariosContainer) {
+            elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
+        }
+        if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
+
+        updateSeleccionResumen(option.dataset.precio);
+
+        // Llevar al usuario directo a elegir día tras escoger el servicio
+        scrollToSection(elements.calendarContainer);
+    }
+
+    function updateSeleccionResumen(precio) {
+        if (!elements.seleccionResumen) return;
+
+        const precioFormateado = `$${parseFloat(precio).toLocaleString('es-CO', { maximumFractionDigits: 0 }).replace(/,/g, '.')} COP`;
+        const resumenBarbero = document.getElementById('resumen-barbero');
+        const resumenServicio = document.getElementById('resumen-servicio');
+        const resumenPrecio = document.getElementById('resumen-precio');
+
+        if (resumenBarbero) resumenBarbero.textContent = appState.selectedBarberoNombre;
+        if (resumenServicio) resumenServicio.textContent = `${appState.selectedServicioNombre} (${appState.selectedDuracion} min)`;
+        if (resumenPrecio) resumenPrecio.textContent = precioFormateado;
+
+        elements.seleccionResumen.style.display = 'flex';
+    }
+
+    // El header del sitio es `position: fixed` y su altura cambia entre
+    // desktop/móvil y estado scrolled/no scrolled, así que se mide en vivo
+    // en vez de usar un offset fijo (que quedaba corto o largo según el caso).
+    function scrollToSection(element, extraGap = 16) {
+        if (!element) return;
+        const header = document.querySelector('header');
+        const headerHeight = header ? header.getBoundingClientRect().height : 0;
+        const targetTop = element.getBoundingClientRect().top + window.pageYOffset;
+
+        window.scrollTo({
+            top: targetTop - headerHeight - extraGap,
+            behavior: 'smooth'
+        });
     }
 
     // ==================== FUNCIONES PRINCIPALES ====================
     const loadAvailableTimes = utils.debounce(async function () {
         console.log('=== loadAvailableTimes ejecutándose ===');
 
-        const barberoId = elements.barberoSelect?.value;
-        const servicioId = elements.servicioSelect?.value;
+        const barberoId = appState.selectedBarberoId;
+        const servicioId = appState.selectedServicioId;
         const fecha = appState.selectedDate;
 
         console.log('Valores actuales:', {
@@ -658,14 +658,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         console.log(`Slot seleccionado: ${appState.selectedTime}`);
 
-        const barberoName = elements.barberoSelect.options[elements.barberoSelect.selectedIndex].text;
-        const servicioName = elements.servicioSelect.options[elements.servicioSelect.selectedIndex].text.split(' - ')[0];
-
         showConfirmationPanel(
             appState.selectedBarberoId,
-            barberoName,
+            appState.selectedBarberoNombre,
             appState.selectedServicioId,
-            servicioName,
+            appState.selectedServicioNombre,
             appState.selectedDate,
             appState.selectedTime
         );
@@ -757,8 +754,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (confirmBarbero) confirmBarbero.textContent = barberoName;
 
         // Obtener la duración del servicio seleccionado
-        const selectedServiceOption = elements.servicioSelect.options[elements.servicioSelect.selectedIndex];
-        const duracionMinutos = selectedServiceOption.dataset.duracion || '30';
+        const duracionMinutos = appState.selectedDuracion || '30';
         const servicioConDuracion = `${servicioName} (${duracionMinutos} min)`;
 
         if (confirmServicio) confirmServicio.textContent = servicioConDuracion;
@@ -792,7 +788,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         elements.bookingConfirmation.style.display = 'block';
-        elements.bookingConfirmation.scrollIntoView({ behavior: 'smooth' });
+
+        // Llevar al usuario directo a sus datos tras escoger la hora
+        scrollToSection(elements.clientInfoForm || elements.bookingConfirmation);
 
         // Focus en el primer campo del formulario para mejor UX
         if (elements.clientNameInput) {
@@ -802,66 +800,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ==================== EVENT LISTENERS ====================
     function setupEventListeners() {
-        // Barbero select
-        if (elements.barberoSelect) {
-            elements.barberoSelect.addEventListener('change', function () {
-                appState.selectedBarberoId = this.value;
-                console.log(`Barbero seleccionado ID: ${appState.selectedBarberoId}`);
-
-                // Resetear selecciones dependientes
-                appState.selectedDate = null;
-                appState.selectedTime = null;
-                appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-                getDateOptions().forEach(el => el.classList.remove('selected'));
-
-                // Invalidar cache relacionado
-                clearRelatedCache();
-
-                // Actualizar precios de servicios según el barbero seleccionado
-                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0") {
-                    actualizarServiciosConPreciosBarbero(appState.selectedBarberoId);
-                } else {
-                    // Restaurar precios base si no hay barbero seleccionado
-                    restaurarPreciosBase();
-                }
-
-                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" &&
-                    appState.selectedServicioId && appState.selectedServicioId !== "0") {
-                    getDateOptions().forEach(option => option.classList.remove('disabled'));
-                    elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
-                } else {
-                    getDateOptions().forEach(option => option.classList.add('disabled'));
-                    elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
-                }
-                if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
-            });
-        }
-
-        // Servicio select
-        if (elements.servicioSelect) {
-            elements.servicioSelect.addEventListener('change', function () {
-                appState.selectedServicioId = this.value;
-                console.log(`Servicio seleccionado ID: ${appState.selectedServicioId}`);
-
-                // Resetear selecciones dependientes
-                appState.selectedDate = null;
-                appState.selectedTime = null;
-                appState.bookingCompleted = false; // Resetear flag para permitir nuevas validaciones
-                getDateOptions().forEach(el => el.classList.remove('selected'));
-
-                // Invalidar cache relacionado
-                clearRelatedCache();
-
-                if (appState.selectedBarberoId && appState.selectedBarberoId !== "0" &&
-                    appState.selectedServicioId && appState.selectedServicioId !== "0") {
-                    getDateOptions().forEach(option => option.classList.remove('disabled'));
-                    elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona una fecha.</p>';
-                } else {
-                    getDateOptions().forEach(option => option.classList.add('disabled'));
-                    elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un barbero y servicio.</p>';
-                }
-                if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
-            });
+        // Acordeón de barberos y servicios
+        if (elements.accordion) {
+            elements.accordion.addEventListener('click', onAccordionClick);
         }
 
         // Date options
@@ -906,6 +847,9 @@ document.addEventListener('DOMContentLoaded', function () {
         loadAvailableTimes();
 
         if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
+
+        // Llevar al usuario directo a elegir hora tras escoger el día
+        scrollToSection(elements.horariosContainer);
     }
 
     function clearRelatedCache() {
@@ -1031,7 +975,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Limpiar estado de selección para evitar validaciones futuras
         appState.selectedBarberoId = null;
+        appState.selectedBarberoNombre = null;
         appState.selectedServicioId = null;
+        appState.selectedServicioNombre = null;
+        appState.selectedDuracion = null;
         appState.selectedDate = null;
         appState.selectedTime = null;
 
