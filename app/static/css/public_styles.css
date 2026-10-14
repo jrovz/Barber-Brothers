@@ -236,6 +236,14 @@ textarea.form-control {
     font-size: 1.1rem;
 }
 
+.form-hint {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
 /* Time slots unificados */
 .time-slot,
 .time-slot-btn {

@@ -1050,18 +1050,32 @@ def agendar_cita():
                 }
             }), 409 # 409 Conflict
 
+        fecha_nacimiento = None
+        if data.get('fecha_nacimiento'):
+            try:
+                fecha_nacimiento = datetime.strptime(data['fecha_nacimiento'], '%Y-%m-%d').date()
+                if fecha_nacimiento > datetime.utcnow().date():
+                    db.session.rollback()
+                    return jsonify({'error': 'La fecha de nacimiento no puede ser futura.'}), 400
+            except ValueError:
+                db.session.rollback()
+                return jsonify({'error': 'Formato de fecha de nacimiento inválido. Use YYYY-MM-DD.'}), 400
+
         cliente = Cliente.query.filter_by(email=data['email']).first()
         if not cliente:
             cliente = Cliente(
                 nombre=data['nombre'],
                 email=data['email'],
-                telefono=data['telefono']
+                telefono=data['telefono'],
+                fecha_nacimiento=fecha_nacimiento
             )
             db.session.add(cliente)
             db.session.flush() # Para obtener el ID del cliente si es nuevo
         else: # Actualizar datos si el cliente existe
             cliente.nombre = data['nombre']
             cliente.telefono = data['telefono']
+            if fecha_nacimiento:
+                cliente.fecha_nacimiento = fecha_nacimiento
             # No es necesario db.session.add(cliente) si ya existe y solo se modifica
 
         # Obtener el precio que se cobrará al cliente según el barbero seleccionado

@@ -186,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
         clientNameInput: document.getElementById('client-name'),
         clientEmailInput: document.getElementById('client-email'),
         clientPhoneInput: document.getElementById('client-phone'),
+        clientBirthdateInput: document.getElementById('client-birthdate'),
         selectedBarberoIdInput: document.getElementById('selected-barbero-id'),
         selectedServicioIdInput: document.getElementById('selected-servicio-id'),
         selectedDateInput: document.getElementById('selected-date'),
@@ -870,6 +871,7 @@ document.addEventListener('DOMContentLoaded', function () {
             nombre: elements.clientNameInput?.value?.trim(),
             email: elements.clientEmailInput?.value?.trim(),
             telefono: elements.clientPhoneInput?.value?.trim(),
+            fecha_nacimiento: elements.clientBirthdateInput?.value?.trim() || null,
             barbero_id: elements.selectedBarberoIdInput?.value,
             servicio_id: elements.selectedServicioIdInput?.value,
             fecha: elements.selectedDateInput?.value,
@@ -943,6 +945,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!data.email) errors.push('• El correo electrónico es obligatorio');
         else if (!utils.validateEmail(data.email)) errors.push('• El correo electrónico no es válido');
         if (!data.telefono) errors.push('• El teléfono es obligatorio');
+        if (data.fecha_nacimiento && new Date(data.fecha_nacimiento) > new Date()) {
+            errors.push('• La fecha de nacimiento no puede ser futura');
+        }
         if (!data.barbero_id || data.barbero_id === "0") errors.push('• Debe seleccionar un barbero');
         if (!data.servicio_id || data.servicio_id === "0") errors.push('• Debe seleccionar un servicio');
         if (!data.fecha) errors.push('• Debe seleccionar una fecha');

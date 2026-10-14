@@ -30,6 +30,7 @@
         <div class="cliente-contact">
             <p><strong>Email:</strong> {{ cliente.email }}</p>
             <p><strong>Teléfono:</strong> {{ cliente.telefono or 'No proporcionado' }}</p>
+            <p><strong>Fecha de nacimiento:</strong> {{ cliente.fecha_nacimiento.strftime('%d/%m/%Y') if cliente.fecha_nacimiento else 'No proporcionado' }}</p>
         </div>
     </div>
     

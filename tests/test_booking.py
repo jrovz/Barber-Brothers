@@ -1,5 +1,5 @@
 from app import db
-from app.models.cliente import Cita
+from app.models.cliente import Cita, Cliente
 from tests.conftest import fecha_futura
 
 
@@ -40,6 +40,38 @@ def test_agendar_cita_horario_duplicado_devuelve_409(client, barbero, servicio):
 def test_agendar_cita_campo_faltante_devuelve_400(client, barbero, servicio):
     payload = _payload(barbero, servicio)
     del payload['telefono']
+    resp = client.post('/api/agendar-cita', json=payload)
+    assert resp.status_code == 400
+
+
+def test_agendar_cita_sin_fecha_nacimiento_funciona(client, barbero, servicio):
+    """La fecha de nacimiento es opcional: no enviarla no debe romper la reserva."""
+    resp = client.post('/api/agendar-cita', json=_payload(barbero, servicio))
+    assert resp.status_code == 200
+    cliente = Cliente.query.filter_by(email='cliente@test.com').first()
+    assert cliente.fecha_nacimiento is None
+
+
+def test_agendar_cita_guarda_fecha_nacimiento(client, barbero, servicio):
+    payload = _payload(barbero, servicio, email='cumple@test.com')
+    payload['fecha_nacimiento'] = '1995-05-20'
+    resp = client.post('/api/agendar-cita', json=payload)
+    assert resp.status_code == 200
+
+    cliente = Cliente.query.filter_by(email='cumple@test.com').first()
+    assert cliente.fecha_nacimiento.isoformat() == '1995-05-20'
+
+
+def test_agendar_cita_fecha_nacimiento_futura_devuelve_400(client, barbero, servicio):
+    payload = _payload(barbero, servicio, email='futuro@test.com')
+    payload['fecha_nacimiento'] = '2999-01-01'
+    resp = client.post('/api/agendar-cita', json=payload)
+    assert resp.status_code == 400
+
+
+def test_agendar_cita_fecha_nacimiento_formato_invalido_devuelve_400(client, barbero, servicio):
+    payload = _payload(barbero, servicio, email='invalido@test.com')
+    payload['fecha_nacimiento'] = '20-05-1995'
     resp = client.post('/api/agendar-cita', json=payload)
     assert resp.status_code == 400
 

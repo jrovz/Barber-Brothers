@@ -11,6 +11,7 @@ class Cliente(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False, index=True)
     telefono = db.Column(db.String(20))
+    fecha_nacimiento = db.Column(db.Date, nullable=True)
     creado = db.Column(db.DateTime, default=datetime.utcnow)
     ultima_visita = db.Column(db.DateTime, nullable=True)
     total_visitas = db.Column(db.Integer, default=0)
