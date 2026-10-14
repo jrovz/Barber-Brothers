@@ -1,7 +1,10 @@
+from app import db
 from app.models.cliente import Cita
+from tests.conftest import fecha_futura
 
 
-def _payload(barbero, servicio, fecha='2026-09-01', hora='10:00', email='cliente@test.com'):
+def _payload(barbero, servicio, fecha=None, hora='10:00', email='cliente@test.com'):
+    fecha = fecha or fecha_futura()
     return {
         'barbero_id': barbero.id,
         'servicio_id': servicio.id,
@@ -61,3 +64,32 @@ def test_confirmar_cita_con_token_valido(app, client, barbero, servicio):
 def test_confirmar_cita_con_token_invalido_no_falla(client):
     resp = client.get('/confirmar-cita/token-invalido-o-vencido')
     assert resp.status_code == 200
+
+
+def test_agendar_cita_en_fecha_pasada_devuelve_400(client, barbero, servicio):
+    resp = client.post('/api/agendar-cita', json=_payload(barbero, servicio, fecha='2020-01-01'))
+    assert resp.status_code == 400
+    assert Cita.query.count() == 0
+
+
+def test_agendar_cita_con_barbero_inactivo_devuelve_400(client, barbero, servicio):
+    barbero.activo = False
+    db.session.commit()
+    resp = client.post('/api/agendar-cita', json=_payload(barbero, servicio))
+    assert resp.status_code == 400
+    assert Cita.query.count() == 0
+
+
+def test_agendar_cita_con_servicio_inexistente_devuelve_400(client, barbero, servicio):
+    payload = _payload(barbero, servicio)
+    payload['servicio_id'] = 9999
+    resp = client.post('/api/agendar-cita', json=payload)
+    assert resp.status_code == 400
+    assert Cita.query.count() == 0
+
+
+def test_agendar_cita_solapada_con_otra_hora_devuelve_409(client, barbero, servicio):
+    """Una cita que empieza a mitad de otra también debe rechazarse."""
+    assert client.post('/api/agendar-cita', json=_payload(barbero, servicio, hora='10:00')).status_code == 200
+    resp = client.post('/api/agendar-cita', json=_payload(barbero, servicio, hora='10:15', email='otro@test.com'))
+    assert resp.status_code == 409

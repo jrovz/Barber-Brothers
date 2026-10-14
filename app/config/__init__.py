@@ -34,13 +34,10 @@ class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
     # Configuración de base de datos para producción usando PostgreSQL estándar
+    # La presencia de estas variables se valida en create_app('production'), no aquí:
+    # validar al importar el módulo rompía las pruebas y cualquier entorno sin .env.
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if SQLALCHEMY_DATABASE_URI is None:
-        raise ValueError("DATABASE_URL environment variable is required for production")
-
     SECRET_KEY = os.environ.get('SECRET_KEY')
-    if SECRET_KEY is None:
-        raise ValueError("SECRET_KEY environment variable is required for production")
 
 class TestingConfig(Config):
     TESTING = True

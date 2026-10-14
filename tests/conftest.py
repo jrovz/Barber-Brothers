@@ -1,4 +1,5 @@
 import pytest
+from datetime import date, timedelta
 
 from app import create_app, db as _db
 from app.models.admin import User
@@ -58,5 +59,10 @@ def servicio(app):
 def login_as(client, user):
     """Fuerza una sesión autenticada para `user` dentro del contexto de una request real."""
     with client.session_transaction() as sess:
-        sess['_user_id'] = str(user.id)
+        sess['_user_id'] = user.get_id()
         sess['_fresh'] = True
+
+
+def fecha_futura(dias=30):
+    """Fecha en formato YYYY-MM-DD siempre en el futuro, para no depender del día en que corren las pruebas."""
+    return (date.today() + timedelta(days=dias)).isoformat()

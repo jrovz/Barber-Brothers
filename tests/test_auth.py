@@ -75,3 +75,39 @@ def test_admin_routes_not_blocked_for_admin(app, client, admin_user):
                  '/admin/servicios', '/admin/citas', '/admin/clientes', '/admin/sliders'):
         resp = client.get(path)
         assert resp.status_code != 403, f"{path} devolvió 403 para un admin autenticado"
+
+
+def _barbero_con_acceso(username='barbero_login', password='barberopass123'):
+    from app import db
+    from app.models.barbero import Barbero
+    b = Barbero(nombre='Barbero Login', especialidad='Corte', activo=True,
+                username=username, tiene_acceso_web=True)
+    b.set_password(password)
+    db.session.add(b)
+    db.session.commit()
+    return b
+
+
+def test_barbero_con_mismo_id_que_admin_no_entra_al_admin(app, client, admin_user):
+    """Admin y barbero comparten el ID numérico; el barbero no debe heredar la sesión de admin."""
+    barbero = _barbero_con_acceso()
+    assert barbero.id == admin_user.id  # mismo número en tablas distintas
+
+    resp = client.post('/barbero/login', data={
+        'username': 'barbero_login', 'password': 'barberopass123',
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+
+    with client.session_transaction() as sess:
+        assert sess['_user_id'] == f'barbero:{barbero.id}'
+
+    assert client.get('/admin/').status_code == 403
+
+
+def test_sesion_antigua_solo_con_numero_no_autentica(client, admin_user):
+    """Las sesiones previas al cambio (solo el número) quedan invalidadas."""
+    with client.session_transaction() as sess:
+        sess['_user_id'] = str(admin_user.id)
+        sess['_fresh'] = True
+    resp = client.get('/admin/', follow_redirects=False)
+    assert resp.status_code in (302, 401)

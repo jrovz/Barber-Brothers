@@ -163,6 +163,10 @@ class Barbero(db.Model, UserMixin):
             self.password_hash = None
             self.tiene_acceso_web = False
 
+    def get_id(self):
+        # Prefijo de tipo: evita que este barbero cargue como un admin con el mismo ID.
+        return f"barbero:{self.id}"
+
     def check_password(self, password):
         """Verifica si la contraseña es correcta"""
         if not self.password_hash:
@@ -480,4 +484,4 @@ def crear_disponibilidad_predeterminada(barbero_id):
     except Exception as e:
         db.session.rollback()
         print(f"Error al crear disponibilidad: {e}")
-        return False
+        return False

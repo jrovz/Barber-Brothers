@@ -89,7 +89,7 @@ except Exception as e:
     Slider = None
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
 from app import db
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, timezone
 from flask import send_from_directory
 from flask import Response
 
@@ -966,8 +966,12 @@ def disponibilidad_barbero(barbero_id, fecha):
 @bp.route('/api/agendar-cita', methods=['POST'])
 def agendar_cita():
     try:
-        data = request.json
-        current_app.logger.info(f"Datos recibidos para agendar cita: {data}")
+        data = request.get_json(silent=True) or {}
+        # No registrar nombre, correo ni teléfono completos (Ley 1581: minimizar datos personales).
+        current_app.logger.info(
+            f"Solicitud de cita - barbero: {data.get('barbero_id')}, servicio: {data.get('servicio_id')}, "
+            f"fecha: {data.get('fecha')} {data.get('hora')}"
+        )
 
         required_fields = ['barbero_id', 'servicio_id', 'fecha', 'hora', 'nombre', 'email', 'telefono']
         for field in required_fields:
@@ -977,10 +981,30 @@ def agendar_cita():
 
         fecha_hora_str = f"{data['fecha']} {data['hora']}"
         fecha_hora = datetime.strptime(fecha_hora_str, '%Y-%m-%d %H:%M')
+        # Hora actual de Colombia (UTC-5, sin horario de verano), independiente de la zona
+        # horaria del servidor. En la fase multi-tenant pasará a ser la zona de cada negocio.
+        ahora_colombia = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
+        if fecha_hora < ahora_colombia - timedelta(minutes=5):
+            return jsonify({'error': 'No se puede agendar una cita en una fecha u hora pasada.'}), 400
+
+        # Bloquear la fila del barbero hasta el commit: dos reservas simultáneas para el
+        # mismo barbero se atienden en fila y la segunda ve la cita de la primera.
+        # (En PostgreSQL es SELECT ... FOR UPDATE; SQLite lo ignora.)
+        barbero = (Barbero.query
+                   .filter_by(id=int(data['barbero_id']))
+                   .with_for_update()
+                   .first())
+        if not barbero or not barbero.activo:
+            db.session.rollback()
+            return jsonify({'error': 'El barbero seleccionado no está disponible.'}), 400
+
+        servicio = db.session.get(Servicio, int(data['servicio_id']))
+        if not servicio or not servicio.activo:
+            db.session.rollback()
+            return jsonify({'error': 'El servicio seleccionado no está disponible.'}), 400
 
         # Obtener la duración del servicio para verificar conflictos
-        servicio = Servicio.query.get(int(data['servicio_id']))
-        duracion_servicio = servicio.get_duracion_minutos() if servicio else 30
+        duracion_servicio = servicio.get_duracion_minutos()
         
         # Calcular el rango de tiempo que ocupará la nueva cita
         inicio_nueva_cita = fecha_hora
@@ -1013,8 +1037,9 @@ def agendar_cita():
                 break
 
         if hay_solapamiento:
+            db.session.rollback()  # liberar el bloqueo del barbero
             current_app.logger.warning(f"CONFLICTO DE HORARIO - Barbero {data['barbero_id']}, "
-                                      f"Cliente: {data['email']}, Horario solicitado: {fecha_hora} - {fin_nueva_cita}, "
+                                      f"Horario solicitado: {fecha_hora} - {fin_nueva_cita}, "
                                       f"Servicio: {data['servicio_id']} ({duracion_servicio}min)")
             return jsonify({
                 'error': 'Este horario se solapa con otra cita. Por favor, selecciona otro horario.',
@@ -1039,10 +1064,6 @@ def agendar_cita():
             cliente.telefono = data['telefono']
             # No es necesario db.session.add(cliente) si ya existe y solo se modifica
 
-        # Obtener la duración del servicio
-        servicio = Servicio.query.get(int(data['servicio_id']))
-        duracion_servicio = servicio.get_duracion_minutos() if servicio else 30
-        
         # Obtener el precio que se cobrará al cliente según el barbero seleccionado
         from app.utils.pricing import obtener_precio_servicio
         precio_info = obtener_precio_servicio(int(data['barbero_id']), int(data['servicio_id']))
@@ -1050,8 +1071,9 @@ def agendar_cita():
         if precio_info and not precio_info['servicio_activo_para_barbero']:
             current_app.logger.warning(
                 f"Intento de reserva de servicio desactivado - Barbero: {data['barbero_id']}, "
-                f"Servicio: {data['servicio_id']}, Cliente: {data['email']}"
+                f"Servicio: {data['servicio_id']}"
             )
+            db.session.rollback()
             return jsonify({'error': 'Este barbero no ofrece este servicio actualmente.'}), 400
 
         if precio_info:
@@ -1078,7 +1100,7 @@ def agendar_cita():
 
         token = nueva_cita.generate_confirmation_token()
         current_app.logger.info(f"CITA CREADA EXITOSAMENTE - ID: {nueva_cita.id}, "
-                               f"Cliente: {cliente.email}, Barbero: {data['barbero_id']}, "
+                               f"Cliente ID: {cliente.id}, Barbero: {data['barbero_id']}, "
                                f"Fecha: {fecha_hora}, Servicio: {data['servicio_id']}, "
                                f"Duración: {duracion_servicio}min. Token generado, enviando correo.")
 
@@ -1131,6 +1153,7 @@ def agendar_cita():
         return response
 
     except ValueError as ve:
+        db.session.rollback()
         current_app.logger.error(f"Error de formato en agendar_cita: {str(ve)}")
         return jsonify({'error': f'Formato de fecha u hora inválido: {str(ve)}'}), 400
     except Exception as e:
@@ -1193,4 +1216,4 @@ def confirmar_cita_route(token):
     return render_template('public/confirmation_status.html',
                            success=True,
                            message='¡Tu cita ha sido confirmada exitosamente!',
-                           cita=cita_token)
+                           cita=cita_token)

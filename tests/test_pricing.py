@@ -1,3 +1,4 @@
+from tests.conftest import fecha_futura
 from app import db
 from app.models.barbero_servicio import BarberoServicio
 from app.models.cliente import Cita
@@ -43,7 +44,7 @@ def test_agendar_cita_rechaza_servicio_desactivado(client, barbero, servicio):
     resp = client.post('/api/agendar-cita', json={
         'barbero_id': barbero.id,
         'servicio_id': servicio.id,
-        'fecha': '2026-09-14',
+        'fecha': fecha_futura(),
         'hora': '10:00',
         'nombre': 'Cliente Test',
         'email': 'cliente@test.com',

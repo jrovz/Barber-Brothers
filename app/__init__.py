@@ -34,34 +34,31 @@ def handle_unauthorized():
     # Por defecto, enviar a login de admin
     return redirect(url_for('admin.login', next=next_url))
 
-# Configuración personalizada para diferentes tipos de usuarios
-def init_login_manager(app):
-    @login_manager.user_loader
-    def load_user(user_id):
-        # Primero intentamos cargar un admin
-        from app.models.admin import User
-        admin = User.query.get(int(user_id))
-        if admin:
-            return admin
-            
-        # Si no es admin, intentamos cargar un barbero
-        from app.models.barbero import Barbero
-        barbero = Barbero.query.get(int(user_id))
-        if barbero:
-            return barbero
-            
+@login_manager.user_loader
+def load_user(user_id):
+    """Carga el usuario de la sesión según su tipo.
+
+    Admins y barberos están en tablas distintas con IDs que se repiten, así que la
+    sesión guarda "admin:<id>" o "barbero:<id>" (ver get_id en cada modelo). Una
+    sesión antigua con solo el número es ambigua y se invalida (pide login de nuevo).
+    """
+    tipo, _, raw_id = str(user_id).partition(':')
+    if not raw_id.isdigit():
         return None
+
+    if tipo == 'admin':
+        from app.models.admin import User
+        return db.session.get(User, int(raw_id))
+    if tipo == 'barbero':
+        from app.models.barbero import Barbero
+        return db.session.get(Barbero, int(raw_id))
+    return None
+
 
 # Detectar entorno Azure - (Desactivado para entorno local)
 def is_azure():
     """Detecta si estamos en Azure App Service"""
     return False  # Forzar siempre entorno local
-
-# Función para cargar usuario (requerida por Flask-Login)
-@login_manager.user_loader
-def load_user(user_id):
-    from app.models import User
-    return User.query.get(int(user_id))
 
 def create_app(config_name='default'):
     # Crear instancia de Flask
@@ -125,6 +122,10 @@ def create_app(config_name='default'):
       # Importar y aplicar configuraciones
     from app.config import config_dict
     app.config.from_object(config_dict[config_name])
+    if config_name == 'production':
+        faltantes = [k for k in ('DATABASE_URL', 'SECRET_KEY') if not os.environ.get(k)]
+        if faltantes:
+            raise ValueError(f"Variables de entorno requeridas en producción: {', '.join(faltantes)}")
     mail.init_app(app)
     
     # Integrar el manejador de errores personalizado
@@ -165,7 +166,6 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
-    init_login_manager(app)  # Inicializar el manejador de login personalizado
     
     # Initialize the database if needed (run migrations and import initial data)
     with app.app_context():

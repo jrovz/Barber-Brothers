@@ -18,6 +18,10 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def get_id(self):
+        # Prefijo de tipo: evita que un barbero con el mismo ID cargue como admin.
+        return f"admin:{self.id}"
+
     def is_admin(self):
         return self.role == 'admin'
 
@@ -28,4 +32,4 @@ class User(db.Model, UserMixin):
 # class Role(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
 #     name = db.Column(db.String(64), unique=True)
-#     users = db.relationship('User', backref='role_obj', lazy='dynamic')
+#     users = db.relationship('User', backref='role_obj', lazy='dynamic')
