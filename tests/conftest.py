@@ -4,7 +4,9 @@ from datetime import date, timedelta
 from app import create_app, db as _db
 from app.models.admin import User
 from app.models.barbero import Barbero
+from app.models.negocio import Negocio
 from app.models.servicio import Servicio
+from app.utils.negocio_actual import limpiar_cache_negocio
 
 
 @pytest.fixture
@@ -12,9 +14,27 @@ def app():
     application = create_app('testing')
     with application.app_context():
         _db.create_all()
+        limpiar_cache_negocio()
+        _db.session.add(Negocio(
+            slug='barberbrothers',
+            nombre='Barbería de Prueba',
+            nombre_corto='Barbería de Prueba',
+            telefono='3000000000',
+            whatsapp='573000000000',
+            color_primario='#000000',
+            color_secundario='#333333',
+            color_acento='#999999',
+        ))
+        _db.session.commit()
         yield application
         _db.session.remove()
         _db.drop_all()
+        limpiar_cache_negocio()
+
+
+@pytest.fixture
+def negocio(app):
+    return Negocio.query.filter_by(slug='barberbrothers').first()
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -182,6 +182,17 @@ def create_app(config_name='default'):
             app.logger.error(f"Error during database initialization check: {e}")
     csrf.init_app(app)
     
+    # Cargar el negocio actual en cada petición y exponerlo a las plantillas
+    from app.utils.negocio_actual import obtener_negocio
+
+    @app.before_request
+    def cargar_negocio_actual():
+        g.negocio = obtener_negocio()
+
+    @app.context_processor
+    def inject_negocio():
+        return dict(negocio=g.get('negocio'))
+
     # Inicializar middleware de cookies comerciales
     from app.middleware.business_middleware import BusinessMiddleware
     business_middleware = BusinessMiddleware()
