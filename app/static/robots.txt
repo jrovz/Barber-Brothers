@@ -39,13 +39,13 @@ Allow: /terminos
 Allow: /cookies
 
 # Sitemap - URL correcta para el sitemap dinámico
-Sitemap: https://barberbrothers.com/sitemap.xml
+Sitemap: https://labarberbrothers.com/sitemap.xml
 
 # Configuración de rastreo
 Crawl-delay: 1
 
 # Información adicional para crawlers
-Host: https://barberbrothers.com
+Host: https://labarberbrothers.com
 Clean-param: utm_source&utm_medium&utm_campaign&utm_content&utm_term
 # Agrega información específica para Google
 User-agent: Googlebot
