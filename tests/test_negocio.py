@@ -332,3 +332,9 @@ def test_sin_historia_no_se_muestra_el_bloque(client):
 def test_sin_variable_de_entorno_usa_el_primer_negocio_activo(client, monkeypatch):
     monkeypatch.delenv('NEGOCIO_SLUG', raising=False)
     assert 'Barbería de Prueba' in client.get('/').get_data(as_text=True)
+
+
+def test_barbero_sin_foto_no_muestra_imagen_de_relleno(client, barbero):
+    html = client.get('/').get_data(as_text=True)
+    assert barbero.nombre in html
+    assert 'unsplash.com' not in html

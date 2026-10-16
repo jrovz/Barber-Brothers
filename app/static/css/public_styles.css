@@ -1349,6 +1349,7 @@ footer p {
     overflow: hidden;
     margin: 0 auto 1.5rem;
     border: 1px solid var(--color-border);
+    background-color: var(--color-bg-dark);
 }
 
 .member-img img {

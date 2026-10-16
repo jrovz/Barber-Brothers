@@ -151,12 +151,10 @@ cookie_consent_banner %}
             {% for barbero in barberos %}
             <div class="team-member">
                 <div class="member-img">
+                    {# Sin foto, el círculo queda vacío (fondo oscuro). Si la imagen no carga, se quita para no mostrar texto. #}
                     {% if barbero.imagen_url %}
                     <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200"
-                        height="200" loading="lazy">
-                    {% else %}
-                    <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
-                        alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200" height="200" loading="lazy">
+                        height="200" loading="lazy" onerror="this.remove()">
                     {% endif %}
                 </div>
                 <h4>{{ barbero.nombre }}</h4>
