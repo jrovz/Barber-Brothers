@@ -1515,6 +1515,12 @@ footer p {
     #why-us-section .value:hover {
         transform: none;
     }
+
+    /* Al tocar o mantener el dedo sobre el carrusel, se detiene (permite leer y pulsar el enlace) */
+    #why-us-section .values-viewport:hover .values-container,
+    #why-us-section .values-viewport:active .values-container {
+        animation-play-state: paused;
+    }
 }
 
 @keyframes why-us-slide {
@@ -1523,25 +1529,6 @@ footer p {
     42%, 58%  { transform: translateX(-40%); }
     62%, 78%  { transform: translateX(-60%); }
     82%, 100% { transform: translateX(-80%); }
-}
-
-/* Sin animación para quien la desactiva: tarjetas apiladas en una columna */
-@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
-    #why-us-section .values-container {
-        width: auto;
-        flex-wrap: wrap;
-        flex-direction: column;
-        gap: 1rem;
-        animation: none;
-    }
-
-    #why-us-section .value {
-        flex: 1 1 auto;
-    }
-
-    #why-us-section .value-clone {
-        display: none;
-    }
 }
 
 /* Reservas */
