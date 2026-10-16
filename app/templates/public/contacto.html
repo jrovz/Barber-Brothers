@@ -18,9 +18,26 @@
             
             <div class="info-block">
                 <h3>Horario</h3>
-                <p>Lunes a Viernes: 8:00 - 12:00 y 14:00 - 19:00</p>
-                <p>Sábados: 8:00 - 12:00 y 14:00 - 19:00</p>
-                <p>Domingos: Cerrado</p>
+                {% set nombres = {'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles', 'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'} %}
+                {% set plurales = {'Saturday': 'Sábados', 'Sunday': 'Domingos'} %}
+                {% set orden = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                {% set abiertos = [] %}
+                {% for tramo in (negocio.horario_atencion or []) %}
+                {% set dias = tramo.dias if tramo.dias is not string else [tramo.dias] %}
+                {% for d in dias %}{% set _ = abiertos.append(d) %}{% endfor %}
+                {% if dias | length == 1 %}
+                <p>{{ plurales.get(dias[0], nombres[dias[0]]) }}: {{ tramo.abre }} - {{ tramo.cierra }}</p>
+                {% elif dias | length == 2 %}
+                <p>{{ nombres[dias[0]] }} y {{ nombres[dias[1]] }}: {{ tramo.abre }} - {{ tramo.cierra }}</p>
+                {% else %}
+                <p>{{ nombres[dias[0]] }} a {{ nombres[dias[-1]] }}: {{ tramo.abre }} - {{ tramo.cierra }}</p>
+                {% endif %}
+                {% endfor %}
+                {% if negocio.horario_atencion %}
+                {% set cerrados = [] %}
+                {% for d in orden if d not in abiertos %}{% set _ = cerrados.append(plurales.get(d, nombres[d] ~ 's')) %}{% endfor %}
+                {% if cerrados %}<p>{{ cerrados | join(', ') }}: Cerrado</p>{% endif %}
+                {% endif %}
             </div>
             
             <div class="info-block">

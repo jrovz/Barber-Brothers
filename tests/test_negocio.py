@@ -111,3 +111,24 @@ def test_paginas_legales_usan_datos_legales_del_negocio(client, negocio):
     assert 'encargada del tratamiento' in privacidad
 
     assert 'contacto@prueba.com' in client.get('/cookies').get_data(as_text=True)
+
+
+def test_contacto_muestra_el_horario_de_la_base(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.horario_atencion = [
+        {'dias': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], 'abre': '08:00', 'cierra': '18:00'},
+        {'dias': ['Saturday'], 'abre': '08:00', 'cierra': '16:00'},
+    ]
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    html = client.get('/contacto').get_data(as_text=True)
+    assert 'Lunes a Viernes: 08:00 - 18:00' in html
+    assert 'Sábados: 08:00 - 16:00' in html
+    assert 'Domingos: Cerrado' in html
+
+
+def test_contacto_sin_horario_no_muestra_dias_cerrados(client):
+    html = client.get('/contacto').get_data(as_text=True)
+    assert 'Cerrado' not in html
