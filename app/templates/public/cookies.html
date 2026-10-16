@@ -1,10 +1,10 @@
 {% extends "public/public_base.html" %}
 
-{% block title %}Política de Cookies - Barber Brothers{% endblock %}
+{% block title %}Política de Cookies - {{ negocio.nombre }}{% endblock %}
 
-{% block meta_description %}Política de cookies de Barber Brothers. Información detallada sobre qué son las cookies, cómo las utilizamos y cómo controlarlas.{% endblock %}
+{% block meta_description %}Política de cookies de {{ negocio.nombre }}. Información detallada sobre qué son las cookies, cómo las utilizamos y cómo controlarlas.{% endblock %}
 
-{% block meta_keywords %}política de cookies, cookies, web cookies, uso de cookies, cookies barber brothers, configuración cookies, gdpr cookies{% endblock %}
+{% block meta_keywords %}política de cookies, cookies, web cookies, uso de cookies, cookies {{ negocio.nombre }}, configuración cookies, gdpr cookies{% endblock %}
 
 {% block content %}
 <section class="legal-container">
@@ -21,7 +21,7 @@
 
     <div class="legal-section">
         <h2>2. ¿Cómo utilizamos las cookies?</h2>
-        <p>En Barber Brothers utilizamos cookies para diversos propósitos, incluyendo:</p>
+        <p>En {{ negocio.nombre }} utilizamos cookies para diversos propósitos, incluyendo:</p>
         <ul>
             <li>Mejorar la funcionalidad y experiencia de nuestro sitio web</li>
             <li>Recordar sus preferencias y elecciones</li>
@@ -251,9 +251,9 @@
     <div class="legal-section">
         <h2>8. Contacto</h2>
         <p>Si tiene alguna pregunta sobre nuestra política de cookies o cómo utilizamos las cookies, no dude en ponerse en contacto con nosotros:</p>
-        <p><strong>Email:</strong> cookies@barberbrothers.com</p>
-        <p><strong>Dirección:</strong> Manzana A casa N•5, Arkambuco, Boyacá, Colombia</p>
-        <p><strong>Teléfono:</strong> +573102160496</p>
+        {% if negocio.email_contacto %}<p><strong>Email:</strong> {{ negocio.email_contacto }}</p>{% endif %}
+        {% if negocio.direccion_legal or negocio.direccion %}<p><strong>Dirección:</strong> {{ [negocio.direccion_legal or negocio.direccion, negocio.ciudad, negocio.departamento, negocio.pais] | select | join(', ') }}</p>{% endif %}
+        {% if negocio.telefono %}<p><strong>Teléfono:</strong> +57 {{ negocio.telefono }}</p>{% endif %}
     </div>
 </section>
 {% endblock %}

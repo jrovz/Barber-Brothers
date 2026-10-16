@@ -1,8 +1,8 @@
 {% extends "public/public_base.html" %}
 
-{% block title %}Política de Privacidad - Barber Brothers{% endblock %}
+{% block title %}Política de Privacidad - {{ negocio.nombre }}{% endblock %}
 
-{% block meta_description %}Política de privacidad y tratamiento de datos personales de Barber Brothers. Conoce cómo protegemos tu información y tus derechos como usuario.{% endblock %}
+{% block meta_description %}Política de privacidad y tratamiento de datos personales de {{ negocio.nombre }}. Conoce cómo protegemos tu información y tus derechos como usuario.{% endblock %}
 
 {% block meta_keywords %}política de privacidad, protección de datos, RGPD, derechos ARCO, barbería, datos personales, cookies{% endblock %}
 
@@ -15,16 +15,19 @@
 
     <div class="policy-section">
         <h2>1. Introducción</h2>
-        <p>En Barber Brothers ("nosotros", "nuestro", o "la Barbería"), respetamos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política de privacidad explica cómo recopilamos, utilizamos, compartimos y protegemos tu información cuando utilizas nuestro sitio web y servicios.</p>
-        <p>Barber Brothers cumple con la normativa vigente en materia de protección de datos personales, incluyendo el Reglamento General de Protección de Datos (RGPD) y la legislación local aplicable.</p>
+        <p>En {{ negocio.nombre }} ("nosotros", "nuestro", o "la Barbería"), respetamos tu privacidad y nos comprometemos a proteger tus datos personales. Esta política de privacidad explica cómo recopilamos, utilizamos, compartimos y protegemos tu información cuando utilizas nuestro sitio web y servicios.</p>
+        <p>{{ negocio.nombre }} cumple con la normativa vigente en materia de protección de datos personales, incluyendo el Reglamento General de Protección de Datos (RGPD) y la legislación local aplicable.</p>
     </div>
 
     <div class="policy-section">
         <h2>2. Responsable del tratamiento</h2>
-        <p><strong>Identidad:</strong> Barber Brothers</p>
-        <p><strong>Dirección:</strong> Manzana A casa N•5, Arkambuco, Boyacá, Colombia</p>
-        <p><strong>Teléfono:</strong> +573102160496</p>
-        <p><strong>Email:</strong> privacidad@barberbrothers.com</p>
+        <p><strong>Identidad:</strong> {{ negocio.razon_social or negocio.nombre }}{% if negocio.razon_social and negocio.razon_social != negocio.nombre %} ({{ negocio.nombre }}){% endif %}</p>
+        {% if negocio.nit %}<p><strong>NIT / documento:</strong> {{ negocio.nit }}</p>{% endif %}
+        {% if negocio.direccion_legal or negocio.direccion %}<p><strong>Dirección:</strong> {{ [negocio.direccion_legal or negocio.direccion, negocio.ciudad, negocio.departamento, negocio.pais] | select | join(', ') }}</p>{% endif %}
+        {% if negocio.telefono %}<p><strong>Teléfono:</strong> +57 {{ negocio.telefono }}</p>{% endif %}
+        {% if negocio.email_datos_personales or negocio.email_contacto %}<p><strong>Email:</strong> {{ negocio.email_datos_personales or negocio.email_contacto }}</p>{% endif %}
+
+        <p>{{ negocio.razon_social or negocio.nombre }} es el <strong>responsable del tratamiento</strong> de tus datos personales: decide para qué y cómo se usan. La plataforma tecnológica que aloja este sitio actúa como <strong>encargada del tratamiento</strong> y solo trata los datos siguiendo las instrucciones del responsable, conforme a la Ley 1581 de 2012 y sus decretos reglamentarios.</p>
     </div>
 
     <div class="policy-section">
@@ -120,7 +123,7 @@
         
         <h3>Proceso para ejercer tus derechos:</h3>
         <ol>
-            <li>Envía una solicitud a <strong>privacidad@barberbrothers.com</strong> indicando claramente:
+            <li>Envía una solicitud {% if negocio.email_datos_personales or negocio.email_contacto %}a <strong>{{ negocio.email_datos_personales or negocio.email_contacto }}</strong>{% else %}a través de los datos de contacto de esta página{% endif %} indicando claramente:
                 <ul>
                     <li>Tu nombre completo</li>
                     <li>Datos de contacto</li>
@@ -136,7 +139,7 @@
         
         <h3>Proceso específico para eliminación de datos:</h3>
         <ol>
-            <li>Envía un correo electrónico a <strong>privacidad@barberbrothers.com</strong> con el asunto "Solicitud de eliminación de datos personales".</li>
+            <li>Envía {% if negocio.email_datos_personales or negocio.email_contacto %}un correo electrónico a <strong>{{ negocio.email_datos_personales or negocio.email_contacto }}</strong>{% else %}una solicitud por los datos de contacto de esta página{% endif %} con el asunto "Solicitud de eliminación de datos personales".</li>
             <li>Incluye tu nombre completo, correo electrónico y teléfono asociados a tu cuenta.</li>
             <li>Nuestro Delegado de Protección de Datos verificará tu identidad contactándote directamente.</li>
             <li>Una vez verificada tu identidad, procederemos a la eliminación de tus datos en un plazo máximo de 15 días hábiles.</li>
@@ -166,9 +169,9 @@
     <div class="policy-section">
         <h2>13. Contacto y reclamaciones</h2>
         <p>Si tienes preguntas sobre esta política de privacidad o deseas ejercer tus derechos, puedes contactarnos en:</p>
-        <p><strong>Email:</strong> privacidad@barberbrothers.com</p>
-        <p><strong>Dirección:</strong> Manzana A casa N•5, Arkambuco, Boyacá, Colombia</p>
-        <p><strong>Teléfono:</strong> +573102160496</p>
+        {% if negocio.email_datos_personales or negocio.email_contacto %}<p><strong>Email:</strong> {{ negocio.email_datos_personales or negocio.email_contacto }}</p>{% endif %}
+        {% if negocio.direccion_legal or negocio.direccion %}<p><strong>Dirección:</strong> {{ [negocio.direccion_legal or negocio.direccion, negocio.ciudad, negocio.departamento, negocio.pais] | select | join(', ') }}</p>{% endif %}
+        {% if negocio.telefono %}<p><strong>Teléfono:</strong> +57 {{ negocio.telefono }}</p>{% endif %}
         <p>También tienes derecho a presentar una reclamación ante la autoridad de control en materia de protección de datos.</p>
     </div>
     

@@ -9,14 +9,6 @@ personalization_meta_tags,
 tracking_scripts,
 cookie_consent_banner %}
 
-{% block title %}Barber Brothers - Barbería Profesional en Ibagué | Reserva tu Cita Online{% endblock %}
-
-{% block meta_description %}Barber Brothers - Barbería profesional en Ibagué con más de 7 años de experiencia. Cortes
-modernos, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Ubicados en Manzana A casa N•5!{% endblock %}
-
-{% block meta_keywords %}barbería Ibagué, Barber Brothers, corte cabello masculino, afeitado profesional, barbero
-Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios barbería, corte infantil{% endblock %}
-
 {% block og_type %}website{% endblock %}
 
 {% block canonical_url %}{{ url_for('public.home', _external=True) }}{% endblock %}
@@ -29,88 +21,11 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
 <link rel="stylesheet" href="{{ url_for('static', filename='css/slider-optimized.css') }}">
 
 <!-- Datos estructurados JSON-LD -->
-<script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "@id": "https://barberbrothers.com/#business",
-        "name": "Barber Brothers",
-        "description": "Barbería profesional con más de 7 años de experiencia en Arkambuco. Especialistas en cortes modernos, afeitado clásico y arreglo de barba.",
-        "url": "{{ request.url_root }}",
-        "telephone": "+573102160496",
-        "priceRange": "$$",
-        "image": "{{ url_for('static', filename='logo.png', _external=True) }}",
-        "logo": "{{ url_for('static', filename='logo.png', _external=True) }}",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Manzana A casa N•5",
-            "addressLocality": "Arkambuco",
-            "addressRegion": "Boyacá",
-            "addressCountry": "CO"
-        },
-        "geo": {
-            "@type": "GeoCoordinates",
-            "latitude": 5.7619,
-            "longitude": -73.0515
-        },
-        "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "08:00",
-                "closes": "18:00"
-            },
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": "Saturday",
-                "opens": "08:00",
-                "closes": "16:00"
-            }
-        ],
-        "hasOfferCatalog": {
-            "@type": "OfferCatalog",
-            "name": "Servicios de Barbería",
-            "itemListElement": [
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "Corte de Cabello",
-                        "description": "Cortes modernos y clásicos para hombre"
-                    }
-                },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service", 
-                        "name": "Afeitado Clásico",
-                        "description": "Afeitado profesional con navaja"
-                    }
-                },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "Arreglo de Barba",
-                        "description": "Recorte y diseño profesional de barba"
-                    }
-                }
-            ]
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "reviewCount": "127"
-        },
-        "sameAs": [
-            "https://www.instagram.com/barberbrothers/",
-            "https://www.facebook.com/barberbrothers/"
-        ]
-    }
-    </script>
+{% include 'public/includes/schema_negocio.html' %}
 {% endblock %}
 
 {% block content %}
+<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">{{ negocio.nombre }} - Barbería en {{ negocio.ciudad }} | Cortes, Afeitado Clásico y Arreglo de Barba</h1>
 <section class="hero-slider initial">
     <div class="slider-container">
         {% if sliders %}
@@ -138,8 +53,8 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
             <div class="slide-bg" data-img="{{ url_for('static', filename='images/foto1.jpg') }}"></div>
             <div class="slide-content">
                 <div class="product-highlight">
-                    <h2>Cortes de Cabello Profesionales en Arkambuco</h2>
-                    <p>Descubre la experiencia única de Barber Brothers - Tu barbería de confianza desde 2017</p>
+                    <h2>Cortes de Cabello Profesionales en {{ negocio.ciudad }}</h2>
+                    <p>Descubre la experiencia única de {{ negocio.nombre }} - Tu barbería de confianza{% if negocio.anio_fundacion %} desde {{ negocio.anio_fundacion }}{% endif %}</p>
                 </div>
             </div>
         </div>
@@ -149,7 +64,7 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
             <div class="slide-content">
                 <div class="product-highlight">
                     <h2>Afeitado Clásico y Moderno</h2>
-                    <p>Barberos expertos en Arkambuco dedicados a resaltar tu mejor imagen</p>
+                    <p>Barberos expertos en {{ negocio.ciudad }} dedicados a resaltar tu mejor imagen</p>
                 </div>
             </div>
         </div>
@@ -159,7 +74,7 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
             <div class="slide-content">
                 <div class="product-highlight">
                     <h2>Arreglo de Barba Profesional</h2>
-                    <p>Servicios de barbería completos en Arkambuco - Cuidado facial y arreglos de barba con técnicas
+                    <p>Servicios de barbería completos en {{ negocio.ciudad }} - Cuidado facial y arreglos de barba con técnicas
                         profesionales</p>
                 </div>
             </div>
@@ -185,17 +100,89 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
     </div>
 </section>
 
+<!-- Sección Por qué elegirnos: razones concretas y verificables, justo después
+     del hero para dar una razón rápida de confianza antes de pedir conversión -->
+<section id="why-us-section" class="about-section">
+    <div class="about-container">
+        <div class="section-title">
+            <h2>¿Por qué elegirnos?</h2>
+            <p>Razones concretas para confiar en nosotros</p>
+        </div>
 
+        <div class="values-container">
+            <div class="value">
+                <span class="value-number">01</span>
+                <h4>{% if negocio.anio_fundacion %}Desde {{ negocio.anio_fundacion }} en {% endif %}{{ negocio.ciudad }}</h4>
+                <p>Años de experiencia cuidando la imagen de nuestros clientes, corte tras corte.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">02</span>
+                <h4>Reserva 100% online</h4>
+                <p>Elige tu barbero, tu servicio y tu horario disponible en tiempo real, sin llamadas ni esperas.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">03</span>
+                <h4>Elige tu barbero de confianza</h4>
+                <p>Conoce a nuestro equipo y agenda directamente con el barbero que prefieras.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">04</span>
+                <h4>Reseñas reales en Google</h4>
+                <p>Conoce la opinión real de nuestros clientes antes de reservar.
+                    <a class="value-link"
+                        href="https://www.google.com/maps/search/?api=1&query={{ (negocio.nombre ~ ' ' ~ negocio.ciudad) | urlencode }}"
+                        target="_blank" rel="noopener noreferrer">Ver reseñas en Google →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección Nuestro Equipo: antes de la reserva, para que el cliente elija barbero
+     por conexión/afinidad y no solo por un nombre en una lista -->
+<section id="equipo-section" class="about-section">
+    <div class="about-container">
+        <div class="section-title">
+            <h2>Nuestro Equipo</h2>
+            <p>Conoce a los barberos detrás de cada corte</p>
+        </div>
+
+        <div class="team-members">
+            {% for barbero in barberos %}
+            <div class="team-member">
+                <div class="member-img">
+                    {% if barbero.imagen_url %}
+                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200"
+                        height="200" loading="lazy">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
+                        alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200" height="200" loading="lazy">
+                    {% endif %}
+                </div>
+                <h4>{{ barbero.nombre }}</h4>
+                <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
+                <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
+                <button type="button" class="btn member-book-btn" data-barbero-id="{{ barbero.id }}">
+                    Reservar con {{ barbero.nombre }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% if not barberos %}
+        <p class="instruction-message" style="text-align:center;">Muy pronto presentaremos a nuestro equipo.</p>
+        {% endif %}
+    </div>
+</section>
 
 <!-- Contenido personalizado basado en cookies -->
-<!--{{ personalized_welcome(personalization) }}-->
+<!--{{ personalized_welcome(personalization, negocio) }}-->
 
 
 
 <section class="availability booking-section" id="booking-section">
     <h2>Agenda tu Cita</h2>
     <h4 class="booking-intro" style="margin-bottom: 25px;">Reserva tu cita online y disfruta de nuestros servicios
-        premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en Ibagué.</h4>
+        premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en {{ negocio.ciudad }}.</h4>
 
     <!-- Selector de barbero y servicio: tarjetas en acordeón. Cada tarjeta muestra el
          barbero junto con TODOS sus servicios y precios reales a la vez, para que una
@@ -329,67 +316,17 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
         </div>
 
         <div class="about-content">
-            <h3>La historia de La Barber Brothers: un viaje de pasión y dedicación</h3>
-            <p>En el año 2017, dos hermanos apasionados por el arte de la barbería decidimos unirnos para crear un
-                espacio donde los hombres pudieran sentirse orgullosos de su apariencia y relajados en un ambiente
-                acogedor. Así nació La Barber Brothers, un lugar donde la tradición y la innovación se unen para ofrecer
-                experiencias únicas.</p>
-            <p>Desde nuestros inicios, nos hemos esforzado por brindar servicios de alta calidad, desde cortes de pelo
-                precisos hasta afeitados suaves y relajantes. Nuestros barberos han sido entrenados para entender las
-                necesidades de cada cliente y ofrecer soluciones personalizadas.</p>
-            <p>A lo largo de los años, hemos visto a hombres de todas las edades y estilos pasar por nuestras puertas,
-                cada uno con su propia historia y necesidades. Hemos sido testigos de momentos importantes, como bodas y
-                graduaciones, y hemos ayudado a nuestros clientes a sentirse seguros y confiados en su apariencia.</p>
-            <p>La Barber Brothers no es solo un lugar para cortarse el pelo o afeitarse; es un espacio donde los hombres
-                pueden relajarse, socializar y sentirse parte de una comunidad. Hemos creado un ambiente acogedor y
-                masculino, donde se puede disfrutar de una buena conversación y un servicio de alta calidad.</p>
-            <p>Hoy en día, La Barber Brothers es un lugar emblemático en la comunidad, conocido por su atención al
-                detalle y su compromiso con la excelencia. Estamos orgullosos de haber podido crecer y evolucionar junto
-                con nuestros clientes, y estamos emocionados de ver lo que el futuro nos depara.</p>
-            <p>Gracias a todos nuestros clientes por haber sido parte de esta historia. Estamos comprometidos con seguir
-                ofreciendo servicios de alta calidad y hacer que cada visita a La Barber Brothers sea una experiencia
-                inolvidable.</p>
-            <p><em>"¡Visítanos y descubre por qué somos la mejor barbería de la ciudad!"</em></p>
-        </div>
-
-        <div class="team-section">
-            <h3>Nuestro Equipo</h3>
-            <div class="team-members">
-                {% for barbero in barberos %}
-                <div class="team-member">
-                    <div class="member-img">
-                        {% if barbero.imagen_url %}
-                        <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" width="200" height="200"
-                            loading="lazy">
-                        {% else %}
-                        <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
-                            alt="{{ barbero.nombre }}" width="200" height="200" loading="lazy">
-                        {% endif %}
-                    </div>
-                    <h4>{{ barbero.nombre }}</h4>
-                    <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
-                    <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="values-section">
-            <h3>Nuestros Valores</h3>
-            <div class="values-container">
-                <div class="value">
-                    <h4>Excelencia</h4>
-                    <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
-                </div>
-                <div class="value">
-                    <h4>Tradición</h4>
-                    <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
-                </div>
-                <div class="value">
-                    <h4>Innovación</h4>
-                    <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
-                </div>
-            </div>
+            {% if negocio.historia %}
+            <h3>La historia de {{ negocio.nombre }}: un viaje de pasión y dedicación</h3>
+            {# Párrafos separados por una línea en blanco; uno entre comillas se muestra como cita #}
+            {% for parrafo in negocio.historia.replace('\r\n', '\n').split('\n\n') if parrafo.strip() %}
+            {% if parrafo.startswith('"') and parrafo.endswith('"') %}
+            <p><em>{{ parrafo }}</em></p>
+            {% else %}
+            <p>{{ parrafo }}</p>
+            {% endif %}
+            {% endfor %}
+            {% endif %}
         </div>
     </div>
 </section>
@@ -451,7 +388,7 @@ Ibagué, citas online barbería, barber shop Boyacá, arreglo barba, servicios b
 <script src="{{ url_for('static', filename='js/booking.js') }}">    </script>
 
 <!-- Scripts de optimización comercial -->
-{{ business_optimization_scripts() }}
+{{ business_optimization_scripts(negocio.tienda_activa) }}
 
 <!-- Auto-completar inteligente -->
 {{ smart_form_fields(personalization) }}

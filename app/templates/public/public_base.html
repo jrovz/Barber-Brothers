@@ -9,6 +9,7 @@
         --color-accent: #b39656;
         --color-accent-hover: #c9aa6b;
         --color-border: #302c25;
+        {{ negocio.tema_css() | safe }}
     }
 
     * {
@@ -60,21 +61,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Barbería Barber Brothers - Cortes y Afeitados Profesionales en Arkambuco{% endblock %}
+    <title>{% block title %}{{ negocio.seo_titulo or negocio.nombre }}{% endblock %}
     </title>
 
     <!-- Meta Tags SEO -->
     <meta name="description"
-        content="{% block meta_description %}Barbería profesional Barber Brothers en Arkambuco. Cortes de cabello, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Más de 7 años de experiencia!{% endblock %}">
+        content="{% block meta_description %}{{ negocio.seo_descripcion or '' }}{% endblock %}">
     <meta name="keywords"
-        content="{% block meta_keywords %}barbería Arkambuco, corte de cabello hombre, afeitado clásico, barber shop, barbero profesional, arreglo barba, citas online barbería{% endblock %}">
-    <meta name="author" content="Barber Brothers">
+        content="{% block meta_keywords %}{{ negocio.seo_palabras_clave or '' }}{% endblock %}">
+    <meta name="author" content="{{ negocio.nombre }}">
     <meta name="robots" content="index, follow">
     <meta name="language" content="es">
-    <meta name="geo.region" content="CO-BOY">
-    <meta name="geo.placename" content="Arkambuco, Boyacá, Colombia">
-    <meta name="geo.position" content="5.7619;-73.0515">
-    <meta name="ICBM" content="5.7619, -73.0515">
+    {% if negocio.ciudad %}<meta name="geo.placename" content="{{ negocio.ciudad }}{% if negocio.departamento %}, {{ negocio.departamento }}{% endif %}, {{ negocio.pais or 'Colombia' }}">{% endif %}
+    {% if negocio.latitud is not none and negocio.longitud is not none %}
+    <meta name="geo.position" content="{{ negocio.latitud }};{{ negocio.longitud }}">
+    <meta name="ICBM" content="{{ negocio.latitud }}, {{ negocio.longitud }}">
+    {% endif %}
 
     <!-- Canonical URL - CRÍTICO para SEO -->
     <link rel="canonical" href="{% block canonical_url %}{% endblock %}">
@@ -85,8 +87,8 @@
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
     <meta property="og:image"
-        content="{% block og_image %}{{ url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
-    <meta property="og:site_name" content="Barber Brothers">
+        content="{% block og_image %}{{ negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
+    <meta property="og:site_name" content="{{ negocio.nombre }}">
     <meta property="og:locale" content="es_CO">
 
     <!-- Twitter -->
@@ -97,16 +99,16 @@
     <meta property="twitter:image" content="{{ self.og_image() }}">
 
     <!-- Business Information -->
-    <meta name="business:contact_data:street_address" content="Manzana A casa N•5">
-    <meta name="business:contact_data:locality" content="Arkambuco">
-    <meta name="business:contact_data:region" content="Boyacá">
+    <meta name="business:contact_data:street_address" content="{{ negocio.direccion or '' }}">
+    <meta name="business:contact_data:locality" content="{{ negocio.ciudad or '' }}">
+    <meta name="business:contact_data:region" content="{{ negocio.departamento or '' }}">
     <meta name="business:contact_data:postal_code" content="">
-    <meta name="business:contact_data:country_name" content="Colombia">
-    <meta name="business:contact_data:phone_number" content="+573102160496">
+    <meta name="business:contact_data:country_name" content="{{ negocio.pais or 'Colombia' }}">
+    <meta name="business:contact_data:phone_number" content="{% if negocio.whatsapp %}+{{ negocio.whatsapp }}{% endif %}">
 
     <!-- Favicon optimizado -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    {% if negocio.favicon_url %}<link rel="icon" href="{{ negocio.favicon_url }}">{% else %}<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">{% endif %}
+    <link rel="apple-touch-icon" href="{{ negocio.logo_url or url_for('static', filename='logo.png') }}">
 
     <!-- DNS Prefetch para recursos externos -->
     <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
@@ -146,9 +148,12 @@
 
     <!-- Preload imágenes críticas solo en home -->
     {% if request.endpoint == 'public.home' %}
-    <link rel="preload" href="{{ url_for('static', filename='logo.png') }}" as="image">
+    <link rel="preload" href="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" as="image">
     <link rel="preload" href="{{ url_for('static', filename='images/foto1.jpg') }}" as="image">
     {% endif %}
+    <script>window.NEGOCIO = {{ negocio.datos_publicos() | tojson }};</script>
+    {# Colores del negocio: van después de las hojas de estilo para sobrescribir sus variables #}
+    <style>:root { {{ negocio.tema_css() | safe }} }</style>
     {% block extra_head %}{% endblock %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5383695411527556"
         crossorigin="anonymous"></script>
@@ -160,7 +165,7 @@
         <div class="header-container">
             <div class="logo">
                 <a href="{{ url_for('public.home') }}" class="logo-link" id="logo-link">
-                    <img src="/static/logo.png" alt="Barbería Clásica">
+                    <img src="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}">
                 </a>
             </div>
 
@@ -169,14 +174,16 @@
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
                     <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    {% if negocio.tienda_activa %}
                     <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon">
+                    {% if negocio.tienda_activa %}<li class="cart-icon">
                         <a href="#" id="cart-button">
                             <i class="cart-symbol">🛒</i>
                             <span class="cart-count">0</span>
                         </a>
-                    </li>
+                    </li>{% endif %}
                 </ul>
             </nav>
 
@@ -190,14 +197,16 @@
                 <ul>
                     <li><a href="{{ url_for('public.home') }}">Inicio</a></li>
                     <li><a href="{{ url_for('public.servicios') }}">Servicios</a></li>
+                    {% if negocio.tienda_activa %}
                     <li><a href="{{ url_for('public.productos') }}">Productos</a></li>
+                    {% endif %}
                     <li><a href="{{ url_for('public.contact') }}">Contacto</a></li>
-                    <li class="cart-icon">
+                    {% if negocio.tienda_activa %}<li class="cart-icon">
                         <a href="#" id="cart-button-mobile">
                             <i class="cart-symbol">🛒</i>
                             <span class="cart-count">0</span>
                         </a>
-                    </li>
+                    </li>{% endif %}
                 </ul>
             </div>
         </div>
@@ -215,7 +224,7 @@
         <div class="footer-content">
             <div class="footer-info">
                 <p>BarberPRo &copy; 2025</p>
-                <p>Manzana A casa N•5 Arkambuco | Tel: +57 314 378 2855</p>
+                <p>{{ [negocio.direccion, negocio.ciudad] | select | join(', ') }}{% if negocio.telefono %} | Tel: +57 {{ negocio.telefono }}{% endif %}</p>
             </div>
             <div class="footer-links">
                 <a href="{{ url_for('public.privacidad') }}">Política de Privacidad</a>
@@ -226,10 +235,11 @@
     </footer>
 
     <!-- Botón flotante de WhatsApp -->
-    <a href="https://wa.me/573143782855" class="whatsapp-float" target="_blank">
+    <a href="{{ negocio.whatsapp_link() }}" class="whatsapp-float" target="_blank">
         <i class="whatsapp-icon">💬</i>
     </a>
 
+    {% if negocio.tienda_activa %}
     <!-- Panel del Carrito -->
     <div class="cart-panel" id="cart-panel">
         <div class="cart-header">
@@ -249,6 +259,7 @@
         </div>
     </div>
     <div class="cart-overlay" id="cart-overlay"></div>
+    {% endif %}
 
     <!-- Scripts Comunes con carga diferida -->
     <script src="{{ url_for('static', filename='js/public_scripts.js') }}"></script>
@@ -308,6 +319,7 @@
         });
     </script>
 
+    {% if negocio.tienda_activa %}
     <!-- Script para checkout -->
     <script>
         function goToCheckout() {
@@ -319,6 +331,7 @@
             window.location.href = "{{ url_for('public.checkout') }}";
         }
     </script>
+    {% endif %}
 
     <!-- Script para header con scroll -->
     <script>

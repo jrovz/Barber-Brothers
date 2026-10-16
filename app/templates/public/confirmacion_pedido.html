@@ -1,6 +1,6 @@
 {% extends "public/public_base.html" %}
 
-{% block title %}Pedido Confirmado - Barber Brothers{% endblock %}
+{% block title %}Pedido Confirmado - {{ negocio.nombre }}{% endblock %}
 
 {% block content %}
 <div class="confirmation-page">
@@ -66,8 +66,8 @@
             <div class="confirmation-message">
                 <h3>📍 Instrucciones de Recogida</h3>
                 <p><strong>Tu pedido estará listo para recoger en nuestra barbería:</strong></p>
-                <p>📍 <strong>Manzana A casa N•5 Arkambuco</strong></p>
-                <p>📞 <strong>3102160496</strong></p>
+                <p>📍 <strong>{{ [negocio.direccion, negocio.ciudad] | select | join(', ') }}</strong></p>
+                <p>📞 <strong>{{ negocio.telefono_tienda or negocio.telefono }}</strong></p>
                 
                 <h4>⏰ Horarios de Atención</h4>
                 <p>• Lunes a Sábado: 8:00 AM - 6:00 PM</p>
@@ -92,7 +92,7 @@
             <a href="{{ url_for('public.home') }}" class="btn btn-primary">
                 🏠 Volver al Inicio
             </a>
-            <a href="https://wa.me/573102160496?text=Hola,%20tengo%20el%20pedido%20{{ pedido.numero_pedido }}%20¿está%20listo%20para%20recoger?" 
+            <a href="{{ negocio.whatsapp_link('Hola, tengo el pedido ' ~ pedido.numero_pedido ~ ' ¿está listo para recoger?') }}"
                class="btn btn-whatsapp" target="_blank">
                 💬 Contactar por WhatsApp
             </a>

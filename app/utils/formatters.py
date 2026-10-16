@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Funciones de formateo para Barber Brothers
+Funciones de formateo
 =========================================
 
 Utilidades para formatear datos de la aplicación.

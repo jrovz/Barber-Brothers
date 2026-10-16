@@ -1,5 +1,5 @@
 """
-Rutas públicas del sitio Barber Brothers.
+Rutas públicas del sitio.
 
 Este módulo define las vistas y endpoints del Blueprint `public` orientados a la
 parte pública del sitio: página principal, productos, servicios, checkout de
@@ -72,7 +72,7 @@ Seguridad y notas
 - El modelo `Slider` es opcional: si no está disponible, se procede con lista
   vacía. Existen logs/prints de depuración en `home()` y APIs para diagnóstico.
 """
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response, Response
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response, Response, g
 from datetime import datetime
 from flask_login import login_required, current_user
 from app.public import bp
@@ -91,6 +91,7 @@ from app.models.email import send_appointment_confirmation_email # Importar la f
 from app import db
 from datetime import datetime, timedelta, time, timezone
 from flask import send_from_directory
+from app.utils.decorators import requiere_tienda
 from flask import Response
 
 @bp.route('/privacidad')
@@ -347,12 +348,6 @@ def sitemap_xml():
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
             },
             {
-                'loc': url_for('public.productos', _external=True).rstrip('/'),
-                'changefreq': 'weekly',
-                'priority': '0.8',
-                'lastmod': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
                 'loc': url_for('public.contact', _external=True).rstrip('/'),
                 'changefreq': 'monthly',
                 'priority': '0.7',
@@ -374,10 +369,19 @@ def sitemap_xml():
         except Exception as e:
             current_app.logger.warning(f"No se pudieron cargar servicios para sitemap: {e}")
 
+        # La tienda (productos y categorías) solo se indexa si el negocio la tiene activa
+        if g.negocio.tienda_activa:
+            static_urls.append({
+                'loc': url_for('public.productos', _external=True).rstrip('/'),
+                'changefreq': 'weekly',
+                'priority': '0.8',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            })
+
         # URLs dinámicas de productos (con manejo de errores)
         try:
             from app.models.producto import Producto
-            productos = Producto.query.filter_by(activo=True).all()
+            productos = Producto.query.filter_by(activo=True).all() if g.negocio.tienda_activa else []
             for producto in productos:
                 static_urls.append({
                     'loc': url_for('public.productos', _external=True) + f'#producto-{producto.id}',
@@ -391,7 +395,7 @@ def sitemap_xml():
         # URLs dinámicas de categorías (con manejo de errores)
         try:
             from app.models.categoria import Categoria
-            categorias = Categoria.query.filter_by(activo=True).all()
+            categorias = Categoria.query.filter_by(activo=True).all() if g.negocio.tienda_activa else []
             for categoria in categorias:
                 static_urls.append({
                     'loc': url_for('public.productos', _external=True) + f'#categoria-{categoria.id}',
@@ -436,12 +440,12 @@ def sitemap_xml():
                                         <priority>0.9</priority>
                                         <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
                                     </url>
-                                    <url>
+                                    ''' + ('''<url>
                                         <loc>''' + url_for('public.productos', _external=True).rstrip('/') + '''</loc>
                                         <changefreq>weekly</changefreq>
                                         <priority>0.8</priority>
                                         <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
-                                    </url>
+                                    </url>''' if g.negocio.tienda_activa else '') + '''
                                     </urlset>'''
             return Response(basic_sitemap, mimetype='application/xml')
         except Exception as e2:
@@ -482,15 +486,13 @@ def favicon():
         except:
             return ('Favicon not found', 404)
 
-@bp.route('/google17b126f9a1dae6ef.html')
-def google_verification():
-    """Sirve el archivo de verificación de Google Search Console."""
-    try:
-        verification_content = "google-site-verification: google17b126f9a1dae6ef.html"
-        return Response(verification_content, mimetype='text/plain')
-    except Exception as e:
-        current_app.logger.error(f"Error al servir archivo de verificación de Google: {e}")
-        return ('Error', 500)
+@bp.route('/google<codigo>.html')
+def google_verification(codigo):
+    """Sirve el archivo de verificación de Google Search Console del negocio actual."""
+    archivo = f'google{codigo}.html'
+    if not g.negocio.google_verificacion or archivo != g.negocio.google_verificacion:
+        return ('Not Found', 404)
+    return Response(f'google-site-verification: {archivo}', mimetype='text/plain')
 
 @bp.route('/about')
 def about():
@@ -526,11 +528,13 @@ def contact():
 @bp.route('/products')
 @bp.route('/producto')
 @bp.route('/tienda')
+@requiere_tienda
 def redirect_to_productos():
     """Redirecciona variantes de URL a la página productos canónica"""
     return redirect(url_for('public.productos'), code=301)
 
 @bp.route('/productos')
+@requiere_tienda
 def productos():
     """Página de productos agrupados por categoría."""
     
@@ -570,6 +574,7 @@ def productos():
     )
 
 @bp.route('/checkout', methods=['GET', 'POST'])
+@requiere_tienda
 def checkout():
     from app.public.forms import CheckoutForm
     from app.models.pedido import Pedido, PedidoItem
@@ -668,6 +673,7 @@ def checkout():
     return render_template('public/checkout.html', form=form)
 
 @bp.route('/confirmacion-pedido/<int:pedido_id>')
+@requiere_tienda
 def confirmacion_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     return render_template('public/confirmacion_pedido.html', pedido=pedido)
@@ -1230,4 +1236,4 @@ def confirmar_cita_route(token):
     return render_template('public/confirmation_status.html',
                            success=True,
                            message='¡Tu cita ha sido confirmada exitosamente!',
-                           cita=cita_token)
+                           cita=cita_token)

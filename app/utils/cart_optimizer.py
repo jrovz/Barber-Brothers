@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Optimizador de Carrito de Compras - Barber Brothers
+Optimizador de carrito de compras
 =================================================
 
 Sistema avanzado para maximizar conversiones en e-commerce

@@ -1,6 +1,6 @@
 {% extends "public/public_base.html" %}
 
-{% block title %}Finalizar Compra - Barber Brothers{% endblock %}
+{% block title %}Finalizar Compra - {{ negocio.nombre }}{% endblock %}
 
 {% block content %}
 <div class="page-title">
@@ -14,8 +14,8 @@
         <div class="info-card">
             <h3>📍 Recogida en Barbería</h3>
             <p>Tu pedido estará listo para recoger en nuestro local:</p>
-            <p><strong>Manzana A casa N•5 Arkambuco</strong></p>
-            <p>📞 <strong>3102160496</strong></p>
+            <p><strong>{{ [negocio.direccion, negocio.ciudad] | select | join(', ') }}</strong></p>
+            <p>📞 <strong>{{ negocio.telefono_tienda or negocio.telefono }}</strong></p>
         </div>
         
         <div class="info-card">

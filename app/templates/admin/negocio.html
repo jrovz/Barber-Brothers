@@ -1,0 +1,121 @@
+{% extends "admin/admin_base.html" %}
+
+{% macro campo(f, ayuda=None) %}
+<div class="form-group">
+    {{ f.label(class="form-label") }}
+    {{ f(class="form-input", **kwargs) }}
+    {% if ayuda %}<small style="opacity:.7">{{ ayuda }}</small>{% endif %}
+    {% for error in f.errors %}<span class="error">{{ error }}</span>{% endfor %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="panel-header">
+    <h1 class="panel-title">{{ title }}</h1>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category or 'info' }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<section class="admin-form">
+    <form action="{{ url_for('admin.configuracion_negocio') }}" method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="negocio-tabs" role="tablist" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem;">
+            {% for id, nombre in [('contacto','Contacto'),('ubicacion','Ubicación'),('redes','Redes'),('seo','SEO'),('historia','Historia y horario'),('legal','Datos legales')] %}
+            <button type="button" class="btn negocio-tab" data-tab="{{ id }}">{{ nombre }}</button>
+            {% endfor %}
+        </div>
+
+        <div class="negocio-panel" id="tab-contacto">
+            <div class="form-grid">
+                {{ campo(form.telefono) }}
+                {{ campo(form.whatsapp, 'Se usa en el botón flotante y en los enlaces de WhatsApp.') }}
+                {{ campo(form.telefono_tienda, 'Si lo dejas vacío, la tienda usa el teléfono principal.') }}
+                {{ campo(form.email_contacto) }}
+                {{ campo(form.remitente_nombre, 'Nombre que verán tus clientes en los correos.') }}
+            </div>
+        </div>
+
+        <div class="negocio-panel" id="tab-ubicacion">
+            <div class="form-grid">
+                {{ campo(form.direccion) }}
+                {{ campo(form.ciudad) }}
+                {{ campo(form.departamento) }}
+                {{ campo(form.pais) }}
+                {{ campo(form.latitud, 'Opcional. Mejora tu ficha en Google.', step='any') }}
+                {{ campo(form.longitud, step='any') }}
+            </div>
+        </div>
+
+        <div class="negocio-panel" id="tab-redes">
+            <div class="form-grid">
+                {{ campo(form.instagram_url) }}
+                {{ campo(form.tiktok_url) }}
+                {{ campo(form.facebook_url) }}
+            </div>
+        </div>
+
+        <div class="negocio-panel" id="tab-seo">
+            <div class="form-grid">
+                {{ campo(form.seo_titulo) }}
+                {{ campo(form.seo_descripcion, rows=3) }}
+                {{ campo(form.seo_palabras_clave, rows=3) }}
+            </div>
+        </div>
+
+        <div class="negocio-panel" id="tab-historia">
+            {{ campo(form.historia, 'Separa los párrafos con una línea en blanco.', rows=8) }}
+
+            <h3>Horario de atención</h3>
+            <p><small>Deja vacíos los días que no abres. Formato 24 horas, por ejemplo 08:00 y 18:00.</small></p>
+            <div class="form-grid">
+                {% for clave, nombre in dias %}
+                <div class="form-group">
+                    <label class="form-label">{{ nombre }}</label>
+                    <input type="time" class="form-input" name="h_{{ clave }}_abre"
+                        value="{{ (horario.get(clave) or {}).get('abre', '') }}" style="display:inline-block;width:auto;">
+                    a
+                    <input type="time" class="form-input" name="h_{{ clave }}_cierra"
+                        value="{{ (horario.get(clave) or {}).get('cierra', '') }}" style="display:inline-block;width:auto;">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="negocio-panel" id="tab-legal">
+            <p><small>Estos datos aparecen en los términos y en la política de privacidad. Si los dejas vacíos, esas páginas solo muestran el nombre del negocio.</small></p>
+            <div class="form-grid">
+                {{ campo(form.razon_social) }}
+                {{ campo(form.nit) }}
+                {{ campo(form.direccion_legal) }}
+                {{ campo(form.email_datos_personales, 'Si lo dejas vacío se usa el correo de contacto.') }}
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:1.5rem;">
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</section>
+
+<script>
+    (function () {
+        var tabs = document.querySelectorAll('.negocio-tab');
+        var paneles = document.querySelectorAll('.negocio-panel');
+        function mostrar(id) {
+            paneles.forEach(function (p) { p.style.display = p.id === 'tab-' + id ? '' : 'none'; });
+            tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.tab === id); });
+        }
+        tabs.forEach(function (t) { t.addEventListener('click', function () { mostrar(t.dataset.tab); }); });
+        // Abrir la pestaña que tenga errores de validación
+        var conError = document.querySelector('.negocio-panel .error');
+        mostrar(conError ? conError.closest('.negocio-panel').id.replace('tab-', '') : 'contacto');
+    })();
+</script>
+{% endblock %}

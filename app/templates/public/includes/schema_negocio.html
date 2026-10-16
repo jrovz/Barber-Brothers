@@ -1,0 +1,40 @@
+{# Datos estructurados JSON-LD del negocio. Los bloques sin datos (horario, coordenadas, redes) se omiten. #}
+{% set schema = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": request.url_root ~ "#business",
+    "name": negocio.nombre,
+    "url": request.url_root,
+    "priceRange": "$$",
+    "image": negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True),
+    "logo": negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True),
+    "address": {
+        "@type": "PostalAddress",
+        "streetAddress": negocio.direccion or "",
+        "addressLocality": negocio.ciudad or "",
+        "addressRegion": negocio.departamento or "",
+        "addressCountry": "CO"
+    },
+    "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Servicios de Barbería",
+        "itemListElement": [
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Corte de Cabello", "description": "Cortes modernos y clásicos para hombre"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Afeitado Clásico", "description": "Afeitado profesional con navaja"}},
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Arreglo de Barba", "description": "Recorte y diseño profesional de barba"}}
+        ]
+    }
+} %}
+{% if negocio.seo_descripcion %}{% set _ = schema.update({"description": negocio.seo_descripcion}) %}{% endif %}
+{% if negocio.whatsapp %}{% set _ = schema.update({"telephone": "+" ~ negocio.whatsapp}) %}{% endif %}
+{% if negocio.latitud is not none and negocio.longitud is not none %}
+{% set _ = schema.update({"geo": {"@type": "GeoCoordinates", "latitude": negocio.latitud, "longitude": negocio.longitud}}) %}
+{% endif %}
+{% set horarios = [] %}
+{% for h in (negocio.horario_atencion or []) %}
+{% set _ = horarios.append({"@type": "OpeningHoursSpecification", "dayOfWeek": h.dias, "opens": h.abre, "closes": h.cierra}) %}
+{% endfor %}
+{% if horarios %}{% set _ = schema.update({"openingHoursSpecification": horarios}) %}{% endif %}
+{% set redes = [negocio.instagram_url, negocio.tiktok_url, negocio.facebook_url] | select | list %}
+{% if redes %}{% set _ = schema.update({"sameAs": redes}) %}{% endif %}
+<script type="application/ld+json">{{ schema | tojson }}</script>

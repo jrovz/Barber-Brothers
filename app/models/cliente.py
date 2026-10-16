@@ -102,24 +102,29 @@ class Cita(db.Model):
     ESTADOS_OCUPAN_HORARIO = ('confirmada', 'pendiente_confirmacion', 'expirada')
 
     @staticmethod
-    def obtener_intervalos_ocupados(barbero_id, fecha, estados=ESTADOS_OCUPAN_HORARIO):
+    def obtener_intervalos_ocupados(barbero_id, fecha, estados=ESTADOS_OCUPAN_HORARIO, excluir_cita_id=None):
         """
         Trae en una sola consulta las citas de un barbero para un día y las devuelve
         como lista de intervalos (inicio, fin) según su duración.
+
+        excluir_cita_id se usa al reprogramar una cita existente, para que no se
+        solape contra su propio horario anterior.
         """
         inicio_dia = datetime.combine(fecha, datetime.min.time())
         fin_dia = inicio_dia + timedelta(days=1)
 
-        citas_del_dia = Cita.query.filter(
+        query = Cita.query.filter(
             Cita.barbero_id == barbero_id,
             Cita.estado.in_(estados),
             Cita.fecha >= inicio_dia,
             Cita.fecha < fin_dia,
-        ).all()
+        )
+        if excluir_cita_id is not None:
+            query = query.filter(Cita.id != excluir_cita_id)
 
         return [
             (cita.fecha, cita.fecha + timedelta(minutes=cita.duracion or 30))
-            for cita in citas_del_dia
+            for cita in query.all()
         ]
 
     @staticmethod
@@ -131,9 +136,9 @@ class Cita(db.Model):
         )
 
     @staticmethod
-    def hay_solapamiento(barbero_id, inicio, fin, estados=ESTADOS_OCUPAN_HORARIO):
+    def hay_solapamiento(barbero_id, inicio, fin, estados=ESTADOS_OCUPAN_HORARIO, excluir_cita_id=None):
         """Indica si existe alguna cita del barbero que se solape con [inicio, fin)."""
-        intervalos = Cita.obtener_intervalos_ocupados(barbero_id, inicio.date(), estados)
+        intervalos = Cita.obtener_intervalos_ocupados(barbero_id, inicio.date(), estados, excluir_cita_id)
         return Cita.intervalo_se_solapa(inicio, fin, intervalos)
 
     @staticmethod

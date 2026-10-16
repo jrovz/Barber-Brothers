@@ -4,6 +4,7 @@ from app.models.cliente import Cliente, Mensaje, Cita
 from app.models.barbero import Barbero
 from app.models.barbero_servicio import BarberoServicio
 from app.models.admin import User
+from app.models.negocio import Negocio
 from .servicio import Servicio 
 from .servicio_imagen import ServicioImagen
 from .pedido import Pedido, PedidoItem

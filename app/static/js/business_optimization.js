@@ -1,5 +1,5 @@
 /**
- * Business Optimization JavaScript - Barber Brothers
+ * Business Optimization JavaScript
  * ================================================
  * 
  * Sistema inteligente que maximiza conversiones usando datos de cookies
@@ -956,7 +956,10 @@ class BusinessOptimizer {
             alert('¡Descuento aplicado! Completa tu reserva para aprovecharlo.');
         } else {
             // Redirigir a WhatsApp o mostrar formulario de contacto
-            window.open('https://wa.me/573001234567?text=Hola, necesito ayuda para agendar una cita', '_blank');
+            const whatsapp = window.NEGOCIO && window.NEGOCIO.whatsapp;
+            if (whatsapp) {
+                window.open('https://wa.me/' + whatsapp + '?text=' + encodeURIComponent('Hola, necesito ayuda para agendar una cita'), '_blank');
+            }
         }
         
         // Tracking del evento

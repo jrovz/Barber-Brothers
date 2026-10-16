@@ -4,9 +4,10 @@ from flask_login import login_required
 from app.admin import bp
 from app.utils.decorators import admin_required
 from app.models.cliente import Cliente, Cita
+from app.models.servicio import Servicio
 from app import db
 from app.admin.forms import CitaForm
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import logging
 
@@ -28,53 +29,65 @@ def gestionar_citas():
         elif form.validate_on_submit(): # La validación ahora incluye el email
             try:
                 fecha_hora_obj = datetime.strptime(f"{fecha_str} {hora_str}", '%Y-%m-%d %H:%M')
-                
-                cliente_nombre_form = form.cliente_nombre.data.strip()
-                cliente_email_form = form.cliente_email.data.strip().lower() # Guardar email en minúsculas
 
-                # Buscar cliente por email primero (más único)
-                cliente = Cliente.query.filter(db.func.lower(Cliente.email) == cliente_email_form).first()
-                
-                if not cliente:
-                    # Si no se encuentra por email, intentar por nombre (menos fiable, pero como fallback)
-                    cliente_por_nombre = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
-                    if cliente_por_nombre:
-                        # Si existe un cliente con ese nombre pero diferente email, podría ser un problema.
-                        # Por ahora, se creará uno nuevo si el email no coincide.
-                        # Considerar una lógica más avanzada si es necesario.
-                        pass
+                # La duración real del servicio decide cuánto horario ocupa, igual que en
+                # la reserva pública: dos citas de 30 min "no se tocan" pero una de 60 min
+                # a las 4:00 sí choca con otra a las 4:30 aunque las horas de inicio difieran.
+                servicio = Servicio.query.get(form.servicio_id.data)
+                duracion = servicio.get_duracion_minutos() if servicio else 30
+                fin_cita = fecha_hora_obj + timedelta(minutes=duracion)
+                hay_conflicto = Cita.hay_solapamiento(form.barbero_id.data, fecha_hora_obj, fin_cita)
 
-                    # Crear nuevo cliente si no se encontró por email
+                if hay_conflicto:
+                    flash('Ese horario se solapa con otra cita del mismo barbero. Elige otra hora.', 'danger')
+                else:
+                    cliente_nombre_form = form.cliente_nombre.data.strip()
+                    cliente_email_form = form.cliente_email.data.strip().lower() # Guardar email en minúsculas
+
+                    # Buscar cliente por email primero (más único)
+                    cliente = Cliente.query.filter(db.func.lower(Cliente.email) == cliente_email_form).first()
+
+                    if not cliente:
+                        # Si no se encuentra por email, intentar por nombre (menos fiable, pero como fallback)
+                        cliente_por_nombre = Cliente.query.filter(db.func.lower(Cliente.nombre) == db.func.lower(cliente_nombre_form)).first()
+                        if cliente_por_nombre:
+                            # Si existe un cliente con ese nombre pero diferente email, podría ser un problema.
+                            # Por ahora, se creará uno nuevo si el email no coincide.
+                            # Considerar una lógica más avanzada si es necesario.
+                            pass
+
+                        # Crear nuevo cliente si no se encontró por email
+                        cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
+                        cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=cliente_telefono_form if cliente_telefono_form else None)
+                        db.session.add(cliente)
+                        flash(f'Nuevo cliente "{cliente_nombre_form}" con email "{cliente_email_form}" será creado.', 'info')
+                    elif cliente.nombre.lower() != cliente_nombre_form.lower():
+                        # Si el email existe pero el nombre es diferente, actualizar el nombre.
+                        flash(f'Cliente encontrado por email. Nombre actualizado de "{cliente.nombre}" a "{cliente_nombre_form}".', 'info')
+                        cliente.nombre = cliente_nombre_form
+
+                    # Actualizar teléfono del cliente existente si se proporciona
                     cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
-                    cliente = Cliente(nombre=cliente_nombre_form, email=cliente_email_form, telefono=cliente_telefono_form if cliente_telefono_form else None)
-                    db.session.add(cliente)
-                    flash(f'Nuevo cliente "{cliente_nombre_form}" con email "{cliente_email_form}" será creado.', 'info')
-                elif cliente.nombre.lower() != cliente_nombre_form.lower():
-                    # Si el email existe pero el nombre es diferente, actualizar el nombre.
-                    flash(f'Cliente encontrado por email. Nombre actualizado de "{cliente.nombre}" a "{cliente_nombre_form}".', 'info')
-                    cliente.nombre = cliente_nombre_form
-                
-                # Actualizar teléfono del cliente existente si se proporciona
-                cliente_telefono_form = request.form.get('cliente_telefono', '').strip()
-                if cliente_telefono_form:
-                    cliente.telefono = cliente_telefono_form
-                
-                # Aquí 'cliente' ya está definido (existente o nuevo)
-                nueva_cita = Cita(
-                    cliente_id=cliente.id if cliente.id else None, 
-                    barbero_id=form.barbero_id.data,
-                    servicio_id=form.servicio_id.data,
-                    fecha=fecha_hora_obj,
-                    estado=form.estado.data,
-                    notas=request.form.get('notas_cita', '')
-                )
-                if not cliente.id: 
-                    nueva_cita.cliente = cliente 
+                    if cliente_telefono_form:
+                        cliente.telefono = cliente_telefono_form
 
-                db.session.add(nueva_cita)
-                db.session.commit()
-                flash('Cita creada correctamente.', 'success')
-                return redirect(url_for('admin.gestionar_citas'))
+                    # Aquí 'cliente' ya está definido (existente o nuevo)
+                    nueva_cita = Cita(
+                        cliente_id=cliente.id if cliente.id else None,
+                        barbero_id=form.barbero_id.data,
+                        servicio_id=form.servicio_id.data,
+                        fecha=fecha_hora_obj,
+                        duracion=duracion,
+                        estado=form.estado.data,
+                        notas=request.form.get('notas_cita', '')
+                    )
+                    if not cliente.id:
+                        nueva_cita.cliente = cliente
+
+                    db.session.add(nueva_cita)
+                    db.session.commit()
+                    flash('Cita creada correctamente.', 'success')
+                    return redirect(url_for('admin.gestionar_citas'))
 
             except ValueError:
                 flash('Formato de fecha u hora inválido.', 'danger')
@@ -158,7 +171,19 @@ def editar_cita(id):
         elif form.validate_on_submit(): # Validación incluye email
             try:
                 fecha_hora_obj = datetime.strptime(f"{fecha_str} {hora_str}", '%Y-%m-%d %H:%M')
-                
+
+                # Misma lógica que la reserva pública y que crear_cita: la duración real
+                # del servicio decide cuánto horario ocupa. excluir_cita_id evita que la
+                # cita choque contra su propio horario anterior al reprogramarla.
+                servicio = Servicio.query.get(form.servicio_id.data)
+                duracion = servicio.get_duracion_minutos() if servicio else 30
+                fin_cita = fecha_hora_obj + timedelta(minutes=duracion)
+                hay_conflicto = Cita.hay_solapamiento(
+                    form.barbero_id.data, fecha_hora_obj, fin_cita, excluir_cita_id=cita.id
+                )
+                if hay_conflicto:
+                    flash('Ese horario se solapa con otra cita del mismo barbero. Elige otra hora.', 'danger')
+
                 cliente_nombre_form = form.cliente_nombre.data.strip()
                 cliente_email_form = form.cliente_email.data.strip().lower()
 
@@ -213,17 +238,18 @@ def editar_cita(id):
                         cliente_para_cita = cita.cliente
 
 
-                if cliente_para_cita: 
+                if cliente_para_cita and not hay_conflicto:
                     cita.cliente = cliente_para_cita
                     cita.barbero_id = form.barbero_id.data
                     cita.servicio_id = form.servicio_id.data
                     cita.fecha = fecha_hora_obj
+                    cita.duracion = duracion
                     cita.estado = form.estado.data
                     cita.notas = request.form.get('notas_cita', cita.notas)
                     db.session.commit()
                     flash('Cita actualizada correctamente.', 'success')
                     return redirect(url_for('admin.gestionar_citas'))
-                # else: el flash de error de email duplicado ya se mostró
+                # else: el flash de error de email duplicado o de solapamiento ya se mostró
 
             except ValueError:
                 flash('Formato de fecha u hora inválido.', 'danger')
