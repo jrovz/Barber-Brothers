@@ -367,3 +367,13 @@ def test_varios_barberos_ocultan_las_tarjetas_hasta_elegir_uno(client, barbero):
     assert 'id="barbero-placeholder"' in html
     assert html.count('Cambiar barbero') == 2
     assert 'accordion-chevron' not in html
+
+
+def test_por_que_elegirnos_tiene_las_tarjetas_y_la_copia_para_el_carrusel(client):
+    html = client.get('/').get_data(as_text=True)
+    inicio = html.index('id="why-us-section"')
+    seccion = html[inicio:html.index('</section>', inicio)]
+    assert seccion.count('class="value"') == 4
+    assert seccion.count('class="value value-clone"') == 1
+    assert 'aria-hidden="true"' in seccion
+    assert 'values-viewport' in seccion

@@ -109,6 +109,9 @@ cookie_consent_banner %}
             <p>Razones concretas para confiar en nosotros</p>
         </div>
 
+        <!-- En móvil las 4 tarjetas pasan solas, de a una (carrusel automático en CSS).
+             La última tarjeta repite la primera para que el ciclo cierre sin rebobinar. -->
+        <div class="values-viewport">
         <div class="values-container">
             <div class="value">
                 <span class="value-number">01</span>
@@ -134,6 +137,12 @@ cookie_consent_banner %}
                         target="_blank" rel="noopener noreferrer">Ver reseñas en Google →</a>
                 </p>
             </div>
+            <div class="value value-clone" aria-hidden="true">
+                <span class="value-number">01</span>
+                <h4>{% if negocio.anio_fundacion %}Desde {{ negocio.anio_fundacion }} en {% endif %}{{ negocio.ciudad }}</h4>
+                <p>Años de experiencia cuidando la imagen de nuestros clientes, corte tras corte.</p>
+            </div>
+        </div>
         </div>
     </div>
 </section>

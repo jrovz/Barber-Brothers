@@ -1480,6 +1480,70 @@ footer p {
     font-size: 1.1rem;
 }
 
+/* "¿Por qué elegirnos?" en móvil: las tarjetas pasan solas, de a una, sin interacción.
+   Son 4 tarjetas + 1 copia de la primera; cada una se muestra ~4 s (ciclo de 20 s).
+   Si se agregan o quitan tarjetas hay que ajustar el ancho (500%), la base (20%) y los
+   pasos de @keyframes. */
+.value-clone {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    #why-us-section .values-viewport {
+        overflow: hidden;
+        padding: 0.5rem 0;
+    }
+
+    #why-us-section .values-container {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        gap: 0;
+        width: 500%;
+        animation: why-us-slide 20s ease-in-out infinite;
+    }
+
+    #why-us-section .value {
+        flex: 0 0 20%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    #why-us-section .value-clone {
+        display: block;
+    }
+
+    #why-us-section .value:hover {
+        transform: none;
+    }
+}
+
+@keyframes why-us-slide {
+    0%, 18%   { transform: translateX(0); }
+    22%, 38%  { transform: translateX(-20%); }
+    42%, 58%  { transform: translateX(-40%); }
+    62%, 78%  { transform: translateX(-60%); }
+    82%, 100% { transform: translateX(-80%); }
+}
+
+/* Sin animación para quien la desactiva: tarjetas apiladas en una columna */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+    #why-us-section .values-container {
+        width: auto;
+        flex-wrap: wrap;
+        flex-direction: column;
+        gap: 1rem;
+        animation: none;
+    }
+
+    #why-us-section .value {
+        flex: 1 1 auto;
+    }
+
+    #why-us-section .value-clone {
+        display: none;
+    }
+}
+
 /* Reservas */
 
 /* Selector de servicio: muestra solo la tarjeta del barbero elegido en "Nuestro Equipo",
