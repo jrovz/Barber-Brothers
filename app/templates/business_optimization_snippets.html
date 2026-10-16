@@ -1,5 +1,5 @@
 <!-- 
-Business Optimization Snippets - Barber Brothers
+Business Optimization Snippets
 ==============================================
 
 Snippets reutilizables para optimización de conversión
@@ -101,7 +101,7 @@ Version: 1.0
 {% endmacro %}
 
 <!-- Snippet: Mensaje de bienvenida personalizado -->
-{% macro personalized_welcome(personalization) %}
+{% macro personalized_welcome(personalization, negocio) %}
 {% if personalization and personalization.is_returning_customer %}
 <div class="personalized-welcome" style="background: linear-gradient(135deg, var(--color-bg-card, #15130f) 0%, var(--color-bg-medium, #121111) 100%); 
      color: var(--color-text-primary, #f5f0e6); padding: 25px; border-radius: 15px; margin: 25px 15px; text-align: center;
@@ -116,7 +116,7 @@ Version: 1.0
     </div>
     <p style="margin: 0 0 20px 0; color: var(--color-text-secondary, #e3d9c6); font-size: 1.05em; line-height: 1.5;">
         {% if personalization.total_reservas > 0 %}
-            Gracias por confiar en Barber Brothers<br>
+            Gracias por confiar en {{ negocio.nombre }}<br>
             <small style="color: var(--color-text-accent, #d2b883); font-weight: 600;">
                 ({{ personalization.total_reservas }} cita{% if personalization.total_reservas != 1 %}s{% endif %} anteriores)
             </small>

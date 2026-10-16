@@ -9,14 +9,6 @@ personalization_meta_tags,
 tracking_scripts,
 cookie_consent_banner %}
 
-{% block title %}Barber Brothers - Barbería Profesional en Ibagué | Reserva tu Cita Online{% endblock %}
-
-{% block meta_description %}Barber Brothers - Barbería profesional en Ibagué con más de 7 años de experiencia. Cortes
-modernos, afeitado clásico, arreglo de barba. Reserva tu cita online. ¡Ubicados en Cra. 20 #94D-34, Arcambuko, Ibagué!{% endblock %}
-
-{% block meta_keywords %}barbería Ibagué, Barber Brothers, corte cabello masculino, afeitado profesional, barbero
-Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios barbería, corte infantil{% endblock %}
-
 {% block og_type %}website{% endblock %}
 
 {% block canonical_url %}{{ url_for('public.home', _external=True) }}{% endblock %}
@@ -29,84 +21,11 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
 <link rel="stylesheet" href="{{ url_for('static', filename='css/slider-optimized.css') }}">
 
 <!-- Datos estructurados JSON-LD -->
-<script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "@id": "https://labarberbrothers.com/#business",
-        "name": "Barber Brothers",
-        "description": "Barbería profesional con más de 7 años de experiencia en Ibagué. Especialistas en cortes modernos, afeitado clásico y arreglo de barba.",
-        "url": "{{ request.url_root }}",
-        "telephone": "+573143782855",
-        "priceRange": "$$",
-        "image": "{{ url_for('static', filename='logo.png', _external=True) }}",
-        "logo": "{{ url_for('static', filename='logo.png', _external=True) }}",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "Cra. 20 #94D-34, Arcambuko",
-            "addressLocality": "Ibagué",
-            "addressRegion": "Tolima",
-            "addressCountry": "CO"
-        },
-        "geo": {
-            "@type": "GeoCoordinates",
-            "latitude": 4.4389,
-            "longitude": -75.2322
-        },
-        "openingHoursSpecification": [
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                "opens": "08:00",
-                "closes": "18:00"
-            },
-            {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": "Saturday",
-                "opens": "08:00",
-                "closes": "16:00"
-            }
-        ],
-        "hasOfferCatalog": {
-            "@type": "OfferCatalog",
-            "name": "Servicios de Barbería",
-            "itemListElement": [
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "Corte de Cabello",
-                        "description": "Cortes modernos y clásicos para hombre"
-                    }
-                },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service", 
-                        "name": "Afeitado Clásico",
-                        "description": "Afeitado profesional con navaja"
-                    }
-                },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "Arreglo de Barba",
-                        "description": "Recorte y diseño profesional de barba"
-                    }
-                }
-            ]
-        },
-        "sameAs": [
-            "https://www.instagram.com/la_barberbrothers/",
-            "https://www.tiktok.com/@labarberbrothers"
-        ]
-    }
-    </script>
+{% include 'public/includes/schema_negocio.html' %}
 {% endblock %}
 
 {% block content %}
-<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Barber Brothers - Barbería en Ibagué | Cortes, Afeitado Clásico y Arreglo de Barba</h1>
+<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">{{ negocio.nombre }} - Barbería en {{ negocio.ciudad }} | Cortes, Afeitado Clásico y Arreglo de Barba</h1>
 <section class="hero-slider initial">
     <div class="slider-container">
         {% if sliders %}
@@ -134,8 +53,8 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
             <div class="slide-bg" data-img="{{ url_for('static', filename='images/foto1.jpg') }}"></div>
             <div class="slide-content">
                 <div class="product-highlight">
-                    <h2>Cortes de Cabello Profesionales en Ibagué</h2>
-                    <p>Descubre la experiencia única de Barber Brothers - Tu barbería de confianza desde 2017</p>
+                    <h2>Cortes de Cabello Profesionales en {{ negocio.ciudad }}</h2>
+                    <p>Descubre la experiencia única de {{ negocio.nombre }} - Tu barbería de confianza{% if negocio.anio_fundacion %} desde {{ negocio.anio_fundacion }}{% endif %}</p>
                 </div>
             </div>
         </div>
@@ -145,7 +64,7 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
             <div class="slide-content">
                 <div class="product-highlight">
                     <h2>Afeitado Clásico y Moderno</h2>
-                    <p>Barberos expertos en Ibagué dedicados a resaltar tu mejor imagen</p>
+                    <p>Barberos expertos en {{ negocio.ciudad }} dedicados a resaltar tu mejor imagen</p>
                 </div>
             </div>
         </div>
@@ -155,7 +74,7 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
             <div class="slide-content">
                 <div class="product-highlight">
                     <h2>Arreglo de Barba Profesional</h2>
-                    <p>Servicios de barbería completos en Ibagué - Cuidado facial y arreglos de barba con técnicas
+                    <p>Servicios de barbería completos en {{ negocio.ciudad }} - Cuidado facial y arreglos de barba con técnicas
                         profesionales</p>
                 </div>
             </div>
@@ -193,7 +112,7 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
         <div class="values-container">
             <div class="value">
                 <span class="value-number">01</span>
-                <h4>Desde 2017 en Ibagué</h4>
+                <h4>{% if negocio.anio_fundacion %}Desde {{ negocio.anio_fundacion }} en {% endif %}{{ negocio.ciudad }}</h4>
                 <p>Años de experiencia cuidando la imagen de nuestros clientes, corte tras corte.</p>
             </div>
             <div class="value">
@@ -211,7 +130,7 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
                 <h4>Reseñas reales en Google</h4>
                 <p>Conoce la opinión real de nuestros clientes antes de reservar.
                     <a class="value-link"
-                        href="https://www.google.com/maps/search/?api=1&query=La+Barber+Brothers+Ibagu%C3%A9"
+                        href="https://www.google.com/maps/search/?api=1&query={{ (negocio.nombre ~ ' ' ~ negocio.ciudad) | urlencode }}"
                         target="_blank" rel="noopener noreferrer">Ver reseñas en Google →</a>
                 </p>
             </div>
@@ -233,11 +152,11 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
             <div class="team-member">
                 <div class="member-img">
                     {% if barbero.imagen_url %}
-                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }} - Barbero en Ibagué" width="200"
+                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200"
                         height="200" loading="lazy">
                     {% else %}
                     <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
-                        alt="{{ barbero.nombre }} - Barbero en Ibagué" width="200" height="200" loading="lazy">
+                        alt="{{ barbero.nombre }} - Barbero en {{ negocio.ciudad }}" width="200" height="200" loading="lazy">
                     {% endif %}
                 </div>
                 <h4>{{ barbero.nombre }}</h4>
@@ -256,14 +175,14 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
 </section>
 
 <!-- Contenido personalizado basado en cookies -->
-<!--{{ personalized_welcome(personalization) }}-->
+<!--{{ personalized_welcome(personalization, negocio) }}-->
 
 
 
 <section class="availability booking-section" id="booking-section">
     <h2>Agenda tu Cita</h2>
     <h4 class="booking-intro" style="margin-bottom: 25px;">Reserva tu cita online y disfruta de nuestros servicios
-        premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en Ibagué.</h4>
+        premium de barbería. Cortes, afeitados y diseño de barba por expertos barberos en {{ negocio.ciudad }}.</h4>
 
     <!-- Selector de barbero y servicio: tarjetas en acordeón. Cada tarjeta muestra el
          barbero junto con TODOS sus servicios y precios reales a la vez, para que una
