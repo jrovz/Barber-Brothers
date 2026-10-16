@@ -1,5 +1,5 @@
 """
-Rutas públicas del sitio Barber Brothers.
+Rutas públicas del sitio.
 
 Este módulo define las vistas y endpoints del Blueprint `public` orientados a la
 parte pública del sitio: página principal, productos, servicios, checkout de

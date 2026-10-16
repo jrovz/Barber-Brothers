@@ -309,3 +309,26 @@ def test_javascript_no_trae_telefonos_fijos():
     import re
     for js in pathlib.Path('app/static/js').glob('*.js'):
         assert not re.search(r'wa\.me/57\d{10}', js.read_text(encoding='utf-8')), js.name
+
+
+def test_historia_se_dibuja_por_parrafos_y_la_cita_en_cursiva(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.historia = 'Primer párrafo.\r\n\r\nSegundo párrafo.\r\n\r\n"Una frase final."'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    html = client.get('/').get_data(as_text=True)
+    assert '<h3>La historia de Barbería de Prueba' in html
+    assert '<p>Primer párrafo.</p>' in html
+    assert '<p>Segundo párrafo.</p>' in html
+    assert '<p><em>"Una frase final."</em></p>' in html or '<p><em>&#34;Una frase final.&#34;</em></p>' in html
+
+
+def test_sin_historia_no_se_muestra_el_bloque(client):
+    assert 'La historia de' not in client.get('/').get_data(as_text=True)
+
+
+def test_sin_variable_de_entorno_usa_el_primer_negocio_activo(client, monkeypatch):
+    monkeypatch.delenv('NEGOCIO_SLUG', raising=False)
+    assert 'Barbería de Prueba' in client.get('/').get_data(as_text=True)

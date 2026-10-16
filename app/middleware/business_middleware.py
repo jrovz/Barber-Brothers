@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Middleware de Negocio para Barber Brothers
+Middleware de negocio
 =========================================
 
 Middleware que procesa automáticamente cookies comerciales y

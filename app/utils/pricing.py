@@ -1,6 +1,6 @@
 # filepath: app/utils/pricing.py
 """
-Utilidades de precios para Barber Brothers.
+Utilidades de precios.
 
 Este módulo contiene funciones para calcular y obtener precios de servicios,
 considerando precios personalizados por barbero.

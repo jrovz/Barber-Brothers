@@ -1,8 +1,6 @@
 """Detecta marca escrita a mano fuera de la tabla `negocios` (fase 1).
 
-Mientras avanzan los pasos 4-9, esta prueba queda marcada como xfail: su lista
-de apariciones es el tablero de pendientes. El xfail se quita en el paso 9,
-cuando debe pasar en serio.
+Si falla, el mensaje lista archivo y línea de cada aparición.
 """
 import ast
 import io
@@ -104,9 +102,5 @@ def test_sin_marca_escrita_a_mano():
         for ruta, num, marca in apariciones
     )
     mensaje = f'{len(apariciones)} apariciones de marca escrita a mano:\n{relativas}'
-
-    if apariciones:
-        # Quitar este bloque en el paso 9: para entonces debe pasar de verdad.
-        pytest.xfail(mensaje)
 
     assert not apariciones, mensaje

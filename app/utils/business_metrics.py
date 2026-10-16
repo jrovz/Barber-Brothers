@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Sistema de Métricas de Negocio - Barber Brothers
+Sistema de métricas de negocio
 ==============================================
 
 Recolecta, analiza y presenta métricas clave de negocio

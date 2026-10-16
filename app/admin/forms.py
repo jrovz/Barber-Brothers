@@ -1,6 +1,6 @@
 # filepath: app/admin/forms.py
 """
-Formularios del panel de administración de Barber Brothers.
+Formularios del panel de administración.
 
 Este módulo define los formularios (WTForms) utilizados en el área de
 administración. Cada formulario se centra en una entidad o flujo específico y

@@ -78,21 +78,25 @@ class _NegocioNulo:
 def obtener_negocio():
     """Devuelve el negocio actual, cacheado en memoria por 60 segundos.
 
-    Por ahora busca por el slug de la variable de entorno NEGOCIO_SLUG (fase 1).
-    La fase 2 reemplaza la búsqueda por dominio, solo en esta función.
+    Por ahora busca por el slug de la variable de entorno NEGOCIO_SLUG (fase 1); si no
+    está definida, usa el primer negocio activo. La fase 2 reemplaza la búsqueda por
+    dominio, solo en esta función.
     """
     from app.models.negocio import Negocio
 
-    slug = os.environ.get('NEGOCIO_SLUG', 'barberbrothers')
+    slug = os.environ.get('NEGOCIO_SLUG') or ''
     ahora = time.monotonic()
 
     if _cache['slug'] == slug and _cache['negocio'] is not None and ahora < _cache['expira']:
         return _cache['negocio']
 
-    negocio = Negocio.query.filter_by(slug=slug).first()
+    if slug:
+        negocio = Negocio.query.filter_by(slug=slug).first()
+    else:
+        negocio = Negocio.query.filter_by(activo=True).order_by(Negocio.id).first()
 
     if negocio is None:
-        logger.error("No existe un negocio con slug '%s'; usando valores neutros.", slug)
+        logger.error("No existe un negocio (slug '%s'); usando valores neutros.", slug or '<primero activo>')
         negocio = _NegocioNulo()
 
     _cache['slug'] = slug

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Paquete de utilidades para Barber Brothers
+Paquete de utilidades
 """
 
 # Importar funciones y clases de uso común

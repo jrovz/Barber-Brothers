@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Gestor de Cookies Comerciales para Barber Brothers
+Gestor de cookies comerciales
 =================================================
 
 Sistema optimizado para maximizar conversiones y retención de clientes.
