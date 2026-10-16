@@ -176,6 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==================== ELEMENTOS DEL DOM ====================
     const elements = {
         accordion: document.getElementById('barbero-accordion'),
+        bookingSection: document.getElementById('booking-section'),
+        equipoSection: document.getElementById('equipo-section'),
         seleccionResumen: document.getElementById('seleccion-resumen'),
         calendarContainer: document.querySelector('.calendar-container'),
         dateOptionsContainer: document.querySelector('[data-date-options-container]') || document.querySelector('.date-options-container') || null,
@@ -411,6 +413,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
         header.setAttribute('aria-expanded', String(!isOpen));
         panel.hidden = isOpen;
+    }
+
+    // Abre la tarjeta de un barbero específico desde fuera del acordeón
+    // (usado por los botones "Reservar con..." de la sección Nuestro Equipo)
+    function openBarberoCardById(barberoId) {
+        if (!elements.accordion) return;
+
+        const card = elements.accordion.querySelector(`.barbero-card[data-barbero-id="${barberoId}"]`);
+        const header = card ? card.querySelector('.barbero-card-header') : null;
+        if (!header) return;
+
+        if (header.getAttribute('aria-expanded') !== 'true') {
+            toggleBarberoCard(header);
+        }
+
+        if (elements.bookingSection) {
+            elements.bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    function onTeamSectionClick(event) {
+        const button = event.target.closest('.member-book-btn');
+        if (!button) return;
+
+        event.preventDefault();
+        openBarberoCardById(button.getAttribute('data-barbero-id'));
     }
 
     function selectServicioOption(option) {
@@ -804,6 +832,11 @@ document.addEventListener('DOMContentLoaded', function () {
         // Acordeón de barberos y servicios
         if (elements.accordion) {
             elements.accordion.addEventListener('click', onAccordionClick);
+        }
+
+        // Botones "Reservar con..." de la sección Nuestro Equipo
+        if (elements.equipoSection) {
+            elements.equipoSection.addEventListener('click', onTeamSectionClick);
         }
 
         // Date options

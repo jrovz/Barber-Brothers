@@ -181,7 +181,79 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
     </div>
 </section>
 
+<!-- Sección Por qué elegirnos: razones concretas y verificables, justo después
+     del hero para dar una razón rápida de confianza antes de pedir conversión -->
+<section id="why-us-section" class="about-section">
+    <div class="about-container">
+        <div class="section-title">
+            <h2>¿Por qué elegirnos?</h2>
+            <p>Razones concretas para confiar en nosotros</p>
+        </div>
 
+        <div class="values-container">
+            <div class="value">
+                <span class="value-number">01</span>
+                <h4>Desde 2017 en Ibagué</h4>
+                <p>Años de experiencia cuidando la imagen de nuestros clientes, corte tras corte.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">02</span>
+                <h4>Reserva 100% online</h4>
+                <p>Elige tu barbero, tu servicio y tu horario disponible en tiempo real, sin llamadas ni esperas.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">03</span>
+                <h4>Elige tu barbero de confianza</h4>
+                <p>Conoce a nuestro equipo y agenda directamente con el barbero que prefieras.</p>
+            </div>
+            <div class="value">
+                <span class="value-number">04</span>
+                <h4>Reseñas reales en Google</h4>
+                <p>Conoce la opinión real de nuestros clientes antes de reservar.
+                    <a class="value-link"
+                        href="https://www.google.com/maps/search/?api=1&query=La+Barber+Brothers+Ibagu%C3%A9"
+                        target="_blank" rel="noopener noreferrer">Ver reseñas en Google →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sección Nuestro Equipo: antes de la reserva, para que el cliente elija barbero
+     por conexión/afinidad y no solo por un nombre en una lista -->
+<section id="equipo-section" class="about-section">
+    <div class="about-container">
+        <div class="section-title">
+            <h2>Nuestro Equipo</h2>
+            <p>Conoce a los barberos detrás de cada corte</p>
+        </div>
+
+        <div class="team-members">
+            {% for barbero in barberos %}
+            <div class="team-member">
+                <div class="member-img">
+                    {% if barbero.imagen_url %}
+                    <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }} - Barbero en Ibagué" width="200"
+                        height="200" loading="lazy">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
+                        alt="{{ barbero.nombre }} - Barbero en Ibagué" width="200" height="200" loading="lazy">
+                    {% endif %}
+                </div>
+                <h4>{{ barbero.nombre }}</h4>
+                <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
+                <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
+                <button type="button" class="btn member-book-btn" data-barbero-id="{{ barbero.id }}">
+                    Reservar con {{ barbero.nombre }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% if not barberos %}
+        <p class="instruction-message" style="text-align:center;">Muy pronto presentaremos a nuestro equipo.</p>
+        {% endif %}
+    </div>
+</section>
 
 <!-- Contenido personalizado basado en cookies -->
 <!--{{ personalized_welcome(personalization) }}-->
@@ -346,46 +418,6 @@ Ibagué, citas online barbería, barber shop Ibagué, arreglo barba, servicios b
                 ofreciendo servicios de alta calidad y hacer que cada visita a La Barber Brothers sea una experiencia
                 inolvidable.</p>
             <p><em>"¡Visítanos y descubre por qué somos la mejor barbería de la ciudad!"</em></p>
-        </div>
-
-        <div class="team-section">
-            <h3>Nuestro Equipo</h3>
-            <div class="team-members">
-                {% for barbero in barberos %}
-                <div class="team-member">
-                    <div class="member-img">
-                        {% if barbero.imagen_url %}
-                        <img src="{{ barbero.imagen_url }}" alt="{{ barbero.nombre }}" width="200" height="200"
-                            loading="lazy">
-                        {% else %}
-                        <img src="https://images.unsplash.com/photo-1582893800633-3efbe2aa4850?w=200&h=200&auto=format&fit=crop"
-                            alt="{{ barbero.nombre }}" width="200" height="200" loading="lazy">
-                        {% endif %}
-                    </div>
-                    <h4>{{ barbero.nombre }}</h4>
-                    <p class="member-role">{{ barbero.especialidad or 'Barbero' }}</p>
-                    <p>{{ barbero.descripcion or 'Experto en servicios de barbería de alta calidad.' }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="values-section">
-            <h3>Nuestros Valores</h3>
-            <div class="values-container">
-                <div class="value">
-                    <h4>Excelencia</h4>
-                    <p>Nos esforzamos por superar las expectativas en cada servicio.</p>
-                </div>
-                <div class="value">
-                    <h4>Tradición</h4>
-                    <p>Honramos las técnicas clásicas de barbería que han perdurado por generaciones.</p>
-                </div>
-                <div class="value">
-                    <h4>Innovación</h4>
-                    <p>Constantemente nos capacitamos en las últimas técnicas y tendencias.</p>
-                </div>
-            </div>
         </div>
     </div>
 </section>
