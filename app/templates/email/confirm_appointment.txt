@@ -1,7 +1,7 @@
 // filepath: app/templates/email/confirm_appointment.txt
 Hola {{ cliente_nombre }},
 
-Gracias por solicitar una cita en Barber Brothers.
+Gracias por solicitar una cita en {{ negocio.nombre }}.
 
 Por favor, confirma los detalles de tu cita visitando el siguiente enlace:
 {{ confirm_url }}
@@ -15,4 +15,4 @@ Si no solicitaste esta cita, por favor ignora este correo.
 El enlace de confirmación expirará en 1 hora.
 
 Saludos,
-El equipo de Barber Brothers
+El equipo de {{ negocio.nombre }}

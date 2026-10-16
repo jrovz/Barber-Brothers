@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Confirma tu Cita - Barber Brothers</title>
+    <title>Confirma tu Cita - {{ negocio.nombre }}</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 5px; }
@@ -13,7 +13,7 @@
 <body>
     <div class="container">
         <p>Hola {{ cliente_nombre }},</p>
-        <p>Gracias por solicitar una cita en <strong>Barber Brothers</strong>.</p>
+        <p>Gracias por solicitar una cita en <strong>{{ negocio.nombre }}</strong>.</p>
         <p>Por favor, confirma los detalles de tu cita haciendo clic en el siguiente enlace:</p>
         <p>
             <strong>Servicio:</strong> {{ cita.servicio_rel.nombre if cita.servicio_rel else 'Servicio no especificado' }}<br>
@@ -23,7 +23,7 @@
         <p><a href="{{ confirm_url }}" class="button">Confirmar mi Cita</a></p>
         <p>Si no solicitaste esta cita, por favor ignora este correo.</p>
         <p class="footer">El enlace de confirmación expirará en 1 hora. Si tienes problemas, contacta con nosotros.</p>
-        <p class="footer">Saludos,<br>El equipo de Barber Brothers</p>
+        <p class="footer">Saludos,<br>El equipo de {{ negocio.nombre }}</p>
     </div>
 </body>
 </html>

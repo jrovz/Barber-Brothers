@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} | Panel Barbero - Barber Brothers</title>
+    <title>{{ title }} | Panel Barbero - {{ negocio.nombre }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <!-- Fuentes locales con preload para mejor rendimiento -->
@@ -24,7 +24,7 @@
         <aside class="sidebar"
             style="background: linear-gradient(180deg, var(--color-bg-dark) 0%, var(--color-bg-medium) 100%);">
             <div class="admin-logo">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Barber Brothers">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}">
                 <h2 class="admin-title" style="color: var(--color-primary);">Panel Barbero</h2>
                 <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
                     {{ current_user.nombre }}

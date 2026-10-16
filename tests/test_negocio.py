@@ -132,3 +132,44 @@ def test_contacto_muestra_el_horario_de_la_base(client, negocio):
 def test_contacto_sin_horario_no_muestra_dias_cerrados(client):
     html = client.get('/contacto').get_data(as_text=True)
     assert 'Cerrado' not in html
+
+
+def test_correo_de_confirmacion_usa_el_nombre_del_negocio(app, client, barbero, servicio, negocio, monkeypatch):
+    from app import db, mail
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    from tests.conftest import fecha_futura
+
+    class HiloSincrono:
+        def __init__(self, target, args=()):
+            self._target, self._args = target, args
+
+        def start(self):
+            self._target(*self._args)
+
+    monkeypatch.setattr('app.models.email.Thread', HiloSincrono)
+    negocio.remitente_nombre = 'Reservas de Prueba'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    with mail.record_messages() as enviados:
+        resp = client.post('/api/agendar-cita', json={
+            'barbero_id': barbero.id, 'servicio_id': servicio.id, 'fecha': fecha_futura(),
+            'hora': '10:00', 'nombre': 'Cliente', 'email': 'cliente@test.com', 'telefono': '3000000000',
+        })
+        assert resp.status_code == 200
+        assert len(enviados) == 1
+        correo = enviados[0]
+        assert correo.subject == 'Confirma tu cita en Barbería de Prueba'
+        assert 'Barbería de Prueba' in correo.html and 'Barbería de Prueba' in correo.body
+        assert 'Barber Brothers' not in correo.html + correo.body
+        assert correo.sender[0] == 'Reservas de Prueba' if isinstance(correo.sender, tuple) else 'Reservas de Prueba' in correo.sender
+
+
+def test_login_de_barberos_muestra_el_nombre_del_negocio(client):
+    assert 'Barbería de Prueba' in client.get('/barbero/login').get_data(as_text=True)
+
+
+def test_panel_admin_muestra_el_nombre_del_negocio(client, admin_user):
+    from tests.conftest import login_as
+    login_as(client, admin_user)
+    assert 'Barbería de Prueba Admin' in client.get('/admin/').get_data(as_text=True)

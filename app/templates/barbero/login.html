@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} | Barber Brothers</title>
+    <title>{{ title }} | {{ negocio.nombre }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
@@ -13,7 +13,7 @@
 <div class="login-container" style="max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
     <!-- Logo -->
     <div style="text-align: center; margin-bottom: 2rem;">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Barber Brothers" style="max-width: 120px; margin-bottom: 1rem;">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}" style="max-width: 120px; margin-bottom: 1rem;">
         <h1 class="form-title" style="color: var(--color-text-accent); margin-bottom: 0.5rem;">Panel de Barberos</h1>
         <p style="color: var(--color-text-muted); font-style: italic;">Acceso exclusivo para barberos</p>
     </div>
