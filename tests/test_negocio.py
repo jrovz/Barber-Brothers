@@ -254,3 +254,39 @@ def test_sin_logo_usa_el_de_la_plataforma(client):
     html = client.get('/').get_data(as_text=True)
     assert 'src="/static/logo.png' in html
     assert 'alt="Barbería de Prueba"' in html
+
+
+def _desactivar_tienda(negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.tienda_activa = False
+    db.session.commit()
+    limpiar_cache_negocio()
+
+
+def test_con_tienda_activa_se_muestran_productos_y_carrito(client):
+    assert client.get('/productos').status_code == 200
+    html = client.get('/').get_data(as_text=True)
+    assert 'href="/productos"' in html
+    assert 'id="cart-panel"' in html
+    assert 'smart_cart.js' in html
+    assert '/productos' in client.get('/sitemap.xml').get_data(as_text=True)
+
+
+def test_con_tienda_desactivada_las_rutas_dan_404(client, negocio):
+    _desactivar_tienda(negocio)
+    assert client.get('/productos').status_code == 404
+    assert client.get('/tienda').status_code == 404
+    assert client.get('/checkout').status_code == 404
+    assert client.get('/confirmacion-pedido/1').status_code == 404
+
+
+def test_con_tienda_desactivada_no_se_ve_en_el_sitio(client, negocio):
+    _desactivar_tienda(negocio)
+    home = client.get('/').get_data(as_text=True)
+    assert 'href="/productos"' not in home
+    assert 'cart-button' not in home
+    assert 'id="cart-panel"' not in home
+    assert 'smart_cart.js' not in home
+    assert '/productos' not in client.get('/sitemap.xml').get_data(as_text=True)
+    assert client.get('/servicios').status_code == 200

@@ -398,7 +398,7 @@ cookie_consent_banner %}
 <script src="{{ url_for('static', filename='js/booking.js') }}">    </script>
 
 <!-- Scripts de optimización comercial -->
-{{ business_optimization_scripts() }}
+{{ business_optimization_scripts(negocio.tienda_activa) }}
 
 <!-- Auto-completar inteligente -->
 {{ smart_form_fields(personalization) }}

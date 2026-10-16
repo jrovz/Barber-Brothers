@@ -91,6 +91,7 @@ from app.models.email import send_appointment_confirmation_email # Importar la f
 from app import db
 from datetime import datetime, timedelta, time, timezone
 from flask import send_from_directory
+from app.utils.decorators import requiere_tienda
 from flask import Response
 
 @bp.route('/privacidad')
@@ -347,12 +348,6 @@ def sitemap_xml():
                 'lastmod': datetime.now().strftime('%Y-%m-%d')
             },
             {
-                'loc': url_for('public.productos', _external=True).rstrip('/'),
-                'changefreq': 'weekly',
-                'priority': '0.8',
-                'lastmod': datetime.now().strftime('%Y-%m-%d')
-            },
-            {
                 'loc': url_for('public.contact', _external=True).rstrip('/'),
                 'changefreq': 'monthly',
                 'priority': '0.7',
@@ -374,10 +369,19 @@ def sitemap_xml():
         except Exception as e:
             current_app.logger.warning(f"No se pudieron cargar servicios para sitemap: {e}")
 
+        # La tienda (productos y categorías) solo se indexa si el negocio la tiene activa
+        if g.negocio.tienda_activa:
+            static_urls.append({
+                'loc': url_for('public.productos', _external=True).rstrip('/'),
+                'changefreq': 'weekly',
+                'priority': '0.8',
+                'lastmod': datetime.now().strftime('%Y-%m-%d')
+            })
+
         # URLs dinámicas de productos (con manejo de errores)
         try:
             from app.models.producto import Producto
-            productos = Producto.query.filter_by(activo=True).all()
+            productos = Producto.query.filter_by(activo=True).all() if g.negocio.tienda_activa else []
             for producto in productos:
                 static_urls.append({
                     'loc': url_for('public.productos', _external=True) + f'#producto-{producto.id}',
@@ -391,7 +395,7 @@ def sitemap_xml():
         # URLs dinámicas de categorías (con manejo de errores)
         try:
             from app.models.categoria import Categoria
-            categorias = Categoria.query.filter_by(activo=True).all()
+            categorias = Categoria.query.filter_by(activo=True).all() if g.negocio.tienda_activa else []
             for categoria in categorias:
                 static_urls.append({
                     'loc': url_for('public.productos', _external=True) + f'#categoria-{categoria.id}',
@@ -436,12 +440,12 @@ def sitemap_xml():
                                         <priority>0.9</priority>
                                         <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
                                     </url>
-                                    <url>
+                                    ''' + ('''<url>
                                         <loc>''' + url_for('public.productos', _external=True).rstrip('/') + '''</loc>
                                         <changefreq>weekly</changefreq>
                                         <priority>0.8</priority>
                                         <lastmod>''' + datetime.now().strftime('%Y-%m-%d') + '''</lastmod>
-                                    </url>
+                                    </url>''' if g.negocio.tienda_activa else '') + '''
                                     </urlset>'''
             return Response(basic_sitemap, mimetype='application/xml')
         except Exception as e2:
@@ -524,11 +528,13 @@ def contact():
 @bp.route('/products')
 @bp.route('/producto')
 @bp.route('/tienda')
+@requiere_tienda
 def redirect_to_productos():
     """Redirecciona variantes de URL a la página productos canónica"""
     return redirect(url_for('public.productos'), code=301)
 
 @bp.route('/productos')
+@requiere_tienda
 def productos():
     """Página de productos agrupados por categoría."""
     
@@ -568,6 +574,7 @@ def productos():
     )
 
 @bp.route('/checkout', methods=['GET', 'POST'])
+@requiere_tienda
 def checkout():
     from app.public.forms import CheckoutForm
     from app.models.pedido import Pedido, PedidoItem
@@ -666,6 +673,7 @@ def checkout():
     return render_template('public/checkout.html', form=form)
 
 @bp.route('/confirmacion-pedido/<int:pedido_id>')
+@requiere_tienda
 def confirmacion_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     return render_template('public/confirmacion_pedido.html', pedido=pedido)

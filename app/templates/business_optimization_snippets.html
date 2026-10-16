@@ -10,9 +10,9 @@ Version: 1.0
 -->
 
 <!-- Snippet: Scripts de optimización comercial -->
-{% macro business_optimization_scripts() %}
+{% macro business_optimization_scripts(tienda_activa=true) %}
 <script src="{{ url_for('static', filename='js/business_optimization.js') }}"></script>
-<script src="{{ url_for('static', filename='js/smart_cart.js') }}"></script>
+{% if tienda_activa %}<script src="{{ url_for('static', filename='js/smart_cart.js') }}"></script>{% endif %}
 
 <style>
 /* Estilos para elementos de optimización */
