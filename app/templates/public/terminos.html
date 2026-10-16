@@ -1,8 +1,8 @@
 {% extends "public/public_base.html" %}
 
-{% block title %}Términos y Condiciones - Barber Brothers{% endblock %}
+{% block title %}Términos y Condiciones - {{ negocio.nombre }}{% endblock %}
 
-{% block meta_description %}Términos y condiciones de uso de Barber Brothers. Información legal sobre el uso de nuestros servicios, responsabilidades y derechos aplicables.{% endblock %}
+{% block meta_description %}Términos y condiciones de uso de {{ negocio.nombre }}. Información legal sobre el uso de nuestros servicios, responsabilidades y derechos aplicables.{% endblock %}
 
 {% block meta_keywords %}términos y condiciones, condiciones legales, aviso legal, barbería, servicios, responsabilidad legal{% endblock %}
 
@@ -15,15 +15,15 @@
 
     <div class="legal-section">
         <h2>1. Introducción</h2>
-        <p>Bienvenido a Barber Brothers. Estos Términos y Condiciones rigen el uso de nuestro sitio web y los servicios que ofrecemos. Al acceder o utilizar nuestro sitio web, reservar citas o comprar productos, usted acepta estos términos en su totalidad. Si no está de acuerdo con alguna parte de estos términos, por favor no utilice nuestro sitio web o servicios.</p>
+        <p>Bienvenido a {{ negocio.nombre }}. Estos Términos y Condiciones rigen el uso de nuestro sitio web y los servicios que ofrecemos. Al acceder o utilizar nuestro sitio web, reservar citas o comprar productos, usted acepta estos términos en su totalidad. Si no está de acuerdo con alguna parte de estos términos, por favor no utilice nuestro sitio web o servicios.</p>
     </div>
 
     <div class="legal-section">
         <h2>2. Definiciones</h2>
         <ul>
-            <li><strong>"Sitio Web"</strong> se refiere a Barber Brothers, accesible desde el dominio principal y todos sus subdominios.</li>
-            <li><strong>"Nosotros", "nuestro"</strong> o <strong>"la Barbería"</strong> se refiere a Barber Brothers.</li>
-            <li><strong>"Cliente", "usuario", "usted"</strong> o <strong>"su"</strong> se refiere a cualquier persona que acceda o utilice el sitio web o los servicios de Barber Brothers.</li>
+            <li><strong>"Sitio Web"</strong> se refiere a {{ negocio.nombre }}, accesible desde el dominio principal y todos sus subdominios.</li>
+            <li><strong>"Nosotros", "nuestro"</strong> o <strong>"la Barbería"</strong> se refiere a {{ negocio.nombre }}{% if negocio.razon_social and negocio.razon_social != negocio.nombre %}, razón social {{ negocio.razon_social }}{% endif %}{% if negocio.nit %}, identificado con NIT / documento {{ negocio.nit }}{% endif %}.</li>
+            <li><strong>"Cliente", "usuario", "usted"</strong> o <strong>"su"</strong> se refiere a cualquier persona que acceda o utilice el sitio web o los servicios de {{ negocio.nombre }}.</li>
             <li><strong>"Servicios"</strong> se refiere a los servicios de barbería ofrecidos en nuestro establecimiento.</li>
             <li><strong>"Productos"</strong> se refiere a los artículos disponibles para su compra a través de nuestro sitio web o establecimiento.</li>
             <li><strong>"Contenido"</strong> se refiere a toda la información disponible en nuestro sitio web, incluyendo texto, imágenes, gráficos, logotipos y material audiovisual.</li>
@@ -95,7 +95,7 @@
 
     <div class="legal-section">
         <h2>6. Propiedad Intelectual</h2>
-        <p>Todo el contenido disponible en nuestro sitio web, incluyendo pero no limitado a textos, gráficos, logotipos, imágenes, clips de audio, descargas digitales, recopilaciones de datos y software, es propiedad de Barber Brothers o sus proveedores de contenido y está protegido por las leyes de propiedad intelectual.</p>
+        <p>Todo el contenido disponible en nuestro sitio web, incluyendo pero no limitado a textos, gráficos, logotipos, imágenes, clips de audio, descargas digitales, recopilaciones de datos y software, es propiedad de {{ negocio.nombre }} o sus proveedores de contenido y está protegido por las leyes de propiedad intelectual.</p>
 
         <p>Usted no puede:</p>
         <ul>
@@ -118,7 +118,7 @@
 
     <div class="legal-section">
         <h2>8. Indemnización</h2>
-        <p>Usted acepta indemnizar, defender y mantener indemne a Barber Brothers y sus afiliados, directores, empleados y agentes contra cualquier reclamación, responsabilidad, daño, pérdida y gasto (incluyendo costos legales) que surjan de:</p>
+        <p>Usted acepta indemnizar, defender y mantener indemne a {{ negocio.nombre }} y sus afiliados, directores, empleados y agentes contra cualquier reclamación, responsabilidad, daño, pérdida y gasto (incluyendo costos legales) que surjan de:</p>
         <ul>
             <li>Su incumplimiento de estos Términos y Condiciones.</li>
             <li>Su uso del sitio web, servicios o productos.</li>
@@ -144,7 +144,7 @@
 
     <div class="legal-section">
         <h2>12. Legislación Aplicable</h2>
-        <p>Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes de Colombia, sin tener en cuenta sus principios de conflicto de leyes. Cualquier disputa relacionada con estos términos estará sujeta a la jurisdicción exclusiva de los tribunales de Ibagué, Tolima, Colombia.</p>
+        <p>Estos Términos y Condiciones se regirán e interpretarán de acuerdo con las leyes de Colombia, sin tener en cuenta sus principios de conflicto de leyes. Cualquier disputa relacionada con estos términos estará sujeta a la jurisdicción exclusiva de los tribunales de {{ [negocio.ciudad, negocio.departamento, negocio.pais] | select | join(', ') }}.</p>
     </div>
 
     <div class="legal-section">
@@ -155,9 +155,9 @@
     <div class="legal-section">
         <h2>14. Contacto</h2>
         <p>Si tiene alguna pregunta sobre estos Términos y Condiciones, puede contactarnos en:</p>
-        <p><strong>Email:</strong> info@barberbrothers.com</p>
-        <p><strong>Dirección:</strong> Cra. 20 #94D-34, Arcambuko, Ibagué, Tolima, Colombia</p>
-        <p><strong>Teléfono:</strong> +573143782855</p>
+        {% if negocio.email_contacto %}<p><strong>Email:</strong> {{ negocio.email_contacto }}</p>{% endif %}
+        {% if negocio.direccion_legal or negocio.direccion %}<p><strong>Dirección:</strong> {{ [negocio.direccion_legal or negocio.direccion, negocio.ciudad, negocio.departamento, negocio.pais] | select | join(', ') }}</p>{% endif %}
+        {% if negocio.telefono %}<p><strong>Teléfono:</strong> +57 {{ negocio.telefono }}</p>{% endif %}
     </div>
     
     <div class="legal-section">

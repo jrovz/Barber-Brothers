@@ -75,3 +75,39 @@ def test_contacto_y_servicios_usan_datos_del_negocio(client):
     assert '3000000000' in contacto
     assert 'instagram.com' not in contacto
     assert 'Barbería de Prueba' in client.get('/servicios').get_data(as_text=True)
+
+
+def test_paginas_legales_sin_datos_legales_no_dejan_frases_rotas(client):
+    for ruta in ('/terminos', '/privacidad', '/cookies'):
+        resp = client.get(ruta)
+        assert resp.status_code == 200, ruta
+        html = resp.get_data(as_text=True)
+        assert 'Barbería de Prueba' in html
+        assert 'barberbrothers.com' not in html
+        assert 'NIT' not in html
+        assert 'None' not in html
+
+
+def test_paginas_legales_usan_datos_legales_del_negocio(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.razon_social = 'Prueba S.A.S.'
+    negocio.nit = '900.123.456-7'
+    negocio.direccion_legal = 'Calle Falsa 123'
+    negocio.email_contacto = 'contacto@prueba.com'
+    negocio.email_datos_personales = 'datos@prueba.com'
+    negocio.ciudad = 'Cali'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    terminos = client.get('/terminos').get_data(as_text=True)
+    assert 'Prueba S.A.S.' in terminos and '900.123.456-7' in terminos
+    assert 'Calle Falsa 123' in terminos and 'contacto@prueba.com' in terminos
+    assert 'tribunales de Cali' in terminos
+
+    privacidad = client.get('/privacidad').get_data(as_text=True)
+    assert 'datos@prueba.com' in privacidad
+    assert 'responsable del tratamiento' in privacidad
+    assert 'encargada del tratamiento' in privacidad
+
+    assert 'contacto@prueba.com' in client.get('/cookies').get_data(as_text=True)
