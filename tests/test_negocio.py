@@ -173,3 +173,35 @@ def test_panel_admin_muestra_el_nombre_del_negocio(client, admin_user):
     from tests.conftest import login_as
     login_as(client, admin_user)
     assert 'Barbería de Prueba Admin' in client.get('/admin/').get_data(as_text=True)
+
+
+def test_robots_usa_el_host_de_la_peticion(client):
+    resp = client.get('/robots.txt', base_url='http://otra-barberia.test')
+    texto = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Sitemap: http://otra-barberia.test/sitemap.xml' in texto
+    assert 'labarberbrothers' not in texto
+
+
+def test_sitemap_usa_el_host_de_la_peticion(client):
+    resp = client.get('/sitemap.xml', base_url='http://otra-barberia.test')
+    texto = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert '<loc>http://otra-barberia.test' in texto
+    assert 'labarberbrothers' not in texto
+
+
+def test_verificacion_de_google_sale_del_negocio(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+
+    assert client.get('/google17b126f9a1dae6ef.html').status_code == 404
+
+    negocio.google_verificacion = 'googleabc123.html'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    ok = client.get('/googleabc123.html')
+    assert ok.status_code == 200
+    assert ok.get_data(as_text=True) == 'google-site-verification: googleabc123.html'
+    assert client.get('/googleotro.html').status_code == 404

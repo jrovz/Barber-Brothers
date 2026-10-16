@@ -72,7 +72,7 @@ Seguridad y notas
 - El modelo `Slider` es opcional: si no está disponible, se procede con lista
   vacía. Existen logs/prints de depuración en `home()` y APIs para diagnóstico.
 """
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response, Response
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response, Response, g
 from datetime import datetime
 from flask_login import login_required, current_user
 from app.public import bp
@@ -482,15 +482,13 @@ def favicon():
         except:
             return ('Favicon not found', 404)
 
-@bp.route('/google17b126f9a1dae6ef.html')
-def google_verification():
-    """Sirve el archivo de verificación de Google Search Console."""
-    try:
-        verification_content = "google-site-verification: google17b126f9a1dae6ef.html"
-        return Response(verification_content, mimetype='text/plain')
-    except Exception as e:
-        current_app.logger.error(f"Error al servir archivo de verificación de Google: {e}")
-        return ('Error', 500)
+@bp.route('/google<codigo>.html')
+def google_verification(codigo):
+    """Sirve el archivo de verificación de Google Search Console del negocio actual."""
+    archivo = f'google{codigo}.html'
+    if not g.negocio.google_verificacion or archivo != g.negocio.google_verificacion:
+        return ('Not Found', 404)
+    return Response(f'google-site-verification: {archivo}', mimetype='text/plain')
 
 @bp.route('/about')
 def about():
@@ -1230,4 +1228,4 @@ def confirmar_cita_route(token):
     return render_template('public/confirmation_status.html',
                            success=True,
                            message='¡Tu cita ha sido confirmada exitosamente!',
-                           cita=cita_token)
+                           cita=cita_token)

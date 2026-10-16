@@ -44,6 +44,8 @@ class Negocio(db.Model):
     dominio = db.Column(db.String(150))
     subdominio = db.Column(db.String(80), unique=True)
     zona_horaria = db.Column(db.String(50), default='America/Bogota')
+    # Nombre del archivo de verificación de Google Search Console, p. ej. 'google123abc.html'
+    google_verificacion = db.Column(db.String(100))
 
     # SEO
     seo_titulo = db.Column(db.String(255))
