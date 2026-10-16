@@ -1330,6 +1330,9 @@ footer p {
     box-shadow: var(--shadow-soft);
     transition: transform 0.3s, box-shadow 0.3s;
     text-align: center;
+    /* Columna: el botón baja al fondo de la tarjeta aunque el texto sea corto */
+    display: flex;
+    flex-direction: column;
 }
 
 .team-member:hover {
@@ -1366,9 +1369,15 @@ footer p {
 }
 
 .member-book-btn {
-    margin-top: 1rem;
+    margin-top: auto;
+    align-self: center;
     font-size: 0.8rem;
     padding: 0.7rem 1.4rem;
+}
+
+/* Espacio entre la descripción y el botón */
+.team-member > p:nth-last-of-type(1) {
+    margin-bottom: 1.5rem;
 }
 
 .values-container {
