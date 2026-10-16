@@ -151,6 +151,7 @@
     <link rel="preload" href="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" as="image">
     <link rel="preload" href="{{ url_for('static', filename='images/foto1.jpg') }}" as="image">
     {% endif %}
+    <script>window.NEGOCIO = {{ negocio.datos_publicos() | tojson }};</script>
     {# Colores del negocio: van después de las hojas de estilo para sobrescribir sus variables #}
     <style>:root { {{ negocio.tema_css() | safe }} }</style>
     {% block extra_head %}{% endblock %}

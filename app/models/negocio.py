@@ -119,7 +119,7 @@ class Negocio(db.Model):
             'nombre_corto': self.nombre_corto,
             'telefono': self.telefono,
             'whatsapp': self.whatsapp,
-            'color_primario': self.color_primario,
-            'color_secundario': self.color_secundario,
-            'color_acento': self.color_acento,
+            'color_primario': self.color_primario if self.color_primario and _COLOR_HEX.match(self.color_primario) else None,
+            'color_secundario': self.color_secundario if self.color_secundario and _COLOR_HEX.match(self.color_secundario) else None,
+            'color_acento': self.color_acento if self.color_acento and _COLOR_HEX.match(self.color_acento) else None,
         }

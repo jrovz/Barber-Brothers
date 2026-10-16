@@ -1,5 +1,5 @@
 /**
- * Dashboard Charts - Barber Brothers
+ * Dashboard Charts
  * Script para visualizar métricas en el panel de administración
  */
 

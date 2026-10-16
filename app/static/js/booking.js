@@ -8,7 +8,6 @@
  * @description Sistema completo de gestión de citas para barbería con funcionalidades
  *              avanzadas de optimización, validación en tiempo real y manejo de errores.
  * 
- * @author Barber Brothers Development Team
  * @created 2024
  * @lastModified 2024
  * 

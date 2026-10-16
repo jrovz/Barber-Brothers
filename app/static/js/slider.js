@@ -1,5 +1,5 @@
 /**
- * Barber Brothers Slider - Optimized
+ * Slider - Optimized
  * ===============================
  * Script optimizado para el slider de la página principal
  * con lazy loading, IntersectionObserver y manejo eficiente de recursos

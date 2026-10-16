@@ -290,3 +290,22 @@ def test_con_tienda_desactivada_no_se_ve_en_el_sitio(client, negocio):
     assert 'smart_cart.js' not in home
     assert '/productos' not in client.get('/sitemap.xml').get_data(as_text=True)
     assert client.get('/servicios').status_code == 200
+
+
+def test_datos_publicos_del_negocio_llegan_al_javascript(client):
+    import json
+    import re
+    html = client.get('/').get_data(as_text=True)
+    m = re.search(r'window\.NEGOCIO = (\{.*?\});</script>', html, re.S)
+    assert m, 'falta window.NEGOCIO'
+    datos = json.loads(m.group(1))
+    assert datos['nombre'] == 'Barbería de Prueba'
+    assert datos['whatsapp'] == '573000000000'
+    assert 'nit' not in datos and 'email_contacto' not in datos
+
+
+def test_javascript_no_trae_telefonos_fijos():
+    import pathlib
+    import re
+    for js in pathlib.Path('app/static/js').glob('*.js'):
+        assert not re.search(r'wa\.me/57\d{10}', js.read_text(encoding='utf-8')), js.name

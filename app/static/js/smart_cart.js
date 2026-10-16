@@ -1,5 +1,5 @@
 /**
- * Smart Cart System - Barber Brothers
+ * Smart Cart System
  * ==================================
  * 
  * Sistema inteligente de carrito que maximiza conversiones
