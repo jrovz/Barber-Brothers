@@ -382,10 +382,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function onAccordionClick(event) {
         if (appState.isLoading) return;
 
-        const header = event.target.closest('.barbero-card-header');
-        if (header && elements.accordion.contains(header)) {
+        const cambiar = event.target.closest('[data-accion="ver-equipo"]');
+        if (cambiar && elements.accordion.contains(cambiar)) {
             event.preventDefault();
-            toggleBarberoCard(header);
+            scrollToSection(elements.equipoSection);
             return;
         }
 
@@ -396,36 +396,58 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function toggleBarberoCard(header) {
-        const panel = document.getElementById(header.getAttribute('aria-controls'));
-        if (!panel) return;
-        const isOpen = header.getAttribute('aria-expanded') === 'true';
+    // Muestra solo la tarjeta del barbero elegido (con sus servicios) y oculta las demás.
+    // Si cambia de barbero, descarta el servicio, la fecha y la hora anteriores.
+    function mostrarBarbero(card) {
+        const barberoId = card.dataset.barberoId;
+        const cambioDeBarbero = appState.selectedBarberoId && String(appState.selectedBarberoId) !== String(barberoId);
 
-        // Acordeón de una sola tarjeta abierta a la vez, para mantener el orden
-        elements.accordion.querySelectorAll('.barbero-card-header[aria-expanded="true"]').forEach(otherHeader => {
-            if (otherHeader !== header) {
-                otherHeader.setAttribute('aria-expanded', 'false');
-                const otherPanel = document.getElementById(otherHeader.getAttribute('aria-controls'));
-                if (otherPanel) otherPanel.hidden = true;
-            }
+        elements.accordion.querySelectorAll('.barbero-card').forEach(other => {
+            other.hidden = other !== card;
         });
+        const placeholder = document.getElementById('barbero-placeholder');
+        if (placeholder) placeholder.hidden = true;
 
-        header.setAttribute('aria-expanded', String(!isOpen));
-        panel.hidden = isOpen;
+        if (cambioDeBarbero) {
+            limpiarSeleccion();
+        }
     }
 
-    // Abre la tarjeta de un barbero específico desde fuera del acordeón
+    function limpiarSeleccion() {
+        appState.selectedBarberoId = null;
+        appState.selectedBarberoNombre = null;
+        appState.selectedServicioId = null;
+        appState.selectedServicioNombre = null;
+        appState.selectedDuracion = null;
+        appState.selectedDate = null;
+        appState.selectedTime = null;
+        appState.bookingCompleted = false;
+
+        elements.accordion.querySelectorAll('.servicio-option.selected').forEach(el => {
+            el.classList.remove('selected');
+            el.setAttribute('aria-selected', 'false');
+        });
+        getDateOptions().forEach(el => {
+            el.classList.remove('selected');
+            el.classList.add('disabled');
+        });
+        clearRelatedCache();
+        if (elements.horariosContainer) {
+            elements.horariosContainer.innerHTML = '<p class="instruction-message">Selecciona un servicio y una fecha.</p>';
+        }
+        if (elements.bookingConfirmation) elements.bookingConfirmation.style.display = 'none';
+        if (elements.seleccionResumen) elements.seleccionResumen.style.display = 'none';
+    }
+
+    // Muestra la tarjeta de un barbero específico desde fuera del acordeón
     // (usado por los botones "Reservar con..." de la sección Nuestro Equipo)
     function openBarberoCardById(barberoId) {
         if (!elements.accordion) return;
 
         const card = elements.accordion.querySelector(`.barbero-card[data-barbero-id="${barberoId}"]`);
-        const header = card ? card.querySelector('.barbero-card-header') : null;
-        if (!header) return;
+        if (!card) return;
 
-        if (header.getAttribute('aria-expanded') !== 'true') {
-            toggleBarberoCard(header);
-        }
+        mostrarBarbero(card);
 
         if (elements.bookingSection) {
             elements.bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });

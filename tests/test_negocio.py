@@ -338,3 +338,32 @@ def test_barbero_sin_foto_no_muestra_imagen_de_relleno(client, barbero):
     html = client.get('/').get_data(as_text=True)
     assert barbero.nombre in html
     assert 'unsplash.com' not in html
+
+
+def _etiquetas_tarjeta(html):
+    import re
+    return re.findall(r'<div class="barbero-card"[^>]*>', html)
+
+
+def test_un_solo_barbero_muestra_su_tarjeta_de_servicios_desde_el_inicio(client, barbero):
+    html = client.get('/').get_data(as_text=True)
+    tarjetas = _etiquetas_tarjeta(html)
+    assert len(tarjetas) == 1
+    assert 'hidden' not in tarjetas[0]
+    assert 'id="barbero-placeholder"' not in html
+    assert 'Cambiar barbero' not in html
+
+
+def test_varios_barberos_ocultan_las_tarjetas_hasta_elegir_uno(client, barbero):
+    from app import db
+    from app.models.barbero import Barbero
+    db.session.add(Barbero(nombre='Segundo Barbero', especialidad='Barba', activo=True))
+    db.session.commit()
+
+    html = client.get('/').get_data(as_text=True)
+    tarjetas = _etiquetas_tarjeta(html)
+    assert len(tarjetas) == 2
+    assert all('hidden' in t for t in tarjetas)
+    assert 'id="barbero-placeholder"' in html
+    assert html.count('Cambiar barbero') == 2
+    assert 'accordion-chevron' not in html
