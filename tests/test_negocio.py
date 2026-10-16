@@ -205,3 +205,31 @@ def test_verificacion_de_google_sale_del_negocio(client, negocio):
     assert ok.status_code == 200
     assert ok.get_data(as_text=True) == 'google-site-verification: googleabc123.html'
     assert client.get('/googleotro.html').status_code == 404
+
+
+def test_colores_del_negocio_se_aplican_como_variables_css(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.color_primario = '#112233'
+    negocio.color_secundario = '#445566'
+    negocio.color_acento = '#778899'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    html = client.get('/').get_data(as_text=True)
+    assert '--color-bg-main: #112233;' in html
+    assert '--color-border: #445566;' in html
+    assert '--color-accent: #778899;' in html
+    assert 'color-mix(in srgb, #778899 80%, white)' in html
+
+
+def test_color_invalido_no_llega_al_css(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.color_primario = 'red;}</style><script>alert(1)</script>'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    html = client.get('/').get_data(as_text=True)
+    assert 'alert(1)' not in html
+    assert '--color-bg-main: red' not in html

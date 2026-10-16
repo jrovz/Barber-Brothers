@@ -1,6 +1,9 @@
 from app import db
 from datetime import datetime
+import re
 from urllib.parse import quote
+
+_COLOR_HEX = re.compile(r'^#[0-9a-fA-F]{6}$')
 
 
 class Negocio(db.Model):
@@ -83,6 +86,23 @@ class Negocio(db.Model):
         if texto:
             return f'{base}?text={quote(texto)}'
         return base
+
+    def tema_css(self):
+        """Declaraciones CSS (sin selector) con los colores válidos del negocio.
+
+        Solo se emiten colores #RRGGBB: el resultado se imprime sin escapar en la plantilla.
+        """
+        variables = [
+            ('--color-bg-main', self.color_primario),
+            ('--color-border', self.color_secundario),
+            ('--color-accent', self.color_acento),
+        ]
+        declaraciones = [f'{nombre}: {valor};' for nombre, valor in variables
+                         if valor and _COLOR_HEX.match(valor)]
+        if self.color_acento and _COLOR_HEX.match(self.color_acento):
+            declaraciones.append(
+                f'--color-accent-hover: color-mix(in srgb, {self.color_acento} 80%, white);')
+        return ' '.join(declaraciones)
 
     def datos_publicos(self):
         """Lo que puede ver el navegador. Nunca NIT ni correos internos."""

@@ -9,6 +9,7 @@
         --color-accent: #b39656;
         --color-accent-hover: #c9aa6b;
         --color-border: #302c25;
+        {{ negocio.tema_css() | safe }}
     }
 
     * {
@@ -150,6 +151,8 @@
     <link rel="preload" href="{{ url_for('static', filename='logo.png') }}" as="image">
     <link rel="preload" href="{{ url_for('static', filename='images/foto1.jpg') }}" as="image">
     {% endif %}
+    {# Colores del negocio: van después de las hojas de estilo para sobrescribir sus variables #}
+    <style>:root { {{ negocio.tema_css() | safe }} }</style>
     {% block extra_head %}{% endblock %}
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5383695411527556"
         crossorigin="anonymous"></script>

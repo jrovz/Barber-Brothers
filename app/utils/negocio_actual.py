@@ -57,6 +57,9 @@ class _NegocioNulo:
     def whatsapp_link(self, texto=None):
         return '#'
 
+    def tema_css(self):
+        return ''
+
     def datos_publicos(self):
         return {
             'nombre': self.nombre,
