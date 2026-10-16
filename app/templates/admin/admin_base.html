@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ title }} | {{ negocio.nombre }} Admin</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    {% if negocio.favicon_url %}<link rel="icon" href="{{ negocio.favicon_url }}">{% else %}<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">{% endif %}
     <!-- Fuentes locales con preload para mejor rendimiento -->
     <link rel="preload" href="{{ url_for('static', filename='fonts/0QIvMX1D_JOuMwr7Iw.woff2') }}" as="font"
         type="font/woff2" crossorigin>
@@ -33,7 +33,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="admin-sidebar">
             <div class="admin-logo">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}">
+                <img src="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}">
                 <h3 class="admin-title">Panel Admin</h3>
             </div>
 

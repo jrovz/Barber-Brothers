@@ -60,6 +60,9 @@ class _NegocioNulo:
     def tema_css(self):
         return ''
 
+    def url_logo(self, url_root=''):
+        return None
+
     def datos_publicos(self):
         return {
             'nombre': self.nombre,

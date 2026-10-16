@@ -233,3 +233,24 @@ def test_color_invalido_no_llega_al_css(client, negocio):
     html = client.get('/').get_data(as_text=True)
     assert 'alert(1)' not in html
     assert '--color-bg-main: red' not in html
+
+
+def test_logo_y_favicon_del_negocio(client, negocio):
+    from app import db
+    from app.utils.negocio_actual import limpiar_cache_negocio
+    negocio.logo_url = '/static/uploads/negocio/logo-prueba.png'
+    negocio.favicon_url = '/static/uploads/negocio/fav-prueba.png'
+    db.session.commit()
+    limpiar_cache_negocio()
+
+    html = client.get('/').get_data(as_text=True)
+    assert 'src="/static/uploads/negocio/logo-prueba.png"' in html
+    assert 'content="http://localhost/static/uploads/negocio/logo-prueba.png"' in html
+    assert 'rel="icon" href="/static/uploads/negocio/fav-prueba.png"' in html
+    assert 'alt="Barbería Clásica"' not in html
+
+
+def test_sin_logo_usa_el_de_la_plataforma(client):
+    html = client.get('/').get_data(as_text=True)
+    assert 'src="/static/logo.png' in html
+    assert 'alt="Barbería de Prueba"' in html

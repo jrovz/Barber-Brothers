@@ -87,6 +87,14 @@ class Negocio(db.Model):
             return f'{base}?text={quote(texto)}'
         return base
 
+    def url_logo(self, url_root=''):
+        """Logo del negocio; si es una ruta relativa y se da url_root, devuelve la URL absoluta."""
+        if not self.logo_url:
+            return None
+        if self.logo_url.startswith('/') and url_root:
+            return url_root.rstrip('/') + self.logo_url
+        return self.logo_url
+
     def tema_css(self):
         """Declaraciones CSS (sin selector) con los colores válidos del negocio.
 

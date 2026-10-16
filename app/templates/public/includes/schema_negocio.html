@@ -6,8 +6,8 @@
     "name": negocio.nombre,
     "url": request.url_root,
     "priceRange": "$$",
-    "image": negocio.logo_url or url_for('static', filename='logo.png', _external=True),
-    "logo": negocio.logo_url or url_for('static', filename='logo.png', _external=True),
+    "image": negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True),
+    "logo": negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True),
     "address": {
         "@type": "PostalAddress",
         "streetAddress": negocio.direccion or "",

@@ -87,7 +87,7 @@
     <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
     <meta property="og:image"
-        content="{% block og_image %}{{ url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
+        content="{% block og_image %}{{ negocio.url_logo(request.url_root) or url_for('static', filename='logo.png', _external=True) }}{% endblock %}">
     <meta property="og:site_name" content="{{ negocio.nombre }}">
     <meta property="og:locale" content="es_CO">
 
@@ -107,8 +107,8 @@
     <meta name="business:contact_data:phone_number" content="{% if negocio.whatsapp %}+{{ negocio.whatsapp }}{% endif %}">
 
     <!-- Favicon optimizado -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='logo.png') }}">
+    {% if negocio.favicon_url %}<link rel="icon" href="{{ negocio.favicon_url }}">{% else %}<link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">{% endif %}
+    <link rel="apple-touch-icon" href="{{ negocio.logo_url or url_for('static', filename='logo.png') }}">
 
     <!-- DNS Prefetch para recursos externos -->
     <link rel="dns-prefetch" href="//pagead2.googlesyndication.com">
@@ -148,7 +148,7 @@
 
     <!-- Preload imágenes críticas solo en home -->
     {% if request.endpoint == 'public.home' %}
-    <link rel="preload" href="{{ url_for('static', filename='logo.png') }}" as="image">
+    <link rel="preload" href="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" as="image">
     <link rel="preload" href="{{ url_for('static', filename='images/foto1.jpg') }}" as="image">
     {% endif %}
     {# Colores del negocio: van después de las hojas de estilo para sobrescribir sus variables #}
@@ -164,7 +164,7 @@
         <div class="header-container">
             <div class="logo">
                 <a href="{{ url_for('public.home') }}" class="logo-link" id="logo-link">
-                    <img src="/static/logo.png" alt="Barbería Clásica">
+                    <img src="{{ negocio.logo_url or url_for('static', filename='logo.png') }}" alt="{{ negocio.nombre }}">
                 </a>
             </div>
 
