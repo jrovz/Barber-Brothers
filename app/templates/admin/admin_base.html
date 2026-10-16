@@ -54,6 +54,8 @@
                             href="{{ url_for('admin.gestionar_citas') }}">Citas</a></li>
                     <li class="{{ 'active' if 'slider' in request.endpoint else '' }}"><a
                             href="{{ url_for('admin.gestionar_sliders') }}">Sliders</a></li>
+                    <li class="{{ 'active' if 'negocio' in request.endpoint else '' }}"><a
+                            href="{{ url_for('admin.configuracion_negocio') }}">Configuración</a></li>
 
 
 

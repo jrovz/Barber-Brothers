@@ -10,3 +10,4 @@ from app.admin.routes import debug
 from app.admin.routes import clientes
 from app.admin.routes import sliders
 from app.admin.routes import api_config
+from app.admin.routes import negocio

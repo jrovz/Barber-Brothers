@@ -71,7 +71,7 @@ Consideraciones generales
 """
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, FloatField, TextAreaField, URLField, SelectField, DecimalField, DateTimeField, IntegerField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, URL, ValidationError # Añadir ValidationError
+from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, Regexp, URL, ValidationError # Añadir ValidationError
 from flask_wtf.file import FileField, FileAllowed, MultipleFileField
 from app.models.categoria import Categoria # Importar el modelo Categoria
 
@@ -262,3 +262,42 @@ class BloqueoHorarioForm(FlaskForm):
     hora_fin = StringField('Hora de Fin (HH:MM)', validators=[DataRequired(message="La hora de fin es obligatoria")])
     motivo = StringField('Motivo (opcional)', validators=[Optional(), Length(max=255)])
     submit = SubmitField('Guardar Bloqueo')
+
+
+class NegocioForm(FlaskForm):
+    """Datos del negocio que el dueño puede editar. slug, dominio, subdominio, plan y activo no están aquí."""
+    # Contacto
+    telefono = StringField('Teléfono', validators=[Optional(), Length(max=20), Regexp(r'^[\d\s+()-]{7,20}$', message='Solo números, espacios, +, - y paréntesis.')])
+    whatsapp = StringField('WhatsApp (con 57, sin espacios)', validators=[Optional(), Regexp(r'^57\d{10}$', message='Debe tener 12 dígitos y empezar por 57. Ej: 573001234567')])
+    telefono_tienda = StringField('Teléfono de la tienda (opcional)', validators=[Optional(), Length(max=20), Regexp(r'^[\d\s+()-]{7,20}$', message='Solo números, espacios, +, - y paréntesis.')])
+    email_contacto = StringField('Correo de contacto', validators=[Optional(), Email(), Length(max=120)])
+    remitente_nombre = StringField('Nombre del remitente de correos', validators=[Optional(), Length(max=150)])
+
+    # Ubicación
+    direccion = StringField('Dirección', validators=[Optional(), Length(max=200)])
+    ciudad = StringField('Ciudad', validators=[Optional(), Length(max=100)])
+    departamento = StringField('Departamento', validators=[Optional(), Length(max=100)])
+    pais = StringField('País', validators=[Optional(), Length(max=100)])
+    latitud = FloatField('Latitud', validators=[Optional(), NumberRange(min=-90, max=90)])
+    longitud = FloatField('Longitud', validators=[Optional(), NumberRange(min=-180, max=180)])
+
+    # Redes
+    instagram_url = StringField('Instagram (URL)', validators=[Optional(), URL(), Length(max=255)])
+    tiktok_url = StringField('TikTok (URL)', validators=[Optional(), URL(), Length(max=255)])
+    facebook_url = StringField('Facebook (URL)', validators=[Optional(), URL(), Length(max=255)])
+
+    # SEO
+    seo_titulo = StringField('Título para Google', validators=[Optional(), Length(max=255)])
+    seo_descripcion = TextAreaField('Descripción para Google', validators=[Optional(), Length(max=500)])
+    seo_palabras_clave = TextAreaField('Palabras clave (separadas por comas)', validators=[Optional(), Length(max=500)])
+
+    # Historia
+    historia = TextAreaField('Nuestra historia', validators=[Optional(), Length(max=5000)])
+
+    # Datos legales (los llena el cliente)
+    razon_social = StringField('Razón social', validators=[Optional(), Length(max=200)])
+    nit = StringField('NIT o cédula', validators=[Optional(), Length(max=30)])
+    direccion_legal = StringField('Dirección legal', validators=[Optional(), Length(max=200)])
+    email_datos_personales = StringField('Correo para datos personales (opcional)', validators=[Optional(), Email(), Length(max=120)])
+
+    submit = SubmitField('Guardar cambios')
