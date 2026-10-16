@@ -1,7 +1,7 @@
 <!-- filepath: app/templates/public/servicios.html -->
 {% extends "public/public_base.html" %}
 
-{% block title %}Nuestros Servicios - Barber Brothers{% endblock %}
+{% block title %}Nuestros Servicios - {{ negocio.nombre }}{% endblock %}
 
 {% block canonical_url %}{{ url_for('public.servicios', _external=True) }}{% endblock %}
 

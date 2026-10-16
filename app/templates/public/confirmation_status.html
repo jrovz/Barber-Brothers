@@ -2,9 +2,9 @@
 
 {% block title %}
 {% if success %}
-Cita Confirmada - Barber Brothers
+Cita Confirmada - {{ negocio.nombre }}
 {% else %}
-Error de Confirmación - Barber Brothers
+Error de Confirmación - {{ negocio.nombre }}
 {% endif %}
 {% endblock %}
 
@@ -53,8 +53,8 @@ Error de Confirmación - Barber Brothers
             <div class="warning-message">
                 <p>Aunque el enlace ha expirado, tu cita sigue reservada en nuestro sistema.</p>
                 <p>Por favor contáctanos lo antes posible para confirmar tu asistencia y no perder tu lugar:</p>
-                <a href="https://wa.me/573143782855" target="_blank" class="btn-whatsapp-warning">
-                    📱 Contactar por WhatsApp (314 378 2855)
+                <a href="{{ negocio.whatsapp_link() }}" target="_blank" class="btn-whatsapp-warning">
+                    📱 Contactar por WhatsApp{% if negocio.telefono %} ({{ negocio.telefono }}){% endif %}
                 </a>
             </div>
         </div>
@@ -64,7 +64,7 @@ Error de Confirmación - Barber Brothers
             <h2 class="confirmation-title">{{ message }}</h2>
             <div class="error-message">
                 <p>Por favor, intenta agendar tu cita nuevamente o contacta con nosotros si el problema persiste.</p>
-                <p>Puedes llamarnos al <strong>3143782855</strong> o enviarnos un WhatsApp.</p>
+                <p>{% if negocio.telefono %}Puedes llamarnos al <strong>{{ negocio.telefono }}</strong> o enviarnos un WhatsApp.{% else %}Puedes enviarnos un WhatsApp.{% endif %}</p>
             </div>
         </div>
         {% endif %}
