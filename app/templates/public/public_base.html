@@ -118,32 +118,13 @@
     <link rel="preload" href="{{ url_for('static', filename='fonts/0QIvMX1D_JOuMwr7Iw.woff2') }}" as="font"
         type="font/woff2" crossorigin>
 
-    <!-- Diferir fonts-optimized.css -->
-    <link rel="preload" href="{{ url_for('static', filename='css/fonts-optimized.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts-optimized.css') }}">
-    </noscript>
-
-    <!-- Preload CSS crítico -->
-    <link rel="preload" href="{{ url_for('static', filename='css/public_styles.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
-    </noscript>
-    <!-- Diferir footer_styles.css -->
-    <link rel="preload" href="{{ url_for('static', filename='css/footer_styles.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/footer_styles.css') }}">
-    </noscript>
+    <!-- Hojas de estilo normales: cargarlas con preload+onload las aplica después del primer pintado y fuerza relayouts completos -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts-optimized.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public_styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/footer_styles.css') }}">
 
     {% if request.endpoint == 'public.home' %}
-    <link rel="preload" href="{{ url_for('static', filename='css/booking-optimized.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
-    </noscript>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/booking-optimized.css') }}">
     {% endif %}
 
     <!-- Preload imágenes críticas solo en home -->

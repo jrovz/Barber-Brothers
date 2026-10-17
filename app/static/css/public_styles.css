@@ -3345,3 +3345,12 @@ footer p {
     max-width: 600px;
     margin: 0 auto;
 }
+/* Rendimiento: el navegador no calcula layout/pintura de estas secciones hasta que
+   están cerca de la pantalla. contain-intrinsic-size reserva una altura estimada
+   (y recuerda la real, "auto") para que la barra de scroll no salte. */
+#equipo-section,
+#booking-section,
+#about-section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+}
