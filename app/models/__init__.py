@@ -14,3 +14,4 @@ except Exception as e:
     print(f"Warning: No se pudo importar el modelo Slider: {e}")
     Slider = None
 from app.models.email import send_appointment_confirmation_email
+from app.models.chat import ChatMensaje

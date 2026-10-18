@@ -23,7 +23,19 @@ class Config:
     MAIL_DEFAULT_SENDER_NAME = os.environ.get('MAIL_DEFAULT_SENDER', 'Reservas')
     MAIL_DEFAULT_SENDER = (MAIL_DEFAULT_SENDER_NAME, os.environ.get('MAIL_USERNAME'))
 
-    
+    # Chatbot. Apagado por defecto: sin CHAT_ENABLED y sin clave, el sitio es idéntico
+    # al de antes (ver chat_activo). La clave nunca es obligatoria, ni en producción.
+    ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or ''
+    CHAT_ENABLED = os.environ.get('CHAT_ENABLED', 'False').lower() in ['true', '1', 't']
+    CHAT_MODEL = os.environ.get('CHAT_MODEL') or 'claude-haiku-5-5'
+    CHAT_MAX_CARACTERES = int(os.environ.get('CHAT_MAX_CARACTERES') or 500)    # por mensaje
+    CHAT_MAX_TURNOS = int(os.environ.get('CHAT_MAX_TURNOS') or 30)             # por sesión
+    CHAT_HISTORIAL = int(os.environ.get('CHAT_HISTORIAL') or 12)               # mensajes que se reenvían al modelo
+    CHAT_RATE_LIMIT = os.environ.get('CHAT_RATE_LIMIT') or '20 per hour'       # por IP
+    CHAT_MAX_TOKENS_RESPUESTA = int(os.environ.get('CHAT_MAX_TOKENS_RESPUESTA') or 400)
+    CHAT_MAX_RESERVAS_SESION = int(os.environ.get('CHAT_MAX_RESERVAS_SESION') or 2)
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
     # Lee la URL de PostgreSQL del entorno, si no existe, usa SQLite como fallback
