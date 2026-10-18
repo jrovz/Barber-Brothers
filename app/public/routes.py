@@ -88,6 +88,7 @@ except Exception as e:
     print(f"Warning: No se pudo importar el modelo Slider: {e}")
     Slider = None
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
+from app.services.disponibilidad import horarios_libres
 from app.services.reservas import crear_cita
 from app import db
 from datetime import datetime, timedelta, time, timezone
@@ -895,61 +896,12 @@ def disponibilidad_barbero(barbero_id, fecha):
 
         servicio_id = request.args.get('servicio_id', type=int)
         validate_slot = request.args.get('validate_slot')  # Para validación en tiempo real
-        duracion_servicio = 30 
 
-        if servicio_id:
-            servicio = Servicio.query.get(servicio_id)
-            if servicio:
-                duracion_servicio = servicio.get_duracion_minutos()
-                current_app.logger.info(f"Servicio '{servicio.nombre}': {duracion_servicio} minutos")
-            else:
-                current_app.logger.warning(f"Servicio con ID {servicio_id} no encontrado. Usando duración por defecto.")
-        else:
-            current_app.logger.warning("No se proporcionó servicio_id. Usando duración por defecto.")
+        resultado = horarios_libres(barbero, fecha_dt, servicio_id, etiqueta_fecha=fecha)
+        horarios_disponibles_str = resultado.horarios
+        duracion_servicio = resultado.duracion_servicio
+        mensaje_respuesta = resultado.mensaje
 
-        # Limpiar citas expiradas antes de obtener horarios para tener datos actualizados
-        try:
-            citas_limpiadas = Cita.limpiar_citas_expiradas()
-            if citas_limpiadas > 0:
-                current_app.logger.info(f"Limpieza automática: {citas_limpiadas} citas expiradas")
-        except Exception as e:
-            current_app.logger.warning(f"Error en limpieza automática de citas: {e}")
-
-        # Debug detallado
-        current_app.logger.info(f"Solicitando horarios disponibles para barbero {barbero.id}, fecha {fecha_dt}, duración {duracion_servicio}min")
-        
-        try:
-            horarios_obj_list = barbero.obtener_horarios_disponibles(fecha_dt, duracion_servicio)
-            current_app.logger.info(f"Horarios obtenidos: {len(horarios_obj_list)} slots")
-            
-            # Debug: Mostrar cada slot obtenido
-            for i, slot in enumerate(horarios_obj_list[:5]):  # Primeros 5 para no llenar el log
-                current_app.logger.debug(f"Slot {i+1}: {slot}")
-                
-            horarios_disponibles_str = []
-            if horarios_obj_list:
-                for slot in horarios_obj_list:
-                    if slot['disponible']:
-                        horarios_disponibles_str.append(slot['hora'])
-                        
-            current_app.logger.info(f"Slots disponibles finales: {len(horarios_disponibles_str)}")
-        except Exception as slot_error:
-            current_app.logger.error(f"Error procesando slots: {str(slot_error)}", exc_info=True)
-            raise
-        
-        mensaje_respuesta = f'Horarios disponibles para {barbero.nombre} el {fecha}'
-        if not horarios_disponibles_str: # Comprobar la lista de strings filtrada
-             disponibilidades_dia = barbero.get_disponibilidad_por_dia(fecha_dt.weekday())
-             if not disponibilidades_dia:
-                 mensaje_respuesta = f"{barbero.nombre} no tiene horario configurado para este día."
-             else:
-                 mensaje_respuesta = f"No hay horarios disponibles para {barbero.nombre} el {fecha} con duración de {duracion_servicio} min."
-
-        # Logging mejorado para debugging
-        current_app.logger.info(f"Disponibilidad solicitada - Barbero: {barbero.nombre}, Fecha: {fecha}, "
-                               f"Servicio: {servicio_id}, Duración: {duracion_servicio}min, "
-                               f"Horarios encontrados: {len(horarios_disponibles_str)}")
-        
         # Si se está validando un slot específico, verificar si está disponible
         if validate_slot and validate_slot not in horarios_disponibles_str:
             current_app.logger.warning(f"Slot {validate_slot} ya no disponible para {barbero.nombre} en {fecha}")
