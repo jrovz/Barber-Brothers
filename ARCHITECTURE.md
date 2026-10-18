@@ -86,6 +86,7 @@ barber-brothers/
 │   ├── barbero/              # Blueprint para el panel de barberos
 │   ├── public/               # Blueprint para la parte pública (incluye el booking real)
 │   ├── models/               # Modelos de SQLAlchemy
+│   ├── services/             # Lógica de negocio reutilizable (reservas, disponibilidad), sin HTTP
 │   ├── static/               # Archivos estáticos (CSS, JS, imágenes)
 │   ├── templates/            # Plantillas Jinja2
 │   └── utils/                # Funciones de utilidad
@@ -124,16 +125,25 @@ barber-brothers/
 ### Flujo de Booking de Citas
 1.  **Cliente (Frontend):** Selecciona Barbero, Servicio y Fecha en `Home.html`.
 2.  **JavaScript (`booking.js`):** Envía una petición `GET` a `/api/disponibilidad/...`.
-3.  **Public Blueprint (Backend):** `/api/disponibilidad/<barbero_id>/<fecha>` (definida en `app/public/routes.py`) consulta los modelos `DisponibilidadBarbero` y `Cita` para calcular los horarios libres.
+3.  **Public Blueprint (Backend):** `/api/disponibilidad/<barbero_id>/<fecha>` (definida en `app/public/routes.py`, con el cálculo en `app/services/disponibilidad.py`) consulta los modelos `DisponibilidadBarbero` y `Cita` para calcular los horarios libres.
 4.  **Public Blueprint (Backend):** Devuelve una respuesta JSON con los horarios disponibles.
 5.  **JavaScript (`booking.js`):** Renderiza dinámicamente los horarios en la página.
 6.  **Cliente (Frontend):** Selecciona un horario e introduce sus datos.
 7.  **JavaScript (`booking.js`):** Envía una petición `POST` a `/api/agendar-cita` con todos los detalles.
-8.  **Public Blueprint (Backend):** `/api/agendar-cita` (también en `app/public/routes.py`) valida los datos, crea un nuevo registro de `Cliente` (si no existe) y una `Cita` con estado `pendiente_confirmacion`, y envía un correo de confirmación con un token.
+8.  **Public Blueprint (Backend):** `/api/agendar-cita` (también en `app/public/routes.py`) delega en `app/services/reservas.py` (`crear_cita`), que valida los datos, crea un nuevo registro de `Cliente` (si no existe) y una `Cita` con estado `pendiente_confirmacion`, y envía un correo de confirmación con un token. La ruta solo traduce el resultado a JSON y escribe las cookies comerciales.
 9.  **Cliente:** Hace clic en el enlace del correo.
 10. **Public Blueprint (Backend):** La ruta `/confirmar-cita/<token>` valida el token y actualiza el estado de la cita a `confirmada`.
 
 > Nota: pese al nombre de las URLs (`/api/...`), esta lógica vive en el Blueprint `public`, no en el Blueprint `api` (`app/api/routes.py`), que hoy solo expone un endpoint de ejemplo (`/api/info`). Es una discrepancia heredada del código, documentada aquí para que no confunda a quien la busque en el lugar "obvio".
+
+### Capa de servicios (`app/services/`)
+
+Las reglas que más importan (no doble-reservar, qué horarios están libres) viven en funciones que no conocen HTTP: reciben datos y devuelven un resultado tipado. Las rutas web solo traducen ese resultado a JSON y cookies. Así el mismo código lo usan el formulario de reservas y, más adelante, el chatbot, sin duplicar reglas.
+
+*   `reservas.crear_cita(datos, enviar_correo=True)` → `ResultadoReserva` (cita y token, o un `ErrorReserva` con código, mensaje y estado HTTP). Bloquea la fila del barbero hasta el commit; **toda** salida con error hace `rollback()` para liberar ese bloqueo.
+*   `disponibilidad.horarios_libres(barbero, fecha, servicio_id, excluir_pasadas=False)` → `ResultadoDisponibilidad`. Con `excluir_pasadas=True` descarta las horas que ya pasaron en la zona horaria del negocio (`app/utils/tiempo.ahora_negocio`).
+
+Límite de peticiones: `Flask-Limiter` (`app.limiter`), sin límites globales; cada ruta declara el suyo. En producción `confiar_en_proxy` toma la IP real de `X-Forwarded-For` (Nginx); con almacenamiento en memoria el contador es por worker de Gunicorn, así que el límite efectivo es el declarado × el número de workers (para uno exacto, `RATELIMIT_STORAGE_URI` con Redis).
 
 ## 6. Evaluación y Puntos de Mejora
 

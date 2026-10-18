@@ -35,6 +35,11 @@ class Config:
     CHAT_MAX_TOKENS_RESPUESTA = int(os.environ.get('CHAT_MAX_TOKENS_RESPUESTA') or 400)
     CHAT_MAX_RESERVAS_SESION = int(os.environ.get('CHAT_MAX_RESERVAS_SESION') or 2)
 
+    # Dónde cuenta Flask-Limiter. En memoria el contador es por proceso: con varios workers
+    # de Gunicorn el límite real es (límite × workers). Para uno exacto, usar Redis
+    # (p. ej. redis://localhost:6379).
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

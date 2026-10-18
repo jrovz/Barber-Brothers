@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import os
 from app.utils import format_cop
 from flask_mail import Mail
@@ -14,6 +16,8 @@ migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
 mail = Mail()
+# Sin límites globales: cada ruta que lo necesite (p. ej. el chat) declara el suyo.
+limiter = Limiter(key_func=get_remote_address)
 # Configuración de login
 login_manager.login_view = 'admin.login'  # Vista predeterminada para admin
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
@@ -59,6 +63,18 @@ def load_user(user_id):
 def is_azure():
     """Detecta si estamos en Azure App Service"""
     return False  # Forzar siempre entorno local
+
+def confiar_en_proxy(app):
+    """Toma la IP real del visitante de X-Forwarded-For (un solo proxy: Nginx).
+
+    Sin esto, detrás de Nginx todas las peticiones llegan desde 127.0.0.1 y cualquier
+    límite "por IP" sería en realidad un límite compartido por todos los visitantes.
+    Solo se activa en producción: sin proxy delante, esa cabecera la puede falsear
+    cualquiera. Se limita a x_for para no cambiar cómo se arman las URLs absolutas.
+    """
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
+
 
 def create_app(config_name='default'):
     # Crear instancia de Flask
@@ -126,6 +142,7 @@ def create_app(config_name='default'):
         faltantes = [k for k in ('DATABASE_URL', 'SECRET_KEY') if not os.environ.get(k)]
         if faltantes:
             raise ValueError(f"Variables de entorno requeridas en producción: {', '.join(faltantes)}")
+        confiar_en_proxy(app)
     mail.init_app(app)
     
     # Integrar el manejador de errores personalizado
@@ -181,6 +198,7 @@ def create_app(config_name='default'):
         except Exception as e:
             app.logger.error(f"Error during database initialization check: {e}")
     csrf.init_app(app)
+    limiter.init_app(app)
     
     # Cargar el negocio actual en cada petición y exponerlo a las plantillas
     from app.utils.negocio_actual import obtener_negocio
