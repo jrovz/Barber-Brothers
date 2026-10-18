@@ -88,6 +88,7 @@ except Exception as e:
     print(f"Warning: No se pudo importar el modelo Slider: {e}")
     Slider = None
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
+from app.services.reservas import crear_cita
 from app import db
 from datetime import datetime, timedelta, time, timezone
 from flask import send_from_directory
@@ -979,163 +980,11 @@ def agendar_cita():
             f"fecha: {data.get('fecha')} {data.get('hora')}"
         )
 
-        required_fields = ['barbero_id', 'servicio_id', 'fecha', 'hora', 'nombre', 'email', 'telefono']
-        for field in required_fields:
-            if field not in data or not data[field]:
-                current_app.logger.error(f"Campo faltante o vacío: {field}")
-                return jsonify({'error': f'Falta el campo o está vacío: {field}'}), 400
+        resultado = crear_cita(data)
+        if not resultado.ok:
+            return jsonify(resultado.error.cuerpo()), resultado.error.http
 
-        fecha_hora_str = f"{data['fecha']} {data['hora']}"
-        fecha_hora = datetime.strptime(fecha_hora_str, '%Y-%m-%d %H:%M')
-        # Hora actual de Colombia (UTC-5, sin horario de verano), independiente de la zona
-        # horaria del servidor. En la fase multi-tenant pasará a ser la zona de cada negocio.
-        ahora_colombia = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=5)
-        if fecha_hora < ahora_colombia - timedelta(minutes=5):
-            return jsonify({'error': 'No se puede agendar una cita en una fecha u hora pasada.'}), 400
-
-        # Bloquear la fila del barbero hasta el commit: dos reservas simultáneas para el
-        # mismo barbero se atienden en fila y la segunda ve la cita de la primera.
-        # (En PostgreSQL es SELECT ... FOR UPDATE; SQLite lo ignora.)
-        barbero = (Barbero.query
-                   .filter_by(id=int(data['barbero_id']))
-                   .with_for_update()
-                   .first())
-        if not barbero or not barbero.activo:
-            db.session.rollback()
-            return jsonify({'error': 'El barbero seleccionado no está disponible.'}), 400
-
-        servicio = db.session.get(Servicio, int(data['servicio_id']))
-        if not servicio or not servicio.activo:
-            db.session.rollback()
-            return jsonify({'error': 'El servicio seleccionado no está disponible.'}), 400
-
-        # Obtener la duración del servicio para verificar conflictos
-        duracion_servicio = servicio.get_duracion_minutos()
-        
-        # Calcular el rango de tiempo que ocupará la nueva cita
-        inicio_nueva_cita = fecha_hora
-        fin_nueva_cita = inicio_nueva_cita + timedelta(minutes=duracion_servicio)
-        
-        # Obtener todas las citas del barbero para el día seleccionado
-        fecha_inicio_dia = datetime.combine(fecha_hora.date(), datetime.min.time())
-        fecha_fin_dia = fecha_inicio_dia + timedelta(days=1)
-        
-        citas_del_dia = Cita.query.filter(
-            Cita.barbero_id == int(data['barbero_id']),
-            Cita.estado.in_(['confirmada', 'pendiente_confirmacion']),
-            Cita.fecha >= fecha_inicio_dia,
-            Cita.fecha < fecha_fin_dia
-        ).all()
-
-        # Verificar solapamientos en Python
-        hay_solapamiento = False
-        for cita_existente in citas_del_dia:
-            inicio_existente = cita_existente.fecha
-            fin_existente = inicio_existente + timedelta(minutes=cita_existente.duracion or 30)
-            
-            # Verificar si hay solapamiento: la nueva cita no debe empezar antes de que termine una existente
-            # ni terminar después de que empiece otra existente
-            if not (fin_nueva_cita <= inicio_existente or inicio_nueva_cita >= fin_existente):
-                hay_solapamiento = True
-                current_app.logger.warning(f"Solapamiento detectado con cita ID {cita_existente.id}: "
-                                         f"Existente: {inicio_existente} - {fin_existente}, "
-                                         f"Nueva: {inicio_nueva_cita} - {fin_nueva_cita}")
-                break
-
-        if hay_solapamiento:
-            db.session.rollback()  # liberar el bloqueo del barbero
-            current_app.logger.warning(f"CONFLICTO DE HORARIO - Barbero {data['barbero_id']}, "
-                                      f"Horario solicitado: {fecha_hora} - {fin_nueva_cita}, "
-                                      f"Servicio: {data['servicio_id']} ({duracion_servicio}min)")
-            return jsonify({
-                'error': 'Este horario se solapa con otra cita. Por favor, selecciona otro horario.',
-                'conflict_details': {
-                    'barbero_id': data['barbero_id'],
-                    'horario_solicitado': fecha_hora.isoformat(),
-                    'duracion_servicio': duracion_servicio
-                }
-            }), 409 # 409 Conflict
-
-        fecha_nacimiento = None
-        if data.get('fecha_nacimiento'):
-            try:
-                fecha_nacimiento = datetime.strptime(data['fecha_nacimiento'], '%Y-%m-%d').date()
-                if fecha_nacimiento > datetime.utcnow().date():
-                    db.session.rollback()
-                    return jsonify({'error': 'La fecha de nacimiento no puede ser futura.'}), 400
-            except ValueError:
-                db.session.rollback()
-                return jsonify({'error': 'Formato de fecha de nacimiento inválido. Use YYYY-MM-DD.'}), 400
-
-        cliente = Cliente.query.filter_by(email=data['email']).first()
-        if not cliente:
-            cliente = Cliente(
-                nombre=data['nombre'],
-                email=data['email'],
-                telefono=data['telefono'],
-                fecha_nacimiento=fecha_nacimiento
-            )
-            db.session.add(cliente)
-            db.session.flush() # Para obtener el ID del cliente si es nuevo
-        else: # Actualizar datos si el cliente existe
-            cliente.nombre = data['nombre']
-            cliente.telefono = data['telefono']
-            if fecha_nacimiento:
-                cliente.fecha_nacimiento = fecha_nacimiento
-            # No es necesario db.session.add(cliente) si ya existe y solo se modifica
-
-        # Obtener el precio que se cobrará al cliente según el barbero seleccionado
-        from app.utils.pricing import obtener_precio_servicio
-        precio_info = obtener_precio_servicio(int(data['barbero_id']), int(data['servicio_id']))
-
-        if precio_info and not precio_info['servicio_activo_para_barbero']:
-            current_app.logger.warning(
-                f"Intento de reserva de servicio desactivado - Barbero: {data['barbero_id']}, "
-                f"Servicio: {data['servicio_id']}"
-            )
-            db.session.rollback()
-            return jsonify({'error': 'Este barbero no ofrece este servicio actualmente.'}), 400
-
-        if precio_info:
-            precio_cobrado = precio_info['precio']
-            es_precio_personalizado = precio_info['es_personalizado']
-        else:
-            # Fallback al precio base del servicio
-            precio_cobrado = servicio.precio if servicio else 0
-            es_precio_personalizado = False
-        
-        nueva_cita = Cita(
-            cliente_id=cliente.id,
-            barbero_id=int(data['barbero_id']),
-            servicio_id=int(data['servicio_id']),
-            fecha=fecha_hora,
-            estado='pendiente_confirmacion', # Estado inicial
-            duracion=duracion_servicio,  # Guardar la duración del servicio
-            precio_cobrado=precio_cobrado,  # Guardar el precio al momento de reserva
-            es_precio_personalizado=es_precio_personalizado,  # Indicar si es precio personalizado
-            notas=data.get('notas', '')
-        )
-        db.session.add(nueva_cita)
-        db.session.commit() # Commit para obtener el ID de nueva_cita
-
-        token = nueva_cita.generate_confirmation_token()
-        current_app.logger.info(f"CITA CREADA EXITOSAMENTE - ID: {nueva_cita.id}, "
-                               f"Cliente ID: {cliente.id}, Barbero: {data['barbero_id']}, "
-                               f"Fecha: {fecha_hora}, Servicio: {data['servicio_id']}, "
-                               f"Duración: {duracion_servicio}min. Token generado, enviando correo.")
-
-        # Enviar correo de confirmación
-        # Las relaciones barbero y servicio_rel se cargarán automáticamente al acceder a ellas
-        # en la plantilla del correo si no son lazy='dynamic' o si se accede a ellas antes.
-        # Para estar seguros, podemos precargarlas o pasar los nombres directamente.
-        # Aquí, el modelo Cita ya tiene las relaciones, así que deberían funcionar.
-
-        send_appointment_confirmation_email(
-            cliente_email=cliente.email,
-            cliente_nombre=cliente.nombre,
-            cita=nueva_cita, # Pasamos el objeto cita completo
-            token=token
-        )
+        nueva_cita = resultado.cita
 
         # NUEVO: Crear respuesta con cookies comerciales optimizadas
         response_data = {
