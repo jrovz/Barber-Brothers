@@ -257,6 +257,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     signal: controller.signal
                 });
                 clearTimeout(timeoutId);
+                // 503 = la base de datos no respondió un instante: las lecturas (GET) se pueden repetir
+                if (response.status === 503 && retries > 0 && String(options.method || 'GET').toUpperCase() === 'GET') {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return utils.fetchWithRetry(url, options, retries - 1);
+                }
                 return response;
             } catch (error) {
                 clearTimeout(timeoutId);
@@ -953,14 +958,26 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.confirmButton.textContent = 'Procesando...';
 
         try {
-            const response = await utils.fetchWithRetry('/api/agendar-cita', {
+            const opcionesEnvio = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(bookingData)
-            });
+            };
+            let response = await utils.fetchWithRetry('/api/agendar-cita', opcionesEnvio);
+
+            // 503 con "reintentar": la base de datos falló ANTES de guardar la cita, así que repetir una
+            // vez es seguro. Sin esa marca (falló al guardar) no se repite solo: la cita pudo quedar
+            // registrada y el mensaje del servidor indica al cliente que revise su correo.
+            if (response.status === 503) {
+                const aviso = await response.clone().json().catch(() => null);
+                if (aviso && aviso.reintentar === true) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    response = await utils.fetchWithRetry('/api/agendar-cita', opcionesEnvio);
+                }
+            }
 
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
@@ -1057,6 +1074,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 break;
             case 400:
                 utils.showError(`Error en los datos proporcionados: ${data.error || 'Por favor, verifica tu información e inténtalo de nuevo.'}`);
+                break;
+            case 503:
+                utils.showError(data.error || 'El servicio está ocupado un momento. Inténtalo de nuevo en unos segundos.');
                 break;
             default:
                 utils.showError(`Error al solicitar la cita: ${data.error || `Error ${status}` || 'Inténtalo de nuevo.'}`);

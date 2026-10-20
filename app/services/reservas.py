@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
 from flask import current_app
+from sqlalchemy.exc import InterfaceError, OperationalError
 
 from app import db
 from app.models.barbero import Barbero
@@ -202,20 +203,26 @@ def _crear_cita(data, enviar_correo):
         notas=data.get('notas', '')
     )
     db.session.add(nueva_cita)
-    db.session.commit()  # commit para obtener el ID de nueva_cita
+    try:
+        db.session.commit()  # commit para obtener el ID de nueva_cita
 
-    token = nueva_cita.generate_confirmation_token()
-    current_app.logger.info(f"CITA CREADA EXITOSAMENTE - ID: {nueva_cita.id}, "
-                            f"Cliente ID: {cliente.id}, Barbero: {data['barbero_id']}, "
-                            f"Fecha: {fecha_hora}, Servicio: {data['servicio_id']}, "
-                            f"Duración: {duracion_servicio}min. Token generado, enviando correo.")
+        token = nueva_cita.generate_confirmation_token()
+        current_app.logger.info(f"CITA CREADA EXITOSAMENTE - ID: {nueva_cita.id}, "
+                                f"Cliente ID: {cliente.id}, Barbero: {data['barbero_id']}, "
+                                f"Fecha: {fecha_hora}, Servicio: {data['servicio_id']}, "
+                                f"Duración: {duracion_servicio}min. Token generado, enviando correo.")
 
-    if enviar_correo:
-        send_appointment_confirmation_email(
-            cliente_email=cliente.email,
-            cliente_nombre=cliente.nombre,
-            cita=nueva_cita,
-            token=token
-        )
+        if enviar_correo:
+            send_appointment_confirmation_email(
+                cliente_email=cliente.email,
+                cliente_nombre=cliente.nombre,
+                cita=nueva_cita,
+                token=token
+            )
+
+    except (OperationalError, InterfaceError) as e:
+        # Desde el commit la cita pudo quedar guardada: la ruta no debe pedir que se repita sola.
+        e.llego_a_guardar = True
+        raise
 
     return ResultadoReserva(cita=nueva_cita, token=token)

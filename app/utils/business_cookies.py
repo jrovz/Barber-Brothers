@@ -124,10 +124,49 @@ class BusinessCookieManager:
         value = request.cookies.get(name, default)
         if value and value != default:
             try:
-                return json.loads(value)
+                leido = json.loads(value)
             except (json.JSONDecodeError, TypeError):
-                return value
+                leido = value
+            # La cookie la controla el navegador: si se esperaba un dict o una lista y llega otra
+            # cosa (texto, número...), se usa el valor por defecto. Si no, el código que sigue
+            # llamaba a .get() sobre un str y la página daba error 500.
+            if isinstance(default, (dict, list)) and not isinstance(leido, type(default)):
+                return default
+            return leido
         return default
+
+    # --- valores seguros: lo que viene en una cookie puede ser de cualquier tipo ---
+
+    @staticmethod
+    def _entero(valor, defecto=0):
+        if isinstance(valor, bool):
+            return defecto
+        try:
+            return int(valor)
+        except (TypeError, ValueError, OverflowError):
+            return defecto
+
+    @staticmethod
+    def _texto(valor, defecto=''):
+        if isinstance(valor, str):
+            return valor
+        if isinstance(valor, (int, float)) and not isinstance(valor, bool):
+            return str(valor)
+        return defecto
+
+    @staticmethod
+    def _escalar(valor):
+        """Texto o número tal cual; cualquier otra cosa (dict, lista, bool) -> None."""
+        if isinstance(valor, (str, int, float)) and not isinstance(valor, bool):
+            return valor
+        return None
+
+    @staticmethod
+    def _contadores(valor):
+        """{'clave': n} con claves de texto y valores enteros; si no es un dict, vacío."""
+        if not isinstance(valor, dict):
+            return {}
+        return {str(k): BusinessCookieManager._entero(v) for k, v in valor.items()}
     
     @staticmethod
     def track_booking_abandonment():
@@ -147,7 +186,11 @@ class BusinessCookieManager:
                 'current_step': 'initial',
                 'abandonment_points': []
             }
-        
+
+        # update_booking_step necesita una lista; una cookie manipulada podría traer otra cosa
+        if not isinstance(session_data.get('steps_completed'), list):
+            session_data['steps_completed'] = []
+
         return session_data
     
     @staticmethod
@@ -197,11 +240,12 @@ class BusinessCookieManager:
         """
         # Filtrar datos sensibles y optimizar para auto-completar
         safe_data = {
-            'nombre': client_data.get('nombre', '').strip(),
-            'telefono': client_data.get('telefono', '').strip(),
-            'email': client_data.get('email', '').strip().lower(),
+            'nombre': BusinessCookieManager._texto(client_data.get('nombre')).strip(),
+            'telefono': BusinessCookieManager._texto(client_data.get('telefono')).strip(),
+            'email': BusinessCookieManager._texto(client_data.get('email')).strip().lower(),
             'last_update': datetime.now().isoformat(),
-            'usage_count': BusinessCookieManager.get_business_cookie('client_booking_data', {}).get('usage_count', 0) + 1
+            'usage_count': BusinessCookieManager._entero(
+                BusinessCookieManager.get_business_cookie('client_booking_data', {}).get('usage_count')) + 1
         }
         
         # Validar datos antes de guardar
@@ -230,28 +274,31 @@ class BusinessCookieManager:
         current_prefs = BusinessCookieManager.get_business_cookie('favorite_barber_service', {})
         
         # Actualizar con lógica de frecuencia
-        barbero_count = current_prefs.get('barbero_stats', {}).get(str(barbero_id), 0) + 1
-        servicio_count = current_prefs.get('servicio_stats', {}).get(str(servicio_id), 0) + 1
+        barbero_stats = BusinessCookieManager._contadores(current_prefs.get('barbero_stats'))
+        servicio_stats = BusinessCookieManager._contadores(current_prefs.get('servicio_stats'))
+        time_stats = BusinessCookieManager._contadores(current_prefs.get('time_stats'))
+        barbero_count = barbero_stats.get(str(barbero_id), 0) + 1
+        servicio_count = servicio_stats.get(str(servicio_id), 0) + 1
         
         # Determinar preferencia horaria
         hora_num = int(hora.split(':')[0])
         time_preference = 'morning' if hora_num < 12 else 'afternoon' if hora_num < 17 else 'evening'
-        time_count = current_prefs.get('time_stats', {}).get(time_preference, 0) + 1
+        time_count = time_stats.get(time_preference, 0) + 1
         
         updated_prefs = {
-            'favorite_barbero': barbero_id if barbero_count >= 2 else current_prefs.get('favorite_barbero'),
-            'favorite_servicio': servicio_id if servicio_count >= 2 else current_prefs.get('favorite_servicio'),
-            'favorite_time': time_preference if time_count >= 2 else current_prefs.get('favorite_time'),
-            'barbero_stats': {**current_prefs.get('barbero_stats', {}), str(barbero_id): barbero_count},
-            'servicio_stats': {**current_prefs.get('servicio_stats', {}), str(servicio_id): servicio_count},
-            'time_stats': {**current_prefs.get('time_stats', {}), time_preference: time_count},
+            'favorite_barbero': barbero_id if barbero_count >= 2 else BusinessCookieManager._escalar(current_prefs.get('favorite_barbero')),
+            'favorite_servicio': servicio_id if servicio_count >= 2 else BusinessCookieManager._escalar(current_prefs.get('favorite_servicio')),
+            'favorite_time': time_preference if time_count >= 2 else BusinessCookieManager._escalar(current_prefs.get('favorite_time')),
+            'barbero_stats': {**barbero_stats, str(barbero_id): barbero_count},
+            'servicio_stats': {**servicio_stats, str(servicio_id): servicio_count},
+            'time_stats': {**time_stats, time_preference: time_count},
             'last_booking': {
                 'barbero_id': barbero_id,
                 'servicio_id': servicio_id,
                 'hora': hora,
                 'fecha': datetime.now().isoformat()
             },
-            'total_bookings': current_prefs.get('total_bookings', 0) + 1
+            'total_bookings': BusinessCookieManager._entero(current_prefs.get('total_bookings')) + 1
         }
         
         return BusinessCookieManager.set_business_cookie(
@@ -270,23 +317,26 @@ class BusinessCookieManager:
         preferences = BusinessCookieManager.get_business_cookie('favorite_barber_service', {})
         session_data = BusinessCookieManager.get_business_cookie('booking_session_tracker', {})
         
+        # Todo lo que sale de aquí alimenta plantillas y cálculos (probabilidad de conversión,
+        # ventana de salida...): se normalizan los tipos para que una cookie rara no dé un 500.
+        cm = BusinessCookieManager
         return {
             'client': {
-                'nombre': client_data.get('nombre', ''),
-                'email': client_data.get('email', ''),
-                'telefono': client_data.get('telefono', ''),
-                'is_returning': client_data.get('usage_count', 0) > 1
+                'nombre': cm._texto(client_data.get('nombre')),
+                'email': cm._texto(client_data.get('email')),
+                'telefono': cm._texto(client_data.get('telefono')),
+                'is_returning': cm._entero(client_data.get('usage_count')) > 1
             },
             'preferences': {
-                'barbero_favorito': preferences.get('favorite_barbero'),
-                'servicio_favorito': preferences.get('favorite_servicio'),
-                'horario_favorito': preferences.get('favorite_time'),
-                'total_reservas': preferences.get('total_bookings', 0)
+                'barbero_favorito': cm._escalar(preferences.get('favorite_barbero')),
+                'servicio_favorito': cm._escalar(preferences.get('favorite_servicio')),
+                'horario_favorito': cm._escalar(preferences.get('favorite_time')),
+                'total_reservas': cm._entero(preferences.get('total_bookings'))
             },
             'session': {
-                'current_step': session_data.get('current_step', 'initial'),
-                'intent_score': session_data.get('intent_score', 0),
-                'steps_completed': session_data.get('steps_completed', [])
+                'current_step': cm._texto(session_data.get('current_step'), 'initial'),
+                'intent_score': cm._entero(session_data.get('intent_score')),
+                'steps_completed': session_data.get('steps_completed') if isinstance(session_data.get('steps_completed'), list) else []
             }
         }
     

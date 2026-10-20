@@ -14,7 +14,7 @@ Resumen de rutas y responsabilidades
   - Renderiza `templates/public/Home.html`.
 
 - About (`GET /about`):
-  - Página informativa estática (`about.html`).
+  - Redirige (301) a la sección `#about-section` de la home; no hay página aparte.
 
 - Contacto (`GET/POST /contacto`):
   - Muestra formulario de contacto (GET) y persiste `Cliente` y `Mensaje` (POST).
@@ -64,7 +64,7 @@ Dependencias clave
 - Utilidades: `send_appointment_confirmation_email`, `utils.format_cop`.
 - Plantillas: `public/Home.html`, `public/productos.html`, `public/servicios.html`,
   `public/checkout.html`, `public/confirmacion_pedido.html`,
-  `public/confirmation_status.html`, `contacto.html`, `about.html`.
+  `public/confirmation_status.html`, `contacto.html`.
 
 Seguridad y notas
 - Rutas públicas sin autenticación. La integridad se asegura con validaciones de
@@ -90,6 +90,8 @@ except Exception as e:
 from app.models.email import send_appointment_confirmation_email # Importar la función de envío
 from app.services.disponibilidad import horarios_libres
 from app.services.reservas import crear_cita
+from sqlalchemy.exc import OperationalError, InterfaceError
+from app.utils.error_handler import respuesta_bd_no_disponible
 from app import db
 from datetime import datetime, timedelta, time, timezone
 from flask import send_from_directory
@@ -498,7 +500,9 @@ def google_verification(codigo):
 
 @bp.route('/about')
 def about():
-    return render_template("about.html")
+    # No existe una página "Nosotros" aparte: esa información está en la sección #about-section
+    # de la home. Antes esta ruta renderizaba una plantilla inexistente y daba error 500 siempre.
+    return redirect(url_for('public.home', _anchor='about-section'), code=301)
 
 @bp.route('/contacto', methods=['GET', 'POST'])
 def contact():
@@ -830,6 +834,8 @@ def get_servicios_barbero(barbero_id):
             'total': len(servicios_data)
         })
         
+    except (OperationalError, InterfaceError) as e:
+        return respuesta_bd_no_disponible(e, reintentar=True)
     except Exception as e:
         current_app.logger.error(f"Error al obtener servicios del barbero {barbero_id}: {e}")
         return jsonify({'error': 'Error interno del servidor'}), 500
@@ -918,6 +924,8 @@ def disponibilidad_barbero(barbero_id, fecha):
     except ValueError as ve:
          current_app.logger.error(f"Error de formato en disponibilidad_barbero: {str(ve)}")
          return jsonify({'error': 'Formato de fecha inválido. Use YYYY-MM-DD.'}), 400
+    except (OperationalError, InterfaceError) as e:
+        return respuesta_bd_no_disponible(e, reintentar=True)
     except Exception as e:
         current_app.logger.error(f"Error en disponibilidad_barbero: {str(e)}", exc_info=True)
         return jsonify({'error': 'Error interno al obtener disponibilidad.'}), 500
@@ -977,6 +985,13 @@ def agendar_cita():
         db.session.rollback()
         current_app.logger.error(f"Error de formato en agendar_cita: {str(ve)}")
         return jsonify({'error': f'Formato de fecha u hora inválido: {str(ve)}'}), 400
+    except (OperationalError, InterfaceError) as e:
+        if getattr(e, 'llego_a_guardar', False):
+            return respuesta_bd_no_disponible(
+                e, reintentar=False,
+                mensaje='Hubo un problema temporal al registrar tu cita. Revisa tu correo: si recibes el '
+                        'mensaje de confirmación, tu cita quedó registrada; si no, vuelve a intentarlo en unos minutos.')
+        return respuesta_bd_no_disponible(e, reintentar=True)
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al agendar cita: {str(e)}", exc_info=True)

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicio temporalmente no disponible</title>
+    <style>
+        body { font-family: 'Lora', serif; background: #f8f8f8; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 500px; margin: 8rem auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); padding: 2.5rem; text-align: center; }
+        h1 { color: #333; font-size: 2rem; margin-bottom: 1rem; }
+        p { font-size: 1.1rem; }
+        .reintentar { display: inline-block; margin-top: 1.5rem; padding: 0.7rem 1.6rem; background: #333; color: #fff; border: 0; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+        .reintentar:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Un momento, por favor</h1>
+        <p>El servicio está ocupado en este instante. No has perdido nada: inténtalo de nuevo en unos segundos.</p>
+        <button type="button" class="reintentar" onclick="window.location.reload()">Reintentar</button>
+    </div>
+</body>
+</html>
