@@ -38,6 +38,10 @@ class ProductionConfig(Config):
     # validar al importar el módulo rompía las pruebas y cualquier entorno sin .env.
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    # pool_pre_ping comprueba la conexión antes de usarla y la reemplaza si está muerta (por
+    # ejemplo tras reiniciar PostgreSQL) en vez de fallar la petición; pool_recycle renueva
+    # conexiones cada 30 min. Ver también app.liberar_conexiones (conexiones heredadas por fork).
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True, 'pool_recycle': 1800}
 
 class TestingConfig(Config):
     TESTING = True

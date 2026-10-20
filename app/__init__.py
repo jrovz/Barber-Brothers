@@ -60,6 +60,21 @@ def is_azure():
     """Detecta si estamos en Azure App Service"""
     return False  # Forzar siempre entorno local
 
+def liberar_conexiones(app, base=None):
+    """Cierra todas las conexiones del pool de la base de datos.
+
+    Con Gunicorn y preload_app=True la app se crea en el proceso maestro y después se hace
+    fork() de los workers. Una conexión abierta en el maestro (create_app hace un SELECT 1
+    al arrancar) la heredan TODOS los workers, y compartir una conexión corrompe el flujo,
+    sobre todo con SSL: "SSL error: decryption failed or bad record mac" y "SSL SYSCALL
+    error: EOF detected", errores 500 intermitentes al reiniciar y al reciclar workers.
+    Cerrar el pool antes del fork hace que cada worker abra las suyas.
+    """
+    base = base or db
+    with app.app_context():
+        base.engine.dispose()
+
+
 def create_app(config_name='default'):
     # Crear instancia de Flask
     app = Flask(__name__, 
@@ -217,7 +232,12 @@ def create_app(config_name='default'):
     
     from app.barbero import bp as barbero_bp
     app.register_blueprint(barbero_bp, url_prefix='/barbero')
-    
+
+    # Ver liberar_conexiones: el maestro no debe conservar conexiones al hacer fork() de los
+    # workers. Solo en producción: los tests usan SQLite en memoria y dispose() la borraría.
+    if config_name == 'production':
+        liberar_conexiones(app)
+
     return app
 
 
