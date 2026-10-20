@@ -143,27 +143,26 @@ class Cita(db.Model):
 
     @staticmethod
     def limpiar_citas_expiradas():
-        """Registra citas que han expirado pero NO las marca como expiradas para mantener horarios cerrados"""
+        """Cuenta las citas pendientes de confirmación con más de 1 hora. NO las marca como
+        expiradas: siguen ocupando su horario a propósito.
+
+        Es una sola consulta COUNT y no registra nada por cita ni datos del cliente. Antes
+        escribía una línea con el correo de cada cita pendiente en cada llamada (miles de
+        líneas por visita) y llenó el disco del servidor con un log de 21 GB.
+        """
         from datetime import datetime, timedelta
-        from app import db
-        
+
         limite_expiracion = datetime.utcnow() - timedelta(hours=1)
-        
-        citas_expiradas = Cita.query.filter(
+
+        total = Cita.query.filter(
             Cita.estado == 'pendiente_confirmacion',
             Cita.creado < limite_expiracion
-        ).all()
-        
-        # Solo registrar en logs, NO cambiar estado
-        for cita in citas_expiradas:
-            current_app.logger.info(f"Cita ID {cita.id} ha expirado pero mantiene horario ocupado - "
-                                f"Cliente: {cita.cliente.email}, Fecha cita: {cita.fecha}")
-        
-        if citas_expiradas:
-            # NO hacer commit - no hay cambios que guardar
-            current_app.logger.info(f"Se detectaron {len(citas_expiradas)} citas expiradas (horarios mantenidos cerrados)")
-        
-        return len(citas_expiradas)
+        ).count()
+
+        if total:
+            current_app.logger.debug(f"{total} citas sin confirmar con más de 1 hora (horarios mantenidos cerrados)")
+
+        return total
 
     def actualizar_segmentacion_cliente(self):
         """Actualiza la segmentación del cliente cuando se completa una cita"""
