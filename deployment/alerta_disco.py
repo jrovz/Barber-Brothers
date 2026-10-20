@@ -24,7 +24,7 @@ import shutil
 import smtplib
 import socket
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
 UMBRAL_AVISO = 70          # % de disco usado
@@ -188,7 +188,7 @@ def enviar_correo(asunto, cuerpo, destino, env=None, smtp_cls=None):
 
 def ejecutar(args, ahora=None, enviar=None, uso=None, archivos=None):
     """Una pasada de la alerta. Devuelve el código de salida (0 bien, 2 si falló el envío)."""
-    ahora = ahora or datetime.utcnow()
+    ahora = ahora or datetime.now(timezone.utc).replace(tzinfo=None)
     enviar = enviar or (lambda asunto, cuerpo: enviar_correo(asunto, cuerpo, args.a))
     host = socket.gethostname()
     uso_pct, libre_gb = uso or uso_disco()
