@@ -118,6 +118,7 @@ barber-brothers/
 *   **Proxy Inverso:** Nginx
 *   **Gestor de Procesos:** `systemd` (en entorno Linux/Ubuntu)
 *   **Automatización:** Scripts de Shell (`.sh`) para migraciones y configuración del servidor.
+*   **Conexiones a la base y `preload_app = True`:** Gunicorn crea la app una vez en el proceso maestro y luego hace `fork()` de los workers. Una conexión abierta en el maestro (el `SELECT 1` de arranque) la heredaban todos los workers, y compartir una conexión SSL corrompe el flujo (`SSL error: decryption failed or bad record mac`, `SSL SYSCALL error: EOF detected`: 310 fallos en 16 meses). Por eso `create_app('production')` llama a `liberar_conexiones` antes de devolver la app, y `ProductionConfig` activa `pool_pre_ping` y `pool_recycle`. Regla: **nada que abra conexiones al importar o crear la app puede dejarlas abiertas**.
 
 ## 5. Flujos de Datos Clave
 
