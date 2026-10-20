@@ -1,0 +1,39 @@
+# Rotación de los logs de la aplicación.
+# Instalar en el servidor:  sudo install -m 644 deployment/logrotate-barber-brothers /etc/logrotate.d/barber-brothers
+# Probar sin cambiar nada:  sudo logrotate -d /etc/logrotate.d/barber-brothers
+#
+# IMPORTANTE: si app.log ya es enorme, VACIARLO ANTES de instalar esta regla
+# (sudo truncate -s 0 /var/log/barber-brothers/app.log). copytruncate copia el archivo
+# entero antes de vaciarlo y con el disco justo lo llenaría. Nunca usar rm sobre un log
+# que el servicio tiene abierto: el espacio no se libera hasta reiniciarlo.
+#
+# maxsize + el temporizador por hora (logrotate-cada-hora.conf) ponen un techo: ningún
+# archivo pasa de ~100 MB más lo que crezca en una hora.
+
+# app.log lo crea systemd (StandardOutput=append:...) como root.
+/var/log/barber-brothers/app.log {
+    su root root
+    daily
+    maxsize 100M
+    rotate 14
+    dateext
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+
+# Estos los escribe Gunicorn y el script de alerta como el usuario ubuntu.
+/var/log/barber-brothers/gunicorn_access.log /var/log/barber-brothers/gunicorn_error.log /var/log/barber-brothers/alerta_disco.log {
+    su ubuntu ubuntu
+    daily
+    maxsize 100M
+    rotate 14
+    dateext
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
