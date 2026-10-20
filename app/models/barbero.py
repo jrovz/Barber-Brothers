@@ -138,6 +138,9 @@ class Barbero(db.Model, UserMixin):
                                 slot['bloqueado'] = True
                                 break
             except Exception as bloqueo_error:
+                # Si la consulta falló, la sesión queda inutilizable (PendingRollbackError /
+                # InFailedSqlTransaction en PostgreSQL) y rompería lo que se haga después con ella.
+                db.session.rollback()
                 current_app.logger.error(f"Error al procesar bloqueos: {str(bloqueo_error)}")
                 # Continuar sin procesar bloqueos
             
